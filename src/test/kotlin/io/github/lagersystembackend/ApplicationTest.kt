@@ -1,6 +1,6 @@
-package com.example
+package io.github.lagersystembackend
 
-import com.example.plugins.*
+import io.github.lagersystembackend.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
