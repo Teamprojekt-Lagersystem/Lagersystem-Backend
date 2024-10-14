@@ -1,6 +1,6 @@
-package com.example
+package io.github.lagersystembackend
 
-import com.example.plugins.*
+import io.github.lagersystembackend.plugins.*
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {

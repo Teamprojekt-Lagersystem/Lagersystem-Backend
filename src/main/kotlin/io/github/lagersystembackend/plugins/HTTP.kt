@@ -1,4 +1,4 @@
-package com.example.plugins
+package io.github.lagersystembackend.plugins
 
 import io.ktor.http.*
 import io.ktor.server.application.*
