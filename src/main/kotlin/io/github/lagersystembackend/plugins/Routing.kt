@@ -4,6 +4,7 @@ import io.github.lagersystembackend.testing.SomeRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -16,6 +17,9 @@ fun Application.configureRouting(someRepository: SomeRepository) {
     }
 
     routing {
+        swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
+        get("/") { call.respondRedirect("/swagger", true) }
+
         route("/items") {
             get { call.respond(someRepository.allItems()) }
             get("/{name}") { call.respond(someRepository.itemByName(call.parameters["name"] ?: "") ?: "Did not find Item")}

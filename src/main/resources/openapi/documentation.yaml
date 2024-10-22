@@ -1,0 +1,106 @@
+openapi: "3.1.0"
+info:
+  title: "  Lagersystem API"
+  description: "API to the Lagersystem Backend"
+  version: "1.0.0"
+paths:
+  /:
+    get:
+      description: ""
+      responses:
+        "301":
+          description: "Moved Permanently <br> Redirect"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "/swagger"
+  /items:
+    delete:
+      description: ""
+      parameters:
+      - name: "name"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Missing parameter 'name'"
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+                Example#2:
+                  value: ""
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Item"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+        required: true
+      responses:
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Item created"
+  /items/{name}:
+    get:
+      description: ""
+      parameters:
+      - name: "name"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Object"
+components:
+  schemas:
+    Item:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+      required:
+      - "name"
+    Object:
+      type: "object"
+      properties: {}
