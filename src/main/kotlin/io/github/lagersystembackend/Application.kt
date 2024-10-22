@@ -13,9 +13,9 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureHTTP()
-    configureRouting(Di.someRepository)
+    configureRouting(DependencyProvider.someRepository)
 }
 
-private object Di {
+private object DependencyProvider {
     val someRepository: SomeRepository = FakeSomeRepository()
 }

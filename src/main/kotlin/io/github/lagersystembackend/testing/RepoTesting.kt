@@ -1,5 +1,8 @@
 package io.github.lagersystembackend.testing
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Item(
     val name: String,
 )
