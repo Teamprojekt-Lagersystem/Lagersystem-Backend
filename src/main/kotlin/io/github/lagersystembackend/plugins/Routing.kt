@@ -18,9 +18,8 @@ fun Application.configureRouting(someRepository: SomeRepository) {
 
     routing {
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
+        get("/") { call.respondRedirect("/swagger", true) }
 
-        get("/") {
-            call.respondText("Hello World!")
         route("/items") {
             get { call.respond(someRepository.allItems()) }
             get("/{name}") { call.respond(someRepository.itemByName(call.parameters["name"] ?: "") ?: "Did not find Item")}
