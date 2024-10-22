@@ -1,6 +1,7 @@
 package io.github.lagersystembackend
 
 import io.github.lagersystembackend.plugins.*
+import io.github.lagersystembackend.testing.FakeSomeRepository
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -11,11 +12,11 @@ class ApplicationTest {
     @Test
     fun testRoot() = testApplication {
         application {
-            configureRouting()
+            configureRouting(FakeSomeRepository())
         }
         client.get("/").apply {
             assertEquals(HttpStatusCode.OK, status)
-            assertEquals("Hello World!", bodyAsText())
+            assertEquals("testItem", bodyAsText())
         }
     }
 }
