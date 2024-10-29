@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.space
 
+import io.github.lagersystembackend.common.isUUID
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -16,36 +17,35 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
 
         route("/{id}") {
             get {
-                val id = call.parameters["id"]
-                if (id == null) {
-                    call.respondText("Missing parameter 'id'", status = HttpStatusCode.BadRequest)
-                    return@get
-                }
+                val id = call.parameters["id"]!!
+
+                if (!id.isUUID())
+                    return@get call.respondText("Invalid UUID", status = HttpStatusCode.BadRequest)
+
                 val space = spaceRepository.getSpace(id)
-                if (space == null) {
-                    call.respondText("Space not found", status = HttpStatusCode.NotFound)
-                    return@get
-                }
+                space ?: return@get call.respondText("Space not found", status = HttpStatusCode.NotFound)
+
                 call.respond(space.toNetworkSpace())
             }
 
             delete {
-                val id = call.parameters["id"]
-                if (id == null) {
-                    call.respondText("Missing parameter 'name'", status = HttpStatusCode.BadRequest)
-                    return@delete
-                }
-                if (!spaceRepository.deleteSpace(id)) {
-                    call.respondText("Space not found", status = HttpStatusCode.NotFound)
-                    return@delete
-                }
+                val id = call.parameters["id"]!!
+
+                if (!id.isUUID())
+                    return@delete call.respondText("Invalid UUID", status = HttpStatusCode.BadRequest)
+
+                if (!spaceRepository.deleteSpace(id))
+                    return@delete call.respondText("Space not found", status = HttpStatusCode.NotFound)
+
                 call.respondText("Space deleted")
             }
         }
         post {
-            call.receive<AddSpaceNetworkRequest>().run {
-                spaceRepository.createSpace(name, size, description)
-            }
+            val addSpaceNetworkRequest = runCatching { call.receive<AddSpaceNetworkRequest>() }.getOrNull()
+            addSpaceNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddSpaceNetworkRequest")
+
+            addSpaceNetworkRequest.run { spaceRepository.createSpace(name, size, description) }
+
             call.respond(HttpStatusCode.Created, "Space created") }
     }
 }
