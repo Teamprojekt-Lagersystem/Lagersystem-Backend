@@ -40,7 +40,7 @@ object Products: UUIDTable() {
     val name = varchar("name", 255)
     val price = float("price").nullable()
     val description = text("description")
-    val space = reference("space", Spaces)
+    val space = reference("spaceId", Spaces)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
