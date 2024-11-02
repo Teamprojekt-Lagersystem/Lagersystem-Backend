@@ -40,7 +40,7 @@ object Products: UUIDTable() {
     val name = varchar("name", 255)
     val price = float("price").nullable()
     val description = text("description")
-    val space = reference("space", Spaces)
+    val spaceId = reference("spaceId", Spaces)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -49,7 +49,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Products.name
     var price by Products.price
     var description by Products.description
-    var space by SpaceEntity referencedOn  Products.space
+    var space by SpaceEntity referencedOn  Products.spaceId
 }
 
 fun ProductEntity.toProduct() = Product(
