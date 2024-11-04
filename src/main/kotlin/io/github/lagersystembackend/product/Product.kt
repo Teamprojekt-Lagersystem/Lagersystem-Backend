@@ -60,14 +60,6 @@ fun ProductEntity.toProduct() = Product(
     space.id.value.toString()
 )
 
-fun NetworkProduct.toProduct() = Product(
-    id,
-    name,
-    price,
-    description,
-    spaceId
-)
-
 fun Product.toNetworkProduct() = NetworkProduct(
     id,
     name,
