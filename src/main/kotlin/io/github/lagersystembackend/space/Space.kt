@@ -56,7 +56,7 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Spaces.name
     var size by Spaces.size
     var description by Spaces.description
-    val products by ProductEntity referrersOn Products.space
+    val products by ProductEntity referrersOn Products.spaceId
     val storage by StorageEntity referencedOn Spaces.storage
 }
 
