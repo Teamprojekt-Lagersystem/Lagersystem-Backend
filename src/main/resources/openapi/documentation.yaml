@@ -1,0 +1,289 @@
+openapi: "3.1.0"
+info:
+  title: "Lagersystem_Backend API"
+  description: "Lagersystem_Backend API"
+  version: "1.0.0"
+paths:
+  /:
+    get:
+      description: ""
+      responses:
+        "301":
+          description: "Moved Permanently <br> Redirect"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "/swagger"
+  /products:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkProduct"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddProductNetworkRequest"
+        required: true
+      responses:
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Product created"
+  /products/{id}:
+    delete:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Missing parameter 'name'"
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Product not found"
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Product deleted"
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Missing parameter 'id'"
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Product not found"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkProduct"
+  /spaces:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkSpace"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddSpaceNetworkRequest"
+        required: true
+      responses:
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Space created"
+  /spaces/{id}:
+    delete:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Missing parameter 'name'"
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Space not found"
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Space deleted"
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Missing parameter 'id'"
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Space not found"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkSpace"
+components:
+  schemas:
+    NetworkProduct:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        price:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+        spaceId:
+          type: "string"
+      required:
+      - "id"
+      - "name"
+      - "description"
+      - "spaceId"
+    AddProductNetworkRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        price:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+        spaceId:
+          type: "string"
+      required:
+      - "name"
+      - "description"
+      - "spaceId"
+    NetworkSpace:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        size:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+        products:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/NetworkProduct"
+      required:
+      - "id"
+      - "name"
+      - "description"
+    AddSpaceNetworkRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        size:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+      required:
+      - "name"
+      - "description"
