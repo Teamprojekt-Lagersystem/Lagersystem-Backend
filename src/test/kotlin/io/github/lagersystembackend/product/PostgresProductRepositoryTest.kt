@@ -5,6 +5,9 @@ import io.github.lagersystembackend.space.Space
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
 import io.github.lagersystembackend.space.toSpace
+import io.github.lagersystembackend.storage.StorageEntity
+import io.github.lagersystembackend.storage.StorageToStorages
+import io.github.lagersystembackend.storage.Storages
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.*
@@ -18,17 +21,25 @@ import kotlin.test.Test
 class PostgresProductRepositoryTest {
     val sut = PostgresProductRepository()
     val spaceId = UUID.randomUUID()
+    val storageId = UUID.randomUUID()
     lateinit var exampleSpace: Space
+    lateinit var exampleStorageEntity: StorageEntity
 
     @BeforeTest
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Products, Spaces)
+            SchemaUtils.create(Products, Spaces, Storages, StorageToStorages)
             transaction {
+                exampleStorageEntity = StorageEntity.new(id = storageId) {
+                    name = "storage name"
+                    description = "storage description"
+                }
+
                 exampleSpace = SpaceEntity.new(id = spaceId) {
                     name = "space name"
                     description = "space description"
+                    storage = exampleStorageEntity
                 }.toSpace()
             }
         }
@@ -37,7 +48,7 @@ class PostgresProductRepositoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Products, Spaces)
+            SchemaUtils.drop(Products, Spaces, Storages, StorageToStorages)
         }
     }
 
@@ -190,6 +201,7 @@ class PostgresProductRepositoryTest {
             SpaceEntity.new(id = secondSpaceId) {
                 name = "second space name"
                 description = "second space description"
+                storage = exampleStorageEntity
             }.toSpace()
         }
         val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }

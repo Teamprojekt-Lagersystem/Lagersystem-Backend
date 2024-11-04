@@ -47,7 +47,7 @@ object Spaces: UUIDTable() {
     val name = varchar("name", 255)
     val size = float("size").nullable()
     val description = text("description")
-    val storage = reference("storageId", Storages)
+    val storageId = reference("storageId", Storages)
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -57,7 +57,7 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var size by Spaces.size
     var description by Spaces.description
     val products by ProductEntity referrersOn Products.spaceId
-    val storage by StorageEntity referencedOn Spaces.storage
+    var storage by StorageEntity referencedOn Spaces.storageId
 }
 
 fun SpaceEntity.toSpace() = Space(

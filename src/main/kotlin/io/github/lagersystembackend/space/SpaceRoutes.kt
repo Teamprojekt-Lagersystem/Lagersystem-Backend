@@ -44,7 +44,8 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
             val addSpaceNetworkRequest = runCatching { call.receive<AddSpaceNetworkRequest>() }.getOrNull()
             addSpaceNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddSpaceNetworkRequest")
 
-            addSpaceNetworkRequest.run { spaceRepository.createSpace(name, size, description) }
+            // TODO: Check if storage exists
+            addSpaceNetworkRequest.run { spaceRepository.createSpace(name, size, description, storageId) }
 
             call.respond(HttpStatusCode.Created, "Space created") }
     }

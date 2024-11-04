@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.space
 
+import io.github.lagersystembackend.storage.StorageEntity
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
@@ -8,11 +9,14 @@ class PostgresSpaceRepository : SpaceRepository {
         name: String,
         size: Float?,
         description: String,
+        storageId: String
     ): Space = transaction {
+        val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: throw IllegalArgumentException("Storage not found")
         SpaceEntity.new {
             this.name = name
             this.size = size
             this.description = description
+            this.storage = storage
         }.toSpace()
     }
 
