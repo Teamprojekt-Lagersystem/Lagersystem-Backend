@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.product
 
+import io.github.lagersystembackend.common.isUUID
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -16,36 +17,35 @@ fun Route.productRoutes(productRepository: ProductRepository) {
 
         route("/{id}") {
             get {
-                val id = call.parameters["id"]
-                if (id == null) {
-                    call.respondText("Missing parameter 'id'", status = HttpStatusCode.BadRequest)
-                    return@get
-                }
+                val id = call.parameters["id"]!!
+
+                if (!id.isUUID())
+                    return@get call.respondText("Invalid UUID", status = HttpStatusCode.BadRequest)
+
                 val product = productRepository.getProduct(id)
-                if (product == null) {
-                    call.respondText("Product not found", status = HttpStatusCode.NotFound)
-                    return@get
-                }
+                product ?: return@get call.respondText("Product not found", status = HttpStatusCode.NotFound)
+
                 call.respond(product.toNetworkProduct())
             }
 
             delete {
-                val id = call.parameters["id"]
-                if (id == null) {
-                    call.respondText("Missing parameter 'name'", status = HttpStatusCode.BadRequest)
-                    return@delete
-                }
-                if (!productRepository.deleteProduct(id)) {
-                    call.respondText("Product not found", status = HttpStatusCode.NotFound)
-                    return@delete
-                }
+                val id = call.parameters["id"]!!
+
+                if (!id.isUUID())
+                    return@delete call.respondText("Invalid UUID", status = HttpStatusCode.BadRequest)
+
+                if (!productRepository.deleteProduct(id))
+                    return@delete call.respondText("Product not found", status = HttpStatusCode.NotFound)
+
                 call.respondText("Product deleted")
             }
         }
         post {
-            call.receive<AddProductNetworkRequest>().run {
-                productRepository.createProduct(name, price, description, spaceId)
-            }
+            val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()
+            addProductNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddProductNetworkRequest")
+
+            addProductNetworkRequest.run { productRepository.createProduct(name, price, description, spaceId) }
+
             call.respond(HttpStatusCode.Created, "Product created") }
     }
 }

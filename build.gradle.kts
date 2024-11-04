@@ -48,4 +48,5 @@ dependencies {
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("io.kotest:kotest-assertions-core:$kotest_version")
     testImplementation("io.kotest.extensions:kotest-assertions-ktor:${kotest_assertions_ktor_version}")
+    testImplementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
 }
