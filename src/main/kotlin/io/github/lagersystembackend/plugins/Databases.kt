@@ -6,9 +6,10 @@ import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Application.configureDatabases() {
+fun configureDatabases(isTest: Boolean = false) {
+    val port = if (isTest) "5434" else "5432"
     Database.connect(
-        url = "jdbc:postgresql://localhost:5432/postgres",
+        url = "jdbc:postgresql://localhost:${port}/postgres",
         driver = "org.postgresql.Driver",
         user = "postgres",
         password = "postgres"
