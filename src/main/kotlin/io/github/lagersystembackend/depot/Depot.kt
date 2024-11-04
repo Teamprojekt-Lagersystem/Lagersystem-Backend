@@ -10,6 +10,7 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.*
 import java.util.UUID
 
 data class Depot(
@@ -48,11 +49,13 @@ class DepotEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 fun DepotEntity.toDepot(): Depot {
     return Depot(
-        id.value.toString(),
-        name,
-        description,
-        transaction {
-            Storages.select { Storages.depotId eq id }
+        id = id.value.toString(),
+        name = name,
+        description = description,
+        storages = transaction {
+            val uuid = UUID.fromString(id)
+            val depotId = EntityID(uuid, Depots)
+            Storages.selectAll().where { Storages.depotId eq depotId }
                 .map { it.toStorage() }
         }.toMutableList()
     )
