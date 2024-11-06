@@ -1,5 +1,8 @@
 package io.github.lagersystembackend.storage
 
+import io.github.lagersystembackend.product.ProductEntity
+import io.github.lagersystembackend.product.Products
+import io.github.lagersystembackend.space.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -12,6 +15,7 @@ data class Storage(
     val id: String,
     val name: String,
     val description: String,
+    val spaces: List<Space>,
     val parentId: String?,
     val subStorages: List<Storage>
 )
@@ -21,6 +25,7 @@ data class NetworkStorage(
     val id: String,
     val name: String,
     val description: String,
+    val spaces: List<NetworkSpace>,
     val subStorages: List<NetworkStorage>
 )
 
@@ -28,6 +33,7 @@ data class NetworkStorage(
 data class AddStorageNetworkRequest(
     val name: String,
     val description: String,
+    val parentId: String?
 )
 
 object Storages: UUIDTable() {
@@ -45,6 +51,7 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var name by Storages.name
     var description by Storages.description
+    val spaces by SpaceEntity referrersOn Spaces.storageId
     var parents by StorageEntity.via(StorageToStorages.child, StorageToStorages.parent)
     var subStorages by StorageEntity.via(StorageToStorages.parent, StorageToStorages.child)
 }
@@ -54,7 +61,29 @@ fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
         id = id.value.toString(),
         name = name,
         description = description,
+        spaces = spaces.map { it.toSpace() },
         parentId = parents.firstOrNull()?.id.toString(),
         subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
+    )
+}
+
+fun NetworkStorage.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
+    return Storage(
+        id = id,
+        name = name,
+        description = description,
+        spaces = spaces.map { it.toSpace() },
+        parentId = null,
+        subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
+    )
+}
+
+fun Storage.toNetworkStorage(depth: Int = 0, maxDepth: Int = 3): NetworkStorage {
+    return NetworkStorage(
+        id = id,
+        name = name,
+        description = description,
+        spaces = spaces.map { it.toNetworkSpace() },
+        subStorages = subStorages.map { it.toNetworkStorage(depth + 1, maxDepth) }
     )
 }

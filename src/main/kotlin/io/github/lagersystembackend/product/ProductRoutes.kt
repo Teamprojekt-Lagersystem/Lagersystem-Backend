@@ -46,7 +46,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
 
             // TODO: Check if space exists
             addProductNetworkRequest.run { productRepository.createProduct(name, price, description, spaceId) }
-
+            //TODO: should return productid
             call.respond(HttpStatusCode.Created, "Product created") }
     }
 }
