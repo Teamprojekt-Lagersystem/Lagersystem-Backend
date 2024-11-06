@@ -1,14 +1,16 @@
 package io.github.lagersystembackend.storage
 
-import io.github.lagersystembackend.product.ProductEntity
-import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import java.util.UUID
 
 data class Storage(
@@ -43,7 +45,7 @@ object Storages: UUIDTable() {
 
 object StorageToStorages: Table() {
     val parent = reference("parent_storage_id", Storages)
-    val child = reference("child_storage_id", Storages)
+    val child = reference("child_storage_id", Storages).uniqueIndex()
 }
 
 class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -52,8 +54,21 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Storages.name
     var description by Storages.description
     val spaces by SpaceEntity referrersOn Spaces.storageId
-    var parents by StorageEntity.via(StorageToStorages.child, StorageToStorages.parent)
     var subStorages by StorageEntity.via(StorageToStorages.parent, StorageToStorages.child)
+    var parent: StorageEntity?
+        get() = StorageToStorages
+            .selectAll().where { StorageToStorages.child eq  id }
+            .firstOrNull()
+            ?.let { findById(it[StorageToStorages.parent]) }
+        set(value) {
+            StorageToStorages.deleteWhere { child eq id }
+            if (value != null) {
+                StorageToStorages.insert {
+                    it[parent] = value.id
+                    it[child] = id
+                }
+            }
+        }
 }
 
 fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
@@ -62,7 +77,7 @@ fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
         name = name,
         description = description,
         spaces = spaces.map { it.toSpace() },
-        parentId = parents.firstOrNull()?.id.toString(),
+        parentId = parent?.id.toString(),
         subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
     )
 }

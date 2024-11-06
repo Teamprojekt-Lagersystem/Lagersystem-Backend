@@ -30,18 +30,16 @@ class PostgresProductRepositoryTest {
         configureDatabases(isTest = true)
         transaction {
             SchemaUtils.create(Products, Spaces, Storages, StorageToStorages)
-            transaction {
-                exampleStorageEntity = StorageEntity.new(id = storageId) {
-                    name = "storage name"
-                    description = "storage description"
-                }
-
-                exampleSpace = SpaceEntity.new(id = spaceId) {
-                    name = "space name"
-                    description = "space description"
-                    storage = exampleStorageEntity
-                }.toSpace()
+            exampleStorageEntity = StorageEntity.new(id = storageId) {
+                name = "storage name"
+                description = "storage description"
             }
+
+            exampleSpace = SpaceEntity.new(id = spaceId) {
+                name = "space name"
+                description = "space description"
+                storage = exampleStorageEntity
+            }.toSpace()
         }
     }
 
