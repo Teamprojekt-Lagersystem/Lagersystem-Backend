@@ -35,7 +35,7 @@ data class NetworkStorage(
 data class AddStorageNetworkRequest(
     val name: String,
     val description: String,
-    val parentId: String?
+    val parentId: String? = null
 )
 
 object Storages: UUIDTable() {

@@ -42,13 +42,14 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 "Body should be Serialized AddStorageNetworkRequest"
             )
 
-            //TODO: check parentid
+            addStorageNetworkRequest.run {
+                var parentId = storageRepository.getStorage(parentId)?.id
+                if (parentId == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Parent storage not found")
+                }
+                storageRepository.createStorage(name, description, parentId) }
 
-            //TODO: Bug when parentId is null
-            var id: Storage? = null;
-            addStorageNetworkRequest.run { id = storageRepository.createStorage(name, description, parentId) }
-            //TODO: should return storagedid
-            call.respond(HttpStatusCode.Created, "Storage created with id: ${id?.id}")
+            call.respond(HttpStatusCode.Created, "Storage created")
         }
 
     }
