@@ -24,6 +24,10 @@ class PostgresSpaceRepository : SpaceRepository {
         SpaceEntity.findById(UUID.fromString(id))?.toSpace()
     }
 
+    override fun storageExists(storageId: String): Boolean = transaction {
+        StorageEntity.findById(UUID.fromString(storageId)) != null
+    }
+
     override fun getSpaces(): List<Space> = transaction {
         SpaceEntity.all().toList().map { it.toSpace() }
     }

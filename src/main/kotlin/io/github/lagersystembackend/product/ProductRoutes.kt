@@ -45,7 +45,12 @@ fun Route.productRoutes(productRepository: ProductRepository) {
             addProductNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddProductNetworkRequest")
 
             // TODO: Check if space exists
-            val createdProduct = addProductNetworkRequest.run { productRepository.createProduct(name, price, description, spaceId) }
+            val createdProduct = addProductNetworkRequest.run {
+                if (!productRepository.spaceExists(spaceId)) {
+                    call.respond(HttpStatusCode.BadRequest, "Specified space not found")
+                    return@post
+                }
+                productRepository.createProduct(name, price, description, spaceId) }
 
             call.respond(HttpStatusCode.Created, "Product created: ${createdProduct.id} ") }
     }
