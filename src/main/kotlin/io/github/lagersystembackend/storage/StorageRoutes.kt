@@ -5,7 +5,6 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.text.get
 
 fun Route.storageRoutes(storageRepository: StorageRepository) {
     route("/storages") {
@@ -46,9 +45,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
             //TODO: check parentid
 
             //TODO: Bug when parentId is null
-            addStorageNetworkRequest.run { storageRepository.createStorage(name, description, parentId) }
+            var id: Storage? = null;
+            addStorageNetworkRequest.run { id = storageRepository.createStorage(name, description, parentId) }
             //TODO: should return storagedid
-            call.respond(HttpStatusCode.Created, "Storage created")
+            call.respond(HttpStatusCode.Created, "Storage created with id: ${id?.id}")
         }
 
     }

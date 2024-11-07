@@ -62,14 +62,14 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun addSubStorage(
-        id: String,
+        parentId: String,
         subStorageId: String
     ): Storage = transaction {
-        val storage = StorageEntity.findById(UUID.fromString(id)) ?:  throw IllegalArgumentException("Storage not found")
+        val parent = StorageEntity.findById(UUID.fromString(parentId)) ?:  throw IllegalArgumentException("Storage not found")
         val subStorage = StorageEntity.findById(UUID.fromString(subStorageId)) ?:  throw IllegalArgumentException("Storage not found")
-        storage.subStorages = SizedCollection(storage.subStorages + subStorage)
-        subStorage.parent = storage
-        storage.toStorage()
+        parent.subStorages = SizedCollection(parent.subStorages + subStorage)
+        subStorage.parent = parent
+        parent.toStorage()
     }
 
     override fun deleteStorage(id: String): Boolean = transaction {
