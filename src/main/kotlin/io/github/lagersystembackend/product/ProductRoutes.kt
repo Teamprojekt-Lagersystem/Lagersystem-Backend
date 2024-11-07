@@ -45,8 +45,8 @@ fun Route.productRoutes(productRepository: ProductRepository) {
             addProductNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddProductNetworkRequest")
 
             // TODO: Check if space exists
-            addProductNetworkRequest.run { productRepository.createProduct(name, price, description, spaceId) }
-            //TODO: should return productid
-            call.respond(HttpStatusCode.Created, "Product created") }
+            val createdProduct = addProductNetworkRequest.run { productRepository.createProduct(name, price, description, spaceId) }
+
+            call.respond(HttpStatusCode.Created, "Product created: ${createdProduct.id} ") }
     }
 }
