@@ -68,6 +68,7 @@ class PostgresStorageRepository: StorageRepository {
         val storage = StorageEntity.findById(UUID.fromString(id)) ?:  throw IllegalArgumentException("Storage not found")
         val subStorage = StorageEntity.findById(UUID.fromString(subStorageId)) ?:  throw IllegalArgumentException("Storage not found")
         storage.subStorages = SizedCollection(storage.subStorages + subStorage)
+        subStorage.parent = storage
         storage.toStorage()
     }
 
