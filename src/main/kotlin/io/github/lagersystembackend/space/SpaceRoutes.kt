@@ -45,9 +45,12 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
             addSpaceNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddSpaceNetworkRequest")
 
             val createdSpace  = addSpaceNetworkRequest.run {
+                if (!storageId.isUUID()) {
+                    return@post call.respond(HttpStatusCode.BadRequest, "Invalid UUID")
+                }
+
                 if (!spaceRepository.storageExists(storageId)) {
-                    call.respond(HttpStatusCode.BadRequest, "Specified storage not found")
-                    return@post
+                    return@post call.respond(HttpStatusCode.BadRequest, "Specified storage not found")
                 }
             spaceRepository.createSpace(name, size, description, storageId)
         }

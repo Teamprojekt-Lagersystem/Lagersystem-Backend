@@ -45,9 +45,12 @@ fun Route.productRoutes(productRepository: ProductRepository) {
             addProductNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddProductNetworkRequest")
 
             val createdProduct = addProductNetworkRequest.run {
+                if (!spaceId.isUUID()) {
+                    return@post call.respond(HttpStatusCode.BadRequest, "Invalid UUID")
+                }
+
                 if (!productRepository.spaceExists(spaceId)) {
-                    call.respond(HttpStatusCode.BadRequest, "Specified space not found")
-                    return@post
+                    return@post call.respond(HttpStatusCode.BadRequest, "Specified space not found")
                 }
                 productRepository.createProduct(name, price, description, spaceId) }
 

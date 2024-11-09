@@ -45,6 +45,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
             val createdStorage = addStorageNetworkRequest.run {
 
                 val resolvedParentId = parentId?.let {
+                    if (!parentId.isUUID()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, "Invalid UUID")
+                    }
+
                     storageRepository.getStorage(it)?.id ?: return@post call.respond(
                         HttpStatusCode.BadRequest,
                         "Parent storage with ID $it not found"
