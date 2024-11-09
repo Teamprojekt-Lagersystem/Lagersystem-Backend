@@ -47,8 +47,8 @@ class PostgresProductRepository : ProductRepository {
         }?.toProduct()
     }
 
-    override fun deleteProduct(id: String): Boolean = transaction {
-        ProductEntity.findById(UUID.fromString(id)).also { it?.delete() } != null
+    override fun deleteProduct(id: String): Product? = transaction {
+        ProductEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toProduct()
     }
 
 }
