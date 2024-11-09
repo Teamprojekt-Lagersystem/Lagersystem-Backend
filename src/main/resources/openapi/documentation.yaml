@@ -38,6 +38,15 @@ paths:
               $ref: "#/components/schemas/AddProductNetworkRequest"
         required: true
       responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Body should be Serialized AddProductNetworkRequest"
         "201":
           description: "Created"
           content:
@@ -65,7 +74,7 @@ paths:
                 type: "string"
               examples:
                 Example#1:
-                  value: "Missing parameter 'name'"
+                  value: "Invalid UUID"
         "404":
           description: "Not Found"
           content:
@@ -101,7 +110,7 @@ paths:
                 type: "string"
               examples:
                 Example#1:
-                  value: "Missing parameter 'id'"
+                  value: "Invalid UUID"
         "404":
           description: "Not Found"
           content:
@@ -138,6 +147,15 @@ paths:
               $ref: "#/components/schemas/AddSpaceNetworkRequest"
         required: true
       responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Body should be Serialized AddSpaceNetworkRequest"
         "201":
           description: "Created"
           content:
@@ -165,7 +183,7 @@ paths:
                 type: "string"
               examples:
                 Example#1:
-                  value: "Missing parameter 'name'"
+                  value: "Invalid UUID"
         "404":
           description: "Not Found"
           content:
@@ -201,7 +219,7 @@ paths:
                 type: "string"
               examples:
                 Example#1:
-                  value: "Missing parameter 'id'"
+                  value: "Invalid UUID"
         "404":
           description: "Not Found"
           content:
@@ -231,12 +249,15 @@ components:
           format: "float"
         description:
           type: "string"
+        attributes:
+          type: "string"
         spaceId:
           type: "string"
       required:
       - "id"
       - "name"
       - "description"
+      - "attributes"
       - "spaceId"
     AddProductNetworkRequest:
       type: "object"

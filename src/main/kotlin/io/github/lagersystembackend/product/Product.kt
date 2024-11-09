@@ -3,10 +3,13 @@ package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.json.jsonb
 import java.util.UUID
 
 
@@ -15,6 +18,7 @@ data class Product(
     val name: String,
     val price: Float?,
     val description: String,
+    val attributes: Map<String, ProductAttribute>,
     val spaceId: String
 )
 
@@ -24,6 +28,7 @@ data class NetworkProduct(
     val name: String,
     val price: Float?,
     val description: String,
+    val attributes: Map<String, ProductAttribute>,
     val spaceId: String
 )
 
@@ -40,6 +45,7 @@ object Products: UUIDTable() {
     val name = varchar("name", 255)
     val price = float("price").nullable()
     val description = text("description")
+    val attributes = jsonb<Map<String, ProductAttribute>>("attributes", serialize = { Json.encodeToString(it) }, deserialize = { Json.decodeFromString(it) }).default(emptyMap())
     val space = reference("space", Spaces)
 }
 
@@ -49,6 +55,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Products.name
     var price by Products.price
     var description by Products.description
+    val attributes by Products.attributes
     var space by SpaceEntity referencedOn  Products.space
 }
 
@@ -57,6 +64,7 @@ fun ProductEntity.toProduct() = Product(
     name,
     price,
     description,
+    attributes,
     space.id.value.toString()
 )
 
@@ -65,5 +73,6 @@ fun Product.toNetworkProduct() = NetworkProduct(
     name,
     price,
     description,
+    attributes,
     spaceId
 )
