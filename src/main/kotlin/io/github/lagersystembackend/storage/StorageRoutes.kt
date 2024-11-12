@@ -34,7 +34,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 if (!storageRepository.deleteStorage(id))
                     return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
                 // ToDo: Error 406 bei Versuch folgendes Response abzuschicken
-                call.respond(ApiResponse.Success<NetworkStorage>("Storage deleted: ${id}"))
+                call.respond(ApiResponse.Success<Nothing>("Storage deleted: ${id}"))
             }
         }
         post {

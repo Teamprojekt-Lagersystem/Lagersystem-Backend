@@ -1,6 +1,5 @@
 package io.github.lagersystembackend.storage
 
-import io.github.lagersystembackend.space.SpaceEntity
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -77,6 +76,6 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun deleteStorage(id: String): Boolean = transaction {
-        SpaceEntity.findById(UUID.fromString(id)).also { it?.delete() } != null
+        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() } != null
     }
 }

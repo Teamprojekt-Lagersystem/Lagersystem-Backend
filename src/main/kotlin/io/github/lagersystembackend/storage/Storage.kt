@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteWhere
@@ -44,8 +45,8 @@ object Storages: UUIDTable() {
 }
 
 object StorageToStorages: Table() {
-    val parent = reference("parent_storage_id", Storages)
-    val child = reference("child_storage_id", Storages).uniqueIndex()
+    val parent = reference("parent_storage_id", Storages, onDelete = ReferenceOption.CASCADE)
+    val child = reference("child_storage_id", Storages, onDelete = ReferenceOption.CASCADE).uniqueIndex()
 }
 
 class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -54,6 +55,7 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Storages.name
     var description by Storages.description
     val spaces by SpaceEntity referrersOn Spaces.storageId
+    //TODO: Do substorages get deleted when parent gets deleted?
     var subStorages by StorageEntity.via(StorageToStorages.parent, StorageToStorages.child)
     var parent: StorageEntity?
         get() = StorageToStorages
