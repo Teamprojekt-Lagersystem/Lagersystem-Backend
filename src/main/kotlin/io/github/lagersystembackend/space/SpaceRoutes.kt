@@ -35,10 +35,10 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
                 if (!id.isUUID())
                     return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
 
-                if (!spaceRepository.deleteSpace(id))
-                    return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Space not found"))
-                // ToDo: Error 406 bei Versuch folgendes Response abzuschicken
-                call.respond(ApiResponse.Success<NetworkSpace>("Space deleted: ${id}"))
+                val deletedSpace = spaceRepository.deleteSpace(id)
+                deletedSpace ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Space not found"))
+
+                call.respond(ApiResponse.Success("Space deleted: ${id}", deletedSpace.toNetworkSpace()))
             }
         }
         post {

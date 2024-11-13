@@ -45,7 +45,7 @@ class PostgresSpaceRepository : SpaceRepository {
         }?.toSpace()
     }
 
-    override fun deleteSpace(id: String): Boolean = transaction {
-        SpaceEntity.findById(UUID.fromString(id)).also { it?.delete() } != null
+    override fun deleteSpace(id: String): Space? = transaction {
+        SpaceEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toSpace()
     }
 }

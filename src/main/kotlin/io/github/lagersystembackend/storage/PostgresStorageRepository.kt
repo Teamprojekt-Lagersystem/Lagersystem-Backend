@@ -75,7 +75,7 @@ class PostgresStorageRepository: StorageRepository {
         parent.toStorage()
     }
 
-    override fun deleteStorage(id: String): Boolean = transaction {
-        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() } != null
+    override fun deleteStorage(id: String): Storage? = transaction {
+        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toStorage()
     }
 }

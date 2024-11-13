@@ -6,6 +6,6 @@ interface StorageRepository {
     fun getStorages(): List<Storage>
     fun updateStorage(id: String, name: String?, description: String?, parentId: String?, subStorages: List<Storage>?): Storage?
     fun addSubStorage(parentId: String, subStorageId: String): Storage
-    fun deleteStorage(id: String): Boolean
+    fun deleteStorage(id: String): Storage?
     fun storageExists(id: String): Boolean
 }

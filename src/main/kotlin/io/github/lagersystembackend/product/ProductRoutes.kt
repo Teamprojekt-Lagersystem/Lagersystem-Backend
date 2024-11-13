@@ -40,7 +40,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
 
                 val deletedProduct = productRepository.deleteProduct(id)
                 deletedProduct ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Product not found"))
-                // ToDo: Error 406 bei Versuch folgendes Response abzuschicken
+
                 call.respond(ApiResponse.Success("Deleted product: ${id}", deletedProduct.toNetworkProduct()))
             }
         }
