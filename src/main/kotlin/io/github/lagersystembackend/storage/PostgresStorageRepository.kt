@@ -25,16 +25,25 @@ class PostgresStorageRepository: StorageRepository {
         newStorage.toStorage()
     }
 
-    override fun getStorage(id: String?): Storage? = transaction {
-        StorageEntity.findById(UUID.fromString(id))?.toStorage()
+    override fun getStorage(id: String?, depth: Int?): Storage? = transaction {
+        println("id: $id and depth: $depth")
+        if (depth == null) {
+            StorageEntity.findById(UUID.fromString(id))?.toStorage()
+        } else {
+            StorageEntity.findById(UUID.fromString(id))?.toStorage(0, depth)
+        }
     }
 
     override fun storageExists(id: String): Boolean = transaction {
         StorageEntity.findById(UUID.fromString(id)) != null
     }
 
-    override fun getStorages(): List<Storage> = transaction {
-        StorageEntity.all().toList().map { it.toStorage() }
+    override fun getStorages(depth: Int?): List<Storage> = transaction {
+        if (depth == null) {
+            StorageEntity.all().toList().map { it.toStorage() }
+        } else {
+            StorageEntity.all().toList().map { it.toStorage(0, depth) }
+        }
     }
 
     //TODO: update storage rework substrage and parent id function

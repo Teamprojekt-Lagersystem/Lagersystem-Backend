@@ -80,7 +80,11 @@ fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
         description = description,
         spaces = spaces.map { it.toSpace() },
         parentId = parent?.id.toString(),
-        subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
+        subStorages = if (depth < maxDepth) {
+            subStorages.map { it.toStorage(depth + 1, maxDepth) }
+        } else {
+            emptyList()
+        }
     )
 }
 
@@ -91,7 +95,11 @@ fun NetworkStorage.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
         description = description,
         spaces = spaces.map { it.toSpace() },
         parentId = null,
-        subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
+        subStorages = if (depth < maxDepth) {
+            subStorages.map { it.toStorage(depth + 1, maxDepth) }
+        } else {
+            emptyList()
+        }
     )
 }
 
@@ -101,6 +109,10 @@ fun Storage.toNetworkStorage(depth: Int = 0, maxDepth: Int = 3): NetworkStorage 
         name = name,
         description = description,
         spaces = spaces.map { it.toNetworkSpace() },
-        subStorages = subStorages.map { it.toNetworkStorage(depth + 1, maxDepth) }
+        subStorages = if (depth < maxDepth) {
+            subStorages.map { it.toNetworkStorage(depth + 1, maxDepth) }
+        } else {
+            emptyList()
+        }
     )
 }
