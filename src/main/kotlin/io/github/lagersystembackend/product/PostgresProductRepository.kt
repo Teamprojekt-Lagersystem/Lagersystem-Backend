@@ -8,14 +8,12 @@ class PostgresProductRepository : ProductRepository {
 
     override fun createProduct(
         name: String,
-        price: Float?,
         description: String,
         spaceId: String
     ): Product = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: return@transaction throw IllegalArgumentException("Space not found")
         ProductEntity.new {
             this.name = name
-            this.price = price
             this.description = description
             this.space = space
         }.toProduct()
@@ -32,13 +30,11 @@ class PostgresProductRepository : ProductRepository {
     override fun updateProduct(
         id: String,
         name: String?,
-        price: Float?,
         description: String?,
         spaceId: String?
     ): Product? = transaction {
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             name?.let { product.name = it }
-            price?.let { product.price = it }
             description?.let { product.description = it }
             spaceId?.let { product.space = SpaceEntity.findById(UUID.fromString(it)) ?: throw IllegalArgumentException("Space not found") }
         }?.toProduct()
