@@ -25,11 +25,13 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 )
             } else if (depthParam == null ) {
                 return@get call.respond(
-                    ApiResponse.Success("Listing every storage", storageRepository.getStorages(null).map { it.toNetworkStorage() }))
+                    ApiResponse.Success("Listing every storage", storageRepository.getStorages(null).filter { it.parentId == "null" }.map { it.toNetworkStorage() }))
             }
 
-            return@get call.respond(
-                ApiResponse.Success("Listing every storage", storageRepository.getStorages(depth).map { it.toNetworkStorage() }))
+            if (depth != null)
+                return@get call.respond(
+                ApiResponse.Success("Listing every storage", storageRepository.getStorages(depth).filter { it.parentId == "null" }.map {
+                        it.toNetworkStorage(0, depth) }))
         }
 
 
@@ -64,7 +66,8 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 val storage = storageRepository.getStorage(id, depth)
                 storage ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
 
-                call.respond(ApiResponse.Success("Storage found: ${id}", storage.toNetworkStorage()))
+                if (depth != null)
+                    call.respond(ApiResponse.Success("Storage found: ${id}", storage.toNetworkStorage(0, depth)))
             }
 
             delete {
