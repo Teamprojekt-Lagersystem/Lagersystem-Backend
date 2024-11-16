@@ -4,8 +4,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class Attribute {
+    @Serializable
     data class StringAttribute(val value: String): Attribute()
+    @Serializable
     data class NumberAttribute(val value: Float): Attribute()
+    @Serializable
     data class BooleanAttribute(val value: Boolean): Attribute()
 
     fun type() = when (this) {

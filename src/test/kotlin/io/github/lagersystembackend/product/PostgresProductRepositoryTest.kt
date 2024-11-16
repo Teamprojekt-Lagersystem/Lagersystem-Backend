@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.product
 
 import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.space.Space
 import io.github.lagersystembackend.space.SpaceEntity
@@ -25,7 +26,7 @@ class PostgresProductRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Products, Spaces)
+            SchemaUtils.create(ProductAttributes, Products, Spaces)
             transaction {
                 exampleSpace = SpaceEntity.new(id = spaceId) {
                     name = "space name"
@@ -38,7 +39,7 @@ class PostgresProductRepositoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Products, Spaces)
+            SchemaUtils.drop(ProductAttributes, Products, Spaces)
         }
     }
 

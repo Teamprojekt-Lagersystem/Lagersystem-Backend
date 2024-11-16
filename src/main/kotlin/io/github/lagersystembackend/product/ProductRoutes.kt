@@ -44,7 +44,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
             val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()
             addProductNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest, "Body should be Serialized AddProductNetworkRequest")
 
-            addProductNetworkRequest.run { productRepository.createProduct(name, price, description, spaceId) }
+            addProductNetworkRequest.run { productRepository.createProduct(name, description, spaceId) }
 
             call.respond(HttpStatusCode.Created, "Product created") }
     }

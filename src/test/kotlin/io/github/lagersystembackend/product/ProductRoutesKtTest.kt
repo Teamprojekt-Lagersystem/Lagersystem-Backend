@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.product
 
+import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.kotest.matchers.shouldBe
@@ -39,8 +40,8 @@ class ProductRoutesKtTest {
     fun `get Products should respond with List of NetworkProducts`() = testApplication {
         createEnvironment()
         val products = listOf(
-            Product(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", UUID.randomUUID().toString()),
-            Product(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", UUID.randomUUID().toString())
+            Product(UUID.randomUUID().toString(), "Space 1",  "Description 1",  emptyMap(), UUID.randomUUID().toString()),
+            Product(UUID.randomUUID().toString(), "Space 2", "Description 2", mapOf("someKey" to Attribute.NumberAttribute(123f)), UUID.randomUUID().toString())
         )
         every { mockSpaceRepository.getProducts() } returns products
         client.get("/products").apply {
@@ -63,7 +64,7 @@ class ProductRoutesKtTest {
     @Test
     fun `get Product by ID should respond with NetworkProduct`() = testApplication {
         createEnvironment()
-        val product1 = Product(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", UUID.randomUUID().toString())
+        val product1 = Product(UUID.randomUUID().toString(), "Space 1", "Description 1", emptyMap(), UUID.randomUUID().toString())
         every { mockSpaceRepository.getProduct(product1.id) } returns product1
         client.get("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -133,10 +134,10 @@ class ProductRoutesKtTest {
             }
         }
         val id = UUID.randomUUID().toString()
-        val addProductNetworkRequest = AddProductNetworkRequest("Product 1", 100f, "Description 1", UUID.randomUUID().toString())
+        val addProductNetworkRequest = AddProductNetworkRequest("Product 1", "Description 1", UUID.randomUUID().toString())
         addProductNetworkRequest.run {
-            val product = Product(id, name, price, description, spaceId)
-            every { mockSpaceRepository.createProduct(name, price, description, spaceId) } returns product
+            val product = Product(id, name, description, emptyMap(), spaceId)
+            every { mockSpaceRepository.createProduct(name, description, spaceId) } returns product
         }
 
         client.post("/products") {
@@ -157,10 +158,10 @@ class ProductRoutesKtTest {
             }
         }
         val id = UUID.randomUUID().toString()
-        val addProductNetworkRequest = AddProductNetworkRequest("Space 1", null, "Description 1", UUID.randomUUID().toString())
+        val addProductNetworkRequest = AddProductNetworkRequest("Space 1", "Description 1", UUID.randomUUID().toString())
         addProductNetworkRequest.run {
-            val product = Product(id, name, price, description, spaceId)
-            every { mockSpaceRepository.createProduct(name, price, description, spaceId) } returns product
+            val product = Product(id, name, description, emptyMap(), spaceId)
+            every { mockSpaceRepository.createProduct(name, description, spaceId) } returns product
         }
 
         client.post("/products") {

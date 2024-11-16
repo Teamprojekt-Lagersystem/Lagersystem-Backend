@@ -51,14 +51,14 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Products.name
     var description by Products.description
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
-    var space by SpaceEntity referencedOn  Products.space
+    var space by SpaceEntity referencedOn Products.space
 }
 
 fun ProductEntity.toProduct() = Product(
     id.value.toString(),
     name,
     description,
-    attributes.map { it.key to it.toAttribute() }.toMap(),
+    attributes.associate { it.key to it.toAttribute() },
     space.id.value.toString()
 )
 
