@@ -21,8 +21,9 @@ class PostgresStorageRepository: StorageRepository {
         newStorage.toStorage()
     }
 
-    override fun getStorage(id: String?): Storage? = transaction {
+    override fun getStorage(id: String): Storage? = transaction {
         StorageEntity.findById(UUID.fromString(id))?.toStorage()
+
     }
 
     override fun storageExists(id: String): Boolean = transaction {
@@ -72,6 +73,10 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun deleteStorage(id: String): Storage? = transaction {
-        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toStorage()
+        val storageEntity = StorageEntity.findById(UUID.fromString(id))
+
+        storageEntity?.delete()
+
+        storageEntity?.toStorage()
     }
 }

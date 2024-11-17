@@ -9,8 +9,32 @@ import io.ktor.server.routing.*
 
 fun Route.storageRoutes(storageRepository: StorageRepository) {
     route("/storages") {
-        get { call.respond(
-            ApiResponse.Success("Listing every storage", storageRepository.getStorages().filter { it.parentId == null }.map { it.toNetworkStorage() })) }
+        get {
+            val depthParam = call.request.queryParameters["depth"]
+            val depth = depthParam?.toIntOrNull()
+
+            if (depthParam == null)
+                return@get call.respond(
+                    ApiResponse.Success(
+                        "Listing every storage",
+                        storageRepository.getStorages().filter { it.parentId == null }
+                            .map { it.toNetworkStorage() })
+                )
+
+            if (depth == null || depth < 0)
+                return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    ApiResponse.Error("Invalid 'depth' parameter '$depthParam'. It must be a positive integer.")
+                )
+
+            call.respond(
+                ApiResponse.Success(
+                    "Listing every storage",
+                    storageRepository.getStorages().filter { it.parentId == null }.map {
+                        it.toNetworkStorage(maxDepth = depth)
+                    })
+            )
+        }
 
         route("/{id}") {
             get {
@@ -22,7 +46,24 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 val storage = storageRepository.getStorage(id)
                 storage ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
 
-                call.respond(ApiResponse.Success("Storage found: ${id}", storage.toNetworkStorage()))
+                val depthParam = call.request.queryParameters["depth"]
+                val depth = depthParam?.toIntOrNull()
+
+                if (depthParam == null)
+                    return@get call.respond(
+                        ApiResponse.Success(
+                            "Storage found: $id",
+                            storage.toNetworkStorage()
+                        )
+                    )
+
+                if (depth == null || depth < 0)
+                    return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse.Error("Invalid 'depth' parameter '$depthParam'. It must be a positive integer.")
+                    )
+
+                call.respond(ApiResponse.Success("Storage found: $id", storage.toNetworkStorage(maxDepth = depth)))
             }
 
             delete {
@@ -32,7 +73,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
 
                 val deletedStorage = storageRepository.deleteStorage(id)
-                deletedStorage ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
+                deletedStorage ?: return@delete call.respond(
+                    HttpStatusCode.NotFound,
+                    ApiResponse.Error("Storage not found")
+                )
 
                 call.respond(ApiResponse.Success("Storage deleted: ${id}", deletedStorage.toNetworkStorage()))
             }
@@ -56,11 +100,13 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                         ApiResponse.Error("Parent storage with ID $it not found")
                     )
                 }
-                storageRepository.createStorage(name, description, resolvedParentId) }
+                storageRepository.createStorage(name, description, resolvedParentId)
+            }
 
-            call.respond(HttpStatusCode.Created,
-                ApiResponse.Success("Storage created: ${createdStorage.id}", createdStorage.toNetworkStorage()))
+            call.respond(
+                HttpStatusCode.Created,
+                ApiResponse.Success("Storage created: ${createdStorage.id}", createdStorage.toNetworkStorage())
+            )
         }
-
     }
 }
