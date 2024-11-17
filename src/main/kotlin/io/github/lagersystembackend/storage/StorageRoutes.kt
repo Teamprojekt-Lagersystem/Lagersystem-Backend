@@ -25,7 +25,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 )
             } else if (depthParam == null ) {
                 return@get call.respond(
-                    ApiResponse.Success("Listing every storage", storageRepository.getStorages(null).filter { it.parentId == "null" }.map { it.toNetworkStorage() }))
+                    ApiResponse.Success("Listing every storage", storageRepository.getStorages(null).filter { it.parentId == "null" }.filter { it.parentId == "null" }.map { it.toNetworkStorage() }))
             }
 
             if (depth != null)
@@ -33,7 +33,6 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 ApiResponse.Success("Listing every storage", storageRepository.getStorages(depth).filter { it.parentId == "null" }.map {
                         it.toNetworkStorage(0, depth) }))
         }
-
 
 
         route("/{id}") {
