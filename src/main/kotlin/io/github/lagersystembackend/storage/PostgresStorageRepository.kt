@@ -2,7 +2,6 @@ package io.github.lagersystembackend.storage
 
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
-import io.github.lagersystembackend.space.PostgresSpaceRepository
 
 import java.util.UUID
 
