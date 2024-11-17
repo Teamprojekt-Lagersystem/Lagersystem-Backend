@@ -76,6 +76,10 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun deleteStorage(id: String): Storage? = transaction {
-        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toStorage()
+        val storageEntity = StorageEntity.findById(UUID.fromString(id))
+
+        storageEntity?.delete()
+
+        storageEntity?.toStorage()
     }
 }
