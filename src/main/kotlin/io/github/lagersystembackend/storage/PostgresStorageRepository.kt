@@ -25,8 +25,9 @@ class PostgresStorageRepository: StorageRepository {
         newStorage.toStorage()
     }
 
-    override fun getStorage(id: String?): Storage? = transaction {
+    override fun getStorage(id: String): Storage? = transaction {
         StorageEntity.findById(UUID.fromString(id))?.toStorage()
+
     }
 
     override fun storageExists(id: String): Boolean = transaction {

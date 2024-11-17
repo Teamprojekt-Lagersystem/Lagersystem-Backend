@@ -284,6 +284,12 @@ paths:
   /storages:
     get:
       description: ""
+      parameters:
+      - name: "depth"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
       responses:
         "200":
           description: "OK"
@@ -297,6 +303,23 @@ paths:
                   value:
                     message: "Listing every storage"
                     data: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    message: "Listing every storage"
+                    data: "null"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errorMessage: "Invalid 'depth' parameter. It must be a positive\
+                      \ integer."
     post:
       description: ""
       requestBody:
@@ -373,6 +396,11 @@ paths:
         required: true
         schema:
           type: "string"
+      - name: "depth"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -382,6 +410,11 @@ paths:
                 $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
+                  description: ""
+                  value:
+                    errorMessage: "Invalid 'depth' parameter. It must be a positive\
+                      \ integer."
+                Example#2:
                   description: ""
                   value:
                     errorMessage: "Invalid UUID"

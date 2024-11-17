@@ -79,34 +79,42 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 }
 
-fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
+fun StorageEntity.toStorage(): Storage {
     return Storage(
         id = id.value.toString(),
         name = name,
         description = description,
         spaces = spaces.map { it.toSpace() },
         parentId = parent?.id.toString(),
-        subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
+        subStorages = subStorages.map { it.toStorage() }
     )
 }
 
-fun NetworkStorage.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
+fun NetworkStorage.toStorage(): Storage {
     return Storage(
         id = id,
         name = name,
         description = description,
         spaces = spaces.map { it.toSpace() },
         parentId = null,
-        subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
+        subStorages = subStorages.map { it.toStorage() }
     )
 }
 
-fun Storage.toNetworkStorage(depth: Int = 0, maxDepth: Int = 3): NetworkStorage {
+fun Storage.toNetworkStorage(maxDepth: Int? = null) = toNetworkStorage(0, maxDepth)
+
+private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage {
+    val subStorages = when {
+        maxDepth == null -> subStorages.map { it.toNetworkStorage(null) }
+        depth < maxDepth -> subStorages.map { it.toNetworkStorage(depth + 1, maxDepth) }
+        else -> emptyList()
+    }
     return NetworkStorage(
         id = id,
         name = name,
         description = description,
         spaces = spaces.map { it.toNetworkSpace() },
-        subStorages = subStorages.map { it.toNetworkStorage(depth + 1, maxDepth) }
+        subStorages = subStorages
     )
 }
+
