@@ -11,17 +11,13 @@ class PostgresStorageRepository: StorageRepository {
         description: String,
         parentId: String?,
     ): Storage = transaction {
+        val parent = parentId?.let { StorageEntity.findById(UUID.fromString(it)) }
         val newStorage = StorageEntity.new {
             this.name = name
             this.description = description
         }
-
-        parentId
-            ?.let { StorageEntity.findById(UUID.fromString(it)) }
-            ?.run {
-                subStorages = SizedCollection(subStorages + newStorage)
-                newStorage.parent = this
-            }
+        parent?.run { subStorages = SizedCollection(subStorages + newStorage) }
+        newStorage.parent = parent
         newStorage.toStorage()
     }
 
