@@ -76,6 +76,17 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun deleteStorage(id: String): Storage? = transaction {
-        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toStorage()
+        val storageEntity = StorageEntity.findById(UUID.fromString(id))
+
+        storageEntity?.let { deleteWithChildren(it) }
+
+        storageEntity?.toStorage()
+    }
+
+    private fun deleteWithChildren(storage: StorageEntity) {
+        // Recursively delete sub-storages
+        storage.subStorages.forEach { deleteWithChildren(it) }
+        // Delete the storage itself
+        storage.delete()
     }
 }
