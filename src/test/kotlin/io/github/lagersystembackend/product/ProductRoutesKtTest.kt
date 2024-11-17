@@ -95,7 +95,7 @@ class ProductRoutesKtTest {
     fun `delete Product should delete Product`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteProduct(id) } returns true
+        every { mockSpaceRepository.deleteProduct(id) } returns null
         client.delete("/products/$id").apply {
             status shouldBe HttpStatusCode.OK
             bodyAsText() shouldBe "Product deleted"
@@ -117,7 +117,7 @@ class ProductRoutesKtTest {
     fun `delete Product should respond with NotFound when Product not found`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteProduct(id) } returns false
+        every { mockSpaceRepository.deleteProduct(id) } returns null
         client.delete("/products/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             bodyAsText() shouldBe "Product not found"

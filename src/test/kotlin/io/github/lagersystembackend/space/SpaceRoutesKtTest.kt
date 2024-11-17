@@ -94,7 +94,7 @@ class SpaceRoutesKtTest {
     fun `delete Space should delete Space`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteSpace(id) } returns true
+        every { mockSpaceRepository.deleteSpace(id) } returns null
         client.delete("/spaces/$id").apply {
             status shouldBe HttpStatusCode.OK
             bodyAsText() shouldBe "Space deleted"
@@ -116,7 +116,7 @@ class SpaceRoutesKtTest {
     fun `delete Space should respond with NotFound when Space not found`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteSpace(id) } returns false
+        every { mockSpaceRepository.deleteSpace(id) } returns null
         client.delete("/spaces/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             bodyAsText() shouldBe "Space not found"
