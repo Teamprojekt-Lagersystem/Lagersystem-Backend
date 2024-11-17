@@ -1,6 +1,8 @@
 package io.github.lagersystembackend.product
 
 import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.PostgresProductAttributeRepository
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.space.Space
@@ -296,5 +298,20 @@ class PostgresProductRepositoryTest {
             this!!::class shouldBe IllegalArgumentException::class
             this.message shouldBe "Invalid UUID string: $invalidUUID"
         }
+    }
+
+    @Test
+    fun `delete Product should delete all of its attributes`() = testApplication {
+        val product = sut.createProduct("name", "description", spaceId.toString())
+        val productAttributeRepository = PostgresProductAttributeRepository()
+        product.run {
+            productAttributeRepository.createOrUpdateAttribute("someKey", Attribute.NumberAttribute(1.2f), id)
+            productAttributeRepository.createOrUpdateAttribute("someOtherKey", Attribute.StringAttribute("some text"), id)
+            productAttributeRepository.createOrUpdateAttribute("someBooleanKey", Attribute.BooleanAttribute(true), id)
+        }
+        transaction { ProductAttributeEntity.all().count() } shouldBe 3
+        sut.getProduct(product.id)!!.attributes.size shouldBe 3
+        sut.deleteProduct(product.id)
+        transaction { ProductAttributeEntity.all().count() } shouldBe 0
     }
 }
