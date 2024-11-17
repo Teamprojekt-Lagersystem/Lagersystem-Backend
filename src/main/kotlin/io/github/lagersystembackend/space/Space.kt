@@ -59,11 +59,12 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
 
-    fun deleteWithChildren() {
+    override fun delete() {
 
         products.forEach { it.delete() }
-        delete()
+        super.delete()
     }
+
 }
 
 fun SpaceEntity.toSpace() = Space(

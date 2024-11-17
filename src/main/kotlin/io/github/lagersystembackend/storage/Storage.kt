@@ -71,13 +71,12 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             }
         }
 
-    fun deleteWithChildren() {
-
-        spaces.forEach { it.deleteWithChildren() }
-
-        subStorages.forEach { it.deleteWithChildren() }
-        delete()
+    override fun delete() {
+        spaces.forEach { it.delete() }
+        subStorages.forEach { it.delete() }
+        super.delete()
     }
+
 }
 
 fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
