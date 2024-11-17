@@ -55,7 +55,6 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Storages.name
     var description by Storages.description
     val spaces by SpaceEntity referrersOn Spaces.storageId
-    //TODO: Do substorages get deleted when parent gets deleted?
     var subStorages by StorageEntity.via(StorageToStorages.parent, StorageToStorages.child)
     var parent: StorageEntity?
         get() = StorageToStorages
@@ -71,6 +70,14 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
                 }
             }
         }
+
+    fun deleteWithChildren() {
+
+        spaces.forEach { it.deleteWithChildren() }
+
+        subStorages.forEach { it.deleteWithChildren() }
+        delete()
+    }
 }
 
 fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {

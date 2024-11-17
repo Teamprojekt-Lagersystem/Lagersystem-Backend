@@ -2,6 +2,7 @@ package io.github.lagersystembackend.storage
 
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
+import io.github.lagersystembackend.space.PostgresSpaceRepository
 
 import java.util.UUID
 
@@ -78,15 +79,8 @@ class PostgresStorageRepository: StorageRepository {
     override fun deleteStorage(id: String): Storage? = transaction {
         val storageEntity = StorageEntity.findById(UUID.fromString(id))
 
-        storageEntity?.let { deleteWithChildren(it) }
+        storageEntity?.deleteWithChildren()
 
         storageEntity?.toStorage()
-    }
-
-    private fun deleteWithChildren(storage: StorageEntity) {
-        // Recursively delete sub-storages
-        storage.subStorages.forEach { deleteWithChildren(it) }
-        // Delete the storage itself
-        storage.delete()
     }
 }

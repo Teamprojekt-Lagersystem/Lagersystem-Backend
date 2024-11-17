@@ -58,6 +58,12 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Spaces.description
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
+
+    fun deleteWithChildren() {
+
+        products.forEach { it.delete() }
+        delete()
+    }
 }
 
 fun SpaceEntity.toSpace() = Space(

@@ -1,7 +1,7 @@
 openapi: "3.1.0"
 info:
-  title: "Lagersystem_Backend API"
-  description: "Lagersystem_Backend API"
+  title: "io_github_Lagersystem_Backend API"
+  description: "io_github_Lagersystem_Backend API"
   version: "1.0.0"
 paths:
   /:
@@ -107,7 +107,7 @@ paths:
                   value:
                     errorMessage: "Product not found"
         "200":
-          description: "OK <br> ToDo: Error 406 bei Versuch folgendes Response abzuschicken"
+          description: "OK"
           content:
             '*/*':
               schema:
@@ -239,7 +239,7 @@ paths:
                   value:
                     errorMessage: "Space not found"
         "200":
-          description: "OK <br> ToDo: Error 406 bei Versuch folgendes Response abzuschicken"
+          description: "OK"
           content:
             '*/*':
               schema:
@@ -360,11 +360,11 @@ paths:
                   value:
                     errorMessage: "Storage not found"
         "200":
-          description: "OK <br> ToDo: Error 406 bei Versuch folgendes Response abzuschicken"
+          description: "OK"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success"
+                $ref: "#/components/schemas/Success_? extends NetworkStorage"
     get:
       description: ""
       parameters:
