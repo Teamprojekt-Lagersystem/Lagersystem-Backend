@@ -25,7 +25,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 )
             } else if (depthParam == null ) {
                 return@get call.respond(
-                    ApiResponse.Success("Listing every storage", storageRepository.getStorages(null).filter { it.parentId == "null" }.filter { it.parentId == "null" }.map { it.toNetworkStorage() }))
+                    ApiResponse.Success("Listing every storage", storageRepository.getStorages(null).filter { it.parentId == "null" }.map { it.toNetworkStorage() }))
             }
 
             if (depth != null)
@@ -56,7 +56,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                         ApiResponse.Error("'depth' must be a non-negative integer.")
                     )
                 } else if (depthParam == null ) {
-                    val storage = storageRepository.getStorage(id, null)
+                    val storage = storageRepository.getStorage(id)
                     storage ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
 
                     call.respond(ApiResponse.Success("Storage found: ${id}", storage.toNetworkStorage()))
@@ -95,7 +95,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                         return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
                     }
 
-                    storageRepository.getStorage(it, null)?.id ?: return@post call.respond(
+                    storageRepository.getStorage(it)?.id ?: return@post call.respond(
                         HttpStatusCode.BadRequest,
                         ApiResponse.Error("Parent storage with ID $it not found")
                     )
