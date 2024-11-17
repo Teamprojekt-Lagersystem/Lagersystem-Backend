@@ -30,9 +30,8 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
             call.respond(
                 ApiResponse.Success(
                     "Listing every storage",
-                    storageRepository.getStorages().filter { it.parentId == null }.map {
-                        it.toNetworkStorage(maxDepth = depth)
-                    })
+                    storageRepository.getStorages().filter { it.parentId == null }
+                        .map { it.toNetworkStorage(maxDepth = depth) })
             )
         }
 
@@ -78,7 +77,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     ApiResponse.Error("Storage not found")
                 )
 
-                call.respond(ApiResponse.Success("Storage deleted: ${id}", deletedStorage.toNetworkStorage()))
+                call.respond(ApiResponse.Success("Storage deleted: $id", deletedStorage.toNetworkStorage()))
             }
         }
         post {

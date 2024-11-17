@@ -29,7 +29,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                 val product = productRepository.getProduct(id)
                 product ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Product not found"))
 
-                call.respond(ApiResponse.Success("Found product: ${id}", product.toNetworkProduct()))
+                call.respond(ApiResponse.Success("Found product: $id", product.toNetworkProduct()))
             }
 
             delete {
@@ -41,7 +41,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                 val deletedProduct = productRepository.deleteProduct(id)
                 deletedProduct ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Product not found"))
 
-                call.respond(ApiResponse.Success("Deleted product: ${id}", deletedProduct.toNetworkProduct()))
+                call.respond(ApiResponse.Success("Deleted product: $id", deletedProduct.toNetworkProduct()))
             }
         }
         post {
