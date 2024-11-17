@@ -1,7 +1,7 @@
 openapi: "3.1.0"
 info:
-  title: "io_github_Lagersystem_Backend API"
-  description: "io_github_Lagersystem_Backend API"
+  title: "Lagersystem_Backend API"
+  description: "Lagersystem_Backend API"
   version: "1.0.0"
 paths:
   /:
@@ -291,22 +291,6 @@ paths:
         schema:
           type: "string"
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errorMessage: "'depth' must be a non-negative integer."
-                Example#2:
-                  description: ""
-                  value:
-                    errorMessage: "Invalid 'depth' parameter. It must be a positive\
-                      \ integer."
         "200":
           description: "OK"
           content:
@@ -324,6 +308,18 @@ paths:
                   value:
                     message: "Listing every storage"
                     data: "null"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errorMessage: "Invalid 'depth' parameter. It must be a positive\
+                      \ integer."
     post:
       description: ""
       requestBody:
@@ -416,13 +412,9 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "'depth' must be a non-negative integer."
-                Example#2:
-                  description: ""
-                  value:
                     errorMessage: "Invalid 'depth' parameter. It must be a positive\
                       \ integer."
-                Example#3:
+                Example#2:
                   description: ""
                   value:
                     errorMessage: "Invalid UUID"
@@ -434,10 +426,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  description: ""
-                  value:
-                    errorMessage: "Storage not found"
-                Example#2:
                   description: ""
                   value:
                     errorMessage: "Storage not found"
