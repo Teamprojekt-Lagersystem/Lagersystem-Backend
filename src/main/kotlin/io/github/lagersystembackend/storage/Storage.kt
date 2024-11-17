@@ -79,7 +79,7 @@ fun StorageEntity.toStorage(depth: Int = 0, maxDepth: Int = 3): Storage {
         name = name,
         description = description,
         spaces = spaces.map { it.toSpace() },
-        parentId = parent?.id.toString(),
+        parentId = parent?.id?.toString(),
         subStorages = subStorages.map { it.toStorage(depth + 1, maxDepth) }
     )
 }
