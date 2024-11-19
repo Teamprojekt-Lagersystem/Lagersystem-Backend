@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.product
 
 import io.github.lagersystembackend.common.ApiResponse
+import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.common.isUUID
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -22,12 +23,12 @@ fun Route.productRoutes(productRepository: ProductRepository) {
 
                 if (!id.isUUID()) {
                     return@get call.respond(
-                        HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID")
+                        HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_PRODUCT)
                     )
                 }
 
                 val product = productRepository.getProduct(id)
-                product ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Product not found"))
+                product ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.PRODUCT_NOT_FOUND))
 
                 call.respond(ApiResponse.Success("Found product: ${id}", product.toNetworkProduct()))
             }
@@ -36,10 +37,10 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                 val id = call.parameters["id"]!!
 
                 if (!id.isUUID())
-                    return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
+                    return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_PRODUCT))
 
                 val deletedProduct = productRepository.deleteProduct(id)
-                deletedProduct ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Product not found"))
+                deletedProduct ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.PRODUCT_NOT_FOUND))
 
                 call.respond(ApiResponse.Success("Deleted product: ${id}", deletedProduct.toNetworkProduct()))
             }
@@ -47,15 +48,15 @@ fun Route.productRoutes(productRepository: ProductRepository) {
         post {
             val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()
             addProductNetworkRequest ?: return@post call.respond(HttpStatusCode.BadRequest,
-                ApiResponse.Error("Body should be Serialized AddProductNetworkRequest"))
+                ApiResponse.Error(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT))
 
             val createdProduct = addProductNetworkRequest.run {
                 if (!spaceId.isUUID())
-                    return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
+                    return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_SPACE))
 
 
                 if (!productRepository.spaceExists(spaceId))
-                    return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Specified space not found"))
+                    return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.SPACE_NOT_FOUND))
 
                 productRepository.createProduct(name, price, description, spaceId) }
 

@@ -1,7 +1,9 @@
 package io.github.lagersystembackend.storage
 
 import io.github.lagersystembackend.common.ApiResponse
+import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.common.isUUID
+import io.github.lagersystembackend.common.ApiError
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -17,10 +19,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 val id = call.parameters["id"]!!
 
                 if (!id.isUUID())
-                    return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
+                    return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_STORAGE))
 
                 val storage = storageRepository.getStorage(id)
-                storage ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
+                storage ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.STORAGE_NOT_FOUND))
 
                 call.respond(ApiResponse.Success("Storage found: ${id}", storage.toNetworkStorage()))
             }
@@ -29,10 +31,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 val id = call.parameters["id"]!!
 
                 if (!id.isUUID())
-                    return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
+                    return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_STORAGE))
 
                 val deletedStorage = storageRepository.deleteStorage(id)
-                deletedStorage ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Storage not found"))
+                deletedStorage ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.STORAGE_NOT_FOUND))
 
                 call.respond(ApiResponse.Success("Storage deleted: ${id}", deletedStorage.toNetworkStorage()))
             }
@@ -41,19 +43,23 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
             val addStorageNetworkRequest = runCatching { call.receive<AddStorageNetworkRequest>() }.getOrNull()
             addStorageNetworkRequest ?: return@post call.respond(
                 HttpStatusCode.BadRequest,
-                ApiResponse.Error("Body should be Serialized AddStorageNetworkRequest")
+                ApiResponse.Error(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
             )
 
             val createdStorage = addStorageNetworkRequest.run {
 
                 val resolvedParentId = parentId?.let {
                     if (!parentId.isUUID()) {
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_STORAGE))
                     }
 
                     storageRepository.getStorage(it)?.id ?: return@post call.respond(
                         HttpStatusCode.BadRequest,
-                        ApiResponse.Error("Parent storage with ID $it not found")
+                        ApiResponse.Error(ApiError(
+                            ErrorMessages.STORAGE_NOT_FOUND.type,
+                            ErrorMessages.STORAGE_NOT_FOUND.message,
+                            context = "ID: $it"
+                        ))
                     )
                 }
                 storageRepository.createStorage(name, description, resolvedParentId) }
