@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Test-Report
-          path: build/test-results/test/
+          path: build/reports/tests/test/
 
       - name: Stop Database
         if: always()
