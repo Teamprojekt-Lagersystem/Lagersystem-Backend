@@ -24,6 +24,12 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+tasks.test {
+    reports {
+        html.required.set(true) // Generates an HTML report
+    }
+}
+
 repositories {
     mavenCentral()
 }
