@@ -36,8 +36,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Docker Compose
-        uses: docker/compose-action@v2
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
       - name: Start Database
         run: docker-compose -f db/docker-compose.yml up -d
