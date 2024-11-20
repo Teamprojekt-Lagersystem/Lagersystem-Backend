@@ -13,6 +13,10 @@ sealed class ApiResponse {
 @Serializable
 data class ApiError(val type: String, val message: String, val context: String? = null)
 
+fun ApiError.withContext(context: String?): ApiError {
+    return ApiError(this.type, this.message, context)
+}
+
 @Serializable
 object ErrorMessages {
     val INVALID_UUID_STORAGE = ApiError("INVALID_UUID" , "The provided storage ID is not a valid UUID.")

@@ -1,9 +1,6 @@
 package io.github.lagersystembackend.storage
 
-import io.github.lagersystembackend.common.ApiResponse
-import io.github.lagersystembackend.common.ErrorMessages
-import io.github.lagersystembackend.common.isUUID
-import io.github.lagersystembackend.common.ApiError
+import io.github.lagersystembackend.common.*
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -55,11 +52,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
 
                     storageRepository.getStorage(it)?.id ?: return@post call.respond(
                         HttpStatusCode.BadRequest,
-                        ApiResponse.Error(ApiError(
-                            ErrorMessages.STORAGE_NOT_FOUND.type,
-                            ErrorMessages.STORAGE_NOT_FOUND.message,
-                            context = "ID: $it"
-                        ))
+                        ApiResponse.Error(
+                            ErrorMessages.STORAGE_NOT_FOUND.
+                            withContext("ID: $it")
+                        )
                     )
                 }
                 storageRepository.createStorage(name, description, resolvedParentId) }
