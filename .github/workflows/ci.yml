@@ -54,6 +54,19 @@ jobs:
           name: Test-Report
           path: build/reports/tests/test/
 
+      - name: Upload JUnit Test Results (JUnit Format)
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: build/test-results/test/**/*.xml
+
+      - name: GitHub JUnit Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: junit-reports
+          path: build/test-results/test/
+
       - name: Stop Database
         if: always()
         run: docker-compose -f db/docker-compose.yml down
