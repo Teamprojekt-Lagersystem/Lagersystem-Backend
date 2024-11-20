@@ -298,14 +298,14 @@ class PostgresProductRepositoryTest {
             spaceId.toString()
         )
         val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
-        sut.deleteProduct(createdProduct.id) shouldBe true
+        sut.deleteProduct(createdProduct.id) shouldBe createdProduct
         sut.getProduct(createdProduct.id) shouldBe null
 
     }
 
     @Test
     fun `delete Product should return false when Product not found`() = testApplication {
-        sut.deleteProduct(UUID.randomUUID().toString()) shouldBe false
+        sut.deleteProduct(UUID.randomUUID().toString()) shouldBe null
     }
 
     @Test

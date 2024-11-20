@@ -34,3 +34,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Ignore .kotlin errors folder
+.kotlin/errors
