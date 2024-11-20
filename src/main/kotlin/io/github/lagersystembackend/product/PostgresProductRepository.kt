@@ -1,5 +1,4 @@
 package io.github.lagersystembackend.product
-
 import io.github.lagersystembackend.space.SpaceEntity
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
@@ -19,6 +18,10 @@ class PostgresProductRepository : ProductRepository {
             this.description = description
             this.space = space
         }.toProduct()
+    }
+
+    override fun spaceExists(spaceId: String): Boolean = transaction {
+        SpaceEntity.findById(UUID.fromString(spaceId)) != null
     }
 
     override fun getProduct(id: String): Product? = transaction {
@@ -44,8 +47,8 @@ class PostgresProductRepository : ProductRepository {
         }?.toProduct()
     }
 
-    override fun deleteProduct(id: String): Boolean = transaction {
-        ProductEntity.findById(UUID.fromString(id)).also { it?.delete() } != null
+    override fun deleteProduct(id: String): Product? = transaction {
+        ProductEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toProduct()
     }
 
 }

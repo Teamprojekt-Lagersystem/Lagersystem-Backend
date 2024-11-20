@@ -38,8 +38,8 @@ class SpaceRoutesKtTest {
     fun `get Spaces should respond with List of NetworkSpaces`() = testApplication {
         createEnvironment()
         val spaces = listOf(
-            Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", products = listOf()),
-            Space(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", products = listOf())
+            Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf()),
+            Space(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", storageId = "any id", products = listOf())
         )
         every { mockSpaceRepository.getSpaces() } returns spaces
         client.get("/spaces").apply {
@@ -62,7 +62,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `get Space by ID should respond with NetworkSpace`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", products = listOf())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf())
         every { mockSpaceRepository.getSpace(space1.id) } returns space1
         client.get("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -131,11 +131,13 @@ class SpaceRoutesKtTest {
                 json()
             }
         }
+
         val id = UUID.randomUUID().toString()
-        val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", 100f, "Description 1")
+        val storageId = UUID.randomUUID().toString()
+        val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", 100f, "Description 1", storageId = storageId)
         addSpaceNetworkRequest.run {
-            val space = Space(id, name, size, description, products = listOf())
-            every { mockSpaceRepository.createSpace(name, size, description) } returns space
+            val space = Space(id, name, size, description, products = listOf(), storageId)
+            every { mockSpaceRepository.createSpace(name, size, description, storageId) } returns space
         }
 
         client.post("/spaces") {
@@ -155,11 +157,13 @@ class SpaceRoutesKtTest {
                 json()
             }
         }
+
         val id = UUID.randomUUID().toString()
-        val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, "Description 1")
+        val storageId = UUID.randomUUID().toString()
+        val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, "Description 1", storageId)
         addSpaceNetworkRequest.run {
-            val space = Space(id, name, size, description, products = listOf())
-            every { mockSpaceRepository.createSpace(name, size, description) } returns space
+            val space = Space(id, name, size, description, products = listOf(), storageId)
+            every { mockSpaceRepository.createSpace(name, size, description, storageId) } returns space
         }
 
         client.post("/spaces") {
