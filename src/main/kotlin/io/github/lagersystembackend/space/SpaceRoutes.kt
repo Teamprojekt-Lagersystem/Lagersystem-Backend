@@ -26,7 +26,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
                 val space = spaceRepository.getSpace(id)
                 space ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Space not found"))
 
-                call.respond(ApiResponse.Success("Found space: ${id}", space.toNetworkSpace()))
+                call.respond(ApiResponse.Success("Found space: $id", space.toNetworkSpace()))
             }
 
             delete {
@@ -38,7 +38,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
                 val deletedSpace = spaceRepository.deleteSpace(id)
                 deletedSpace ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Space not found"))
 
-                call.respond(ApiResponse.Success("Space deleted: ${id}", deletedSpace.toNetworkSpace()))
+                call.respond(ApiResponse.Success("Space deleted: $id", deletedSpace.toNetworkSpace()))
             }
         }
         post {
