@@ -58,15 +58,15 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var subStorages by StorageEntity.via(StorageToStorages.parent, StorageToStorages.child)
     var parent: StorageEntity?
         get() = StorageToStorages
-            .selectAll().where { StorageToStorages.child eq  id }
+            .selectAll().where { StorageToStorages.child eq  id.value }
             .firstOrNull()
             ?.let { findById(it[StorageToStorages.parent]) }
         set(value) {
-            StorageToStorages.deleteWhere { child eq id }
+            StorageToStorages.deleteWhere { child eq id.value }
             if (value != null) {
                 StorageToStorages.insert {
-                    it[parent] = value.id
-                    it[child] = id
+                    it[parent] = value.id.value
+                    it[child] = id.value
                 }
             }
         }
@@ -85,7 +85,7 @@ fun StorageEntity.toStorage(): Storage {
         name = name,
         description = description,
         spaces = spaces.map { it.toSpace() },
-        parentId = parent?.id.toString(),
+        parentId = parent?.id?.value?.toString(),
         subStorages = subStorages.map { it.toStorage() }
     )
 }
@@ -117,4 +117,3 @@ private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage
         subStorages = subStorages
     )
 }
-
