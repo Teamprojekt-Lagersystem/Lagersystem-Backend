@@ -21,20 +21,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+      - name: Run Assemble
+        run: ./gradlew assemble
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Docker Compose
+        uses: docker/compose-action@v2
 
       - name: Start Database
         run: docker-compose -f db/docker-compose.yml up -d
