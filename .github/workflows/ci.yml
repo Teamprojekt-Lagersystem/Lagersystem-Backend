@@ -45,7 +45,14 @@ jobs:
         run: docker-compose -f db/docker-compose.yml up -d
 
       - name: Run Tests
-        run: ./gradlew test --info
+        run: ./gradlew test --info --console=rich
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test-Report
+          path: build/reports/tests/test
 
       - name: Stop Database
         if: always()
