@@ -36,7 +36,7 @@ tasks.register("printLineCoverage") {
         println("Report file path: ${report.absolutePath}")
 
         if (!report.exists()) {
-            println("Report file not found: ${report.absolutePath}")
+            println("Report file not found: ${layout.buildDirectory.get()}")
             return@doLast
         }
 
