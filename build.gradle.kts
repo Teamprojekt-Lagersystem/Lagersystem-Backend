@@ -36,7 +36,7 @@ tasks.register("printLineCoverage") {
         println("Report file path: ${report.absolutePath}")
 
         if (!report.exists()) {
-            println("Report file not found: ${layout.buildDirectory.get()}")
+            println("Report file not found: ${layout.buildDirectory.get().file("/reports/kover/report.xml")}")
             return@doLast
         }
 
