@@ -28,17 +28,9 @@ application {
 
 tasks.register("printLineCoverage") {
     group = "verification" // Put into the same group as the `kover` tasks
-    dependsOn("koverXmlReport")
+    //dependsOn("koverXmlReport")
     doLast {
        val report = layout.buildDirectory.file("/reports/kover/report.xml").get().asFile
-
-        // Debugging output to check the actual path
-        println("Report file path: ${report.absolutePath}")
-
-        if (!report.exists()) {
-            println("Report file not found: ${layout.buildDirectory.get().file("/reports/kover/report.xml")}")
-            return@doLast
-        }
 
         val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(report)
         val rootNode = doc.firstChild
