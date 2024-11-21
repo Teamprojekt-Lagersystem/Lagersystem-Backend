@@ -21,9 +21,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Start Database
+        run: docker-compose -f db/docker-compose.yml up -d
+
       - name: Generate coverage output
         run: |
           echo "COVERAGE=$(${{github.workspace}}/gradlew -q printLineCoverage)" >> $GITHUB_ENV
+
+      - name: Stop Database
+        if: always()
+        run: docker-compose -f db/docker-compose.yml down
 
       - name: Update dynamic badge gist
         uses: schneegans/dynamic-badges-action@v1.7.0
