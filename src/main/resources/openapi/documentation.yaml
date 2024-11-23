@@ -149,6 +149,67 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Success_? extends NetworkProduct"
+  /products/moveProducts/{fromSpaceId}/{toSpaceId}:
+    post:
+      description: ""
+      parameters:
+      - name: "fromSpaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "toSpaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errorMessage: "Invalid UUID"
+                Example#2:
+                  description: ""
+                  value:
+                    errorMessage: "Invalid UUID"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errorMessage: "No products found in specified space"
+                Example#2:
+                  description: ""
+                  value:
+                    errorMessage: "to Space Id not found"
+                Example#3:
+                  description: ""
+                  value:
+                    errorMessage: "from Space Id not found"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends List<? extends Product>"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Moved products"
+                    data: "null"
   /spaces:
     get:
       description: ""
@@ -314,12 +375,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errorMessage: "Invalid 'depth' parameter. It must be a positive\
-                      \ integer."
     post:
       description: ""
       requestBody:
@@ -412,11 +467,6 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid 'depth' parameter. It must be a positive\
-                      \ integer."
-                Example#2:
-                  description: ""
-                  value:
                     errorMessage: "Invalid UUID"
         "404":
           description: "Not Found"
@@ -473,6 +523,13 @@ components:
       required:
       - "errorMessage"
     Success_? extends NetworkProduct:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+        data:
+          type: "object"
+    Success_? extends List<? extends Product>:
       type: "object"
       properties:
         message:

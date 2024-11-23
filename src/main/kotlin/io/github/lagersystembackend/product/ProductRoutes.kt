@@ -60,6 +60,39 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                 productRepository.createProduct(name, price, description, spaceId) }
 
             call.respond(HttpStatusCode.Created,
-                ApiResponse.Success("Created product: ${createdProduct.id}", createdProduct.toNetworkProduct())) }
+                ApiResponse.Success("Created product: ${createdProduct.id}", createdProduct.toNetworkProduct()))
+        }
+        route("/moveProducts/{fromSpaceId}/{toSpaceId}") {
+            post {
+                val id = call.parameters["fromSpaceId"]!!
+
+                if (!id.isUUID()) {
+                    return@post call.respond(
+                        HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID")
+                    )
+                }
+
+                val moveid = call.parameters["toSpaceId"]!!
+
+                if (!moveid.isUUID()) {
+                    return@post call.respond(
+                        HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID")
+                    )
+                }
+
+                if (!productRepository.spaceExists(id)) {
+                    return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error("from Space Id not found"))
+                }
+
+                if (!productRepository.spaceExists(moveid)) {
+                    return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error("to Space Id not found"))
+                }
+
+                val movedProduct = productRepository.moveProducts(id, moveid)
+                movedProduct ?: return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error("No products found in specified space"))
+
+                call.respond(HttpStatusCode.OK, ApiResponse.Success("Moved products", movedProduct.map { it.toNetworkProduct() }))
+            }
+        }
     }
 }
