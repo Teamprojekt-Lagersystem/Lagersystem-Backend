@@ -14,55 +14,74 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
         route("/{id}") {
             get {
                 val id = call.parameters["id"]!!
+                val errors = mutableListOf<ApiError>()
 
-                if (!id.isUUID())
-                    return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_STORAGE))
+                if (!id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
 
                 val storage = storageRepository.getStorage(id)
-                storage ?: return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.STORAGE_NOT_FOUND))
+                if (storage == null) {
+                    errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                    return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                }
 
-                call.respond(ApiResponse.Success("Storage found: ${id}", storage.toNetworkStorage()))
+                call.respond(ApiResponse.Success("Storage found: $id", storage.toNetworkStorage()))
             }
+
 
             delete {
                 val id = call.parameters["id"]!!
+                val errors = mutableListOf<ApiError>()
 
-                if (!id.isUUID())
-                    return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_STORAGE))
+                if (!id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
 
                 val deletedStorage = storageRepository.deleteStorage(id)
-                deletedStorage ?: return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(ErrorMessages.STORAGE_NOT_FOUND))
+                if (deletedStorage == null) {
+                    errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                    return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                }
 
-                call.respond(ApiResponse.Success("Storage deleted: ${id}", deletedStorage.toNetworkStorage()))
+                call.respond(ApiResponse.Success("Storage deleted: $id", deletedStorage.toNetworkStorage()))
             }
         }
         post {
+            val errors = mutableListOf<ApiError>()
             val addStorageNetworkRequest = runCatching { call.receive<AddStorageNetworkRequest>() }.getOrNull()
-            addStorageNetworkRequest ?: return@post call.respond(
-                HttpStatusCode.BadRequest,
-                ApiResponse.Error(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
-            )
 
-            val createdStorage = addStorageNetworkRequest.run {
-
-                val resolvedParentId = parentId?.let {
-                    if (!parentId.isUUID()) {
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(ErrorMessages.INVALID_UUID_STORAGE))
-                    }
-
-                    storageRepository.getStorage(it)?.id ?: return@post call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiResponse.Error(
-                            ErrorMessages.STORAGE_NOT_FOUND.
-                            withContext("ID: $it")
-                        )
-                    )
+            if (addStorageNetworkRequest == null) {
+                errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+            } else {
+                if (addStorageNetworkRequest.parentId != null && !addStorageNetworkRequest.parentId.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_STORAGE)
                 }
-                storageRepository.createStorage(name, description, resolvedParentId) }
 
-            call.respond(HttpStatusCode.Created,
-                ApiResponse.Success("Storage created: ${createdStorage.id}", createdStorage.toNetworkStorage()))
+                if (addStorageNetworkRequest.parentId != null && storageRepository.getStorage(addStorageNetworkRequest.parentId!!) == null) {
+                    errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: ${addStorageNetworkRequest.parentId}"))
+                }
+            }
+
+            if (errors.isNotEmpty()) {
+                return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+            }
+
+            val createdStorage = addStorageNetworkRequest?.let {
+                storageRepository.createStorage(it.name, it.description, it.parentId)
+            }
+
+            createdStorage?.let {
+                call.respond(HttpStatusCode.Created, ApiResponse.Success("Storage created: ${it.id}", it.toNetworkStorage()))
+            }
         }
-
     }
 }

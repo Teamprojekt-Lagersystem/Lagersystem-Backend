@@ -7,7 +7,7 @@ sealed class ApiResponse {
     @Serializable
     data class Success<out T>(val message: String? = null, val data: T? = null) : ApiResponse()
     @Serializable
-    data class Error(val error: ApiError) : ApiResponse()
+    data class Error(val errors: List<ApiError>) : ApiResponse()
 }
 
 @Serializable
