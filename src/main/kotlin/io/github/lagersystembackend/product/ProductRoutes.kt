@@ -2,6 +2,7 @@ package io.github.lagersystembackend.product
 
 import io.github.lagersystembackend.common.ApiResponse
 import io.github.lagersystembackend.common.isUUID
+import io.github.lagersystembackend.space.SpaceRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -11,7 +12,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.productRoutes(productRepository: ProductRepository) {
+fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: SpaceRepository) {
     route("/products") {
         get { call.respond(
             ApiResponse.Success("Listing every product", productRepository.getProducts().map { it.toNetworkProduct() })) }
@@ -54,7 +55,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                     return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
 
 
-                if (!productRepository.spaceExists(spaceId))
+                if (!spaceRepository.spaceExists(spaceId))
                     return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Specified space not found"))
 
                 productRepository.createProduct(name, price, description, spaceId) }

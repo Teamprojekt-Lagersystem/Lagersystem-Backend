@@ -2,6 +2,7 @@ package io.github.lagersystembackend.space
 
 import io.github.lagersystembackend.common.ApiResponse
 import io.github.lagersystembackend.common.isUUID
+import io.github.lagersystembackend.storage.StorageRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -11,7 +12,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
+fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: StorageRepository) {
     route("/spaces") {
         get { call.respond(
             ApiResponse.Success("Listing every space", spaceRepository.getSpaces().map { it.toNetworkSpace() })) }
@@ -51,11 +52,11 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository) {
                     return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid UUID"))
                 }
 
-                if (!spaceRepository.storageExists(storageId)) {
+                if (!storageRepository.storageExists(storageId)) {
                     return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error("Specified storage not found"))
                 }
-            spaceRepository.createSpace(name, size, description, storageId)
-        }
+                spaceRepository.createSpace(name, size, description, storageId)
+            }
             call.respond(HttpStatusCode.Created,
                 ApiResponse.Success( "Space created: ${createdSpace.id}", createdSpace.toNetworkSpace())) }
     }
