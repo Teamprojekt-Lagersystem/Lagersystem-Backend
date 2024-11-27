@@ -9,7 +9,7 @@ import io.ktor.server.routing.*
 fun Route.storageRoutes(storageRepository: StorageRepository) {
     route("/storages") {
         get { call.respond(
-            ApiResponse.Success("Listing every storage", storageRepository.getStorages().map { it.toNetworkStorage() })) }
+            ApiResponse.Success("Listing every storage", storageRepository.getStorages().filter { it.parentId == "null" }.map { it.toNetworkStorage() })) }
 
         route("/{id}") {
             get {
