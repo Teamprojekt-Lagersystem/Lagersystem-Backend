@@ -39,6 +39,11 @@ data class AddStorageNetworkRequest(
     val parentId: String? = null
 )
 
+@Serializable
+data class MoveStorageRequest(
+    val newParentId: String?
+)
+
 object Storages: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
