@@ -11,71 +11,45 @@ class PostgresStorageRepository: StorageRepository {
         description: String,
         parentId: String?,
     ): Storage = transaction {
+        val parent = parentId?.let { StorageEntity.findById(UUID.fromString(it)) }
         val newStorage = StorageEntity.new {
             this.name = name
             this.description = description
         }
-
-        parentId
-            ?.let { StorageEntity.findById(UUID.fromString(it)) }
-            ?.run {
-                subStorages = SizedCollection(subStorages + newStorage)
-                newStorage.parent = this
-            }
+        parent?.run { subStorages = SizedCollection(subStorages + newStorage) }
+        newStorage.parent = parent
         newStorage.toStorage()
     }
 
-    override fun getStorage(id: String?): Storage? = transaction {
+    override fun getStorage(id: String): Storage? = transaction {
         StorageEntity.findById(UUID.fromString(id))?.toStorage()
-    }
 
-    override fun storageExists(id: String): Boolean = transaction {
-        StorageEntity.findById(UUID.fromString(id)) != null
     }
 
     override fun getStorages(): List<Storage> = transaction {
         StorageEntity.all().toList().map { it.toStorage() }
     }
 
-    //TODO: update storage rework substrage and parent id function
     override fun updateStorage(
         id: String,
         name: String?,
         description: String?,
-        parentId: String?,
-        subStorages: List<Storage>?
     ): Storage? = transaction {
         StorageEntity.findByIdAndUpdate(UUID.fromString(id)) { storage ->
             name?.let { storage.name = it }
             description?.let { storage.description = it }
-            parentId?.let {
-                val newParentStorage = StorageEntity.findById(UUID.fromString(it))
-                if (newParentStorage != null && newParentStorage.id.toString() != it) {
-                    storage.parent = newParentStorage
-                    newParentStorage.subStorages = SizedCollection(newParentStorage.subStorages + storage)
-                }
-            }
-            subStorages?.forEach { subStorage ->
-                val subStorageEntity = StorageEntity.findById(UUID.fromString(subStorage.id))
-                if (subStorageEntity != null) {
-                    storage.subStorages = SizedCollection(storage.subStorages + subStorageEntity)
-                }
-            }
         }?.toStorage()
     }
 
-    override fun addSubStorage(
-        parentId: String,
-        subStorageId: String
-    ): Storage = transaction {
-        val parent = StorageEntity.findById(UUID.fromString(parentId)) ?:  throw IllegalArgumentException("Storage not found")
-        val subStorage = StorageEntity.findById(UUID.fromString(subStorageId)) ?:  throw IllegalArgumentException("Storage not found")
-        parent.subStorages = SizedCollection(parent.subStorages + subStorage)
-        subStorage.parent = parent
-        parent.toStorage()
+    override fun deleteStorage(id: String): Storage? = transaction {
+        val storageEntity = StorageEntity.findById(UUID.fromString(id))
+
+        storageEntity?.delete()
+
+        storageEntity?.toStorage()
     }
 
-    override fun deleteStorage(id: String): Storage? = transaction {
-        StorageEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toStorage()
+    override fun storageExists(id: String): Boolean = transaction {
+        StorageEntity.findById(UUID.fromString(id)) != null
     }
 }

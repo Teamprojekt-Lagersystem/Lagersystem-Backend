@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.space
 
+import io.github.lagersystembackend.common.ApiResponse
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.kotest.matchers.shouldBe
@@ -44,7 +45,11 @@ class SpaceRoutesKtTest {
         every { mockSpaceRepository.getSpaces() } returns spaces
         client.get("/spaces").apply {
             status shouldBe HttpStatusCode.OK
-            Json.decodeFromString<List<NetworkSpace>>(bodyAsText()) shouldBe spaces.map { it.toNetworkSpace() }
+            val expectedResponse = ApiResponse.Success(
+                message = "Listing every space",
+                data = spaces.map { it.toNetworkSpace() }
+            )
+            Json.decodeFromString<ApiResponse.Success<List<NetworkSpace>>>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
@@ -55,7 +60,11 @@ class SpaceRoutesKtTest {
         every { mockSpaceRepository.getSpaces() } returns emptyList()
         client.get("/spaces").apply {
             status shouldBe HttpStatusCode.OK
-            Json.decodeFromString<List<NetworkSpace>>(bodyAsText()) shouldBe emptyList()
+            val expectedResponse = ApiResponse.Success(
+                message = "Listing every space",
+                data = emptyList<NetworkSpace>()
+            )
+            Json.decodeFromString<ApiResponse.Success<List<NetworkSpace>>>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
@@ -66,7 +75,11 @@ class SpaceRoutesKtTest {
         every { mockSpaceRepository.getSpace(space1.id) } returns space1
         client.get("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
-            Json.decodeFromString<NetworkSpace>(bodyAsText()) shouldBe space1.toNetworkSpace()
+            val expectedResponse = ApiResponse.Success(
+                message = "Found space: ${space1.id}",
+                data = space1.toNetworkSpace()
+            )
+            Json.decodeFromString<ApiResponse.Success<NetworkSpace>>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
@@ -75,7 +88,10 @@ class SpaceRoutesKtTest {
         createEnvironment()
         client.get("/spaces/${"invalid id"}").apply {
             status shouldBe HttpStatusCode.BadRequest
-            bodyAsText() shouldBe "Invalid UUID"
+            val expectedResponse = ApiResponse.Error(
+                errorMessage = "Invalid UUID",
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
@@ -86,19 +102,26 @@ class SpaceRoutesKtTest {
         every { mockSpaceRepository.getSpace(id) } returns null
         client.get("/spaces/${id}").apply {
             status shouldBe HttpStatusCode.NotFound
-            bodyAsText() shouldBe "Space not found"
+            val expectedResponse = ApiResponse.Error(
+                errorMessage = "Space not found",
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
     @Test
     fun `delete Space should delete Space`() = testApplication {
         createEnvironment()
-        val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteSpace(id) } returns true
-        client.delete("/spaces/$id").apply {
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf())
+        every { mockSpaceRepository.deleteSpace(space1.id) } returns space1
+        client.delete("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
-            bodyAsText() shouldBe "Space deleted"
-            verify { mockSpaceRepository.deleteSpace(id) }
+            val expectedResponse = ApiResponse.Success(
+                message = "Space deleted: ${space1.id}",
+                data = space1.toNetworkSpace()
+            )
+            Json.decodeFromString<ApiResponse.Success<NetworkSpace>>(bodyAsText()) shouldBe expectedResponse
+            verify { mockSpaceRepository.deleteSpace(space1.id) }
         }
     }
 
@@ -108,7 +131,10 @@ class SpaceRoutesKtTest {
         val id = "invalid id"
         client.delete("/spaces/$id").apply {
             status shouldBe HttpStatusCode.BadRequest
-            bodyAsText() shouldBe "Invalid UUID"
+            val expectedResponse = ApiResponse.Error(
+                errorMessage = "Invalid UUID",
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
@@ -116,10 +142,13 @@ class SpaceRoutesKtTest {
     fun `delete Space should respond with NotFound when Space not found`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteSpace(id) } returns false
+        every { mockSpaceRepository.deleteSpace(id) } returns null
         client.delete("/spaces/$id").apply {
             status shouldBe HttpStatusCode.NotFound
-            bodyAsText() shouldBe "Space not found"
+            val expectedResponse = ApiResponse.Error(
+                errorMessage = "Space not found",
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
 
@@ -138,14 +167,18 @@ class SpaceRoutesKtTest {
         addSpaceNetworkRequest.run {
             val space = Space(id, name, size, description, products = listOf(), storageId)
             every { mockSpaceRepository.createSpace(name, size, description, storageId) } returns space
-        }
-
-        client.post("/spaces") {
-            setBody(addSpaceNetworkRequest)
-            contentType(ContentType.Application.Json)
-        }.apply {
-            status shouldBe HttpStatusCode.Created
-            bodyAsText() shouldBe "Space created"
+            every { mockSpaceRepository.storageExists(storageId) } returns true
+            client.post("/spaces") {
+                setBody(addSpaceNetworkRequest)
+                contentType(ContentType.Application.Json)
+            }.apply {
+                status shouldBe HttpStatusCode.Created
+                val expectedResponse = ApiResponse.Success(
+                    message = "Space created: ${space.id}",
+                    data = space.toNetworkSpace()
+                )
+                Json.decodeFromString<ApiResponse.Success<NetworkSpace>>(bodyAsText()) shouldBe expectedResponse
+            }
         }
     }
 
@@ -160,18 +193,22 @@ class SpaceRoutesKtTest {
 
         val id = UUID.randomUUID().toString()
         val storageId = UUID.randomUUID().toString()
-        val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, "Description 1", storageId)
+        val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, "Description 1", storageId = storageId)
         addSpaceNetworkRequest.run {
             val space = Space(id, name, size, description, products = listOf(), storageId)
             every { mockSpaceRepository.createSpace(name, size, description, storageId) } returns space
-        }
-
-        client.post("/spaces") {
-            setBody(addSpaceNetworkRequest)
-            contentType(ContentType.Application.Json)
-        }.apply {
-            status shouldBe HttpStatusCode.Created
-            bodyAsText() shouldBe "Space created"
+            every { mockSpaceRepository.storageExists(storageId) } returns true
+            client.post("/spaces") {
+                setBody(addSpaceNetworkRequest)
+                contentType(ContentType.Application.Json)
+            }.apply {
+                status shouldBe HttpStatusCode.Created
+                val expectedResponse = ApiResponse.Success(
+                    message = "Space created: ${space.id}",
+                    data = space.toNetworkSpace()
+                )
+                Json.decodeFromString<ApiResponse.Success<NetworkSpace>>(bodyAsText()) shouldBe expectedResponse
+            }
         }
     }
 
@@ -190,7 +227,10 @@ class SpaceRoutesKtTest {
             contentType(ContentType.Application.Json)
         }.apply {
             status shouldBe HttpStatusCode.BadRequest
-            bodyAsText() shouldBe "Body should be Serialized AddSpaceNetworkRequest"
+            val expectedResponse = ApiResponse.Error(
+                errorMessage = "Body should be Serialized AddSpaceNetworkRequest"
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
 

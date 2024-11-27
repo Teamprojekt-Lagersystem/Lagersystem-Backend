@@ -69,7 +69,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `create Product should throw IllegalStateException when SpaceUUID is unknown`() = testApplication {
+    fun `create Product should throw IllegalArgumentException when SpaceUUID is unknown`() = testApplication {
         val expectedProduct = Product(
             "any id",
             "name",
@@ -87,7 +87,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `create Product should throw IllegalStateException when SpaceUUID is invalid UUID`() = testApplication {
+    fun `create Product should throw IllegalArgumentException when SpaceUUID is invalid UUID`() = testApplication {
         val expectedProduct = Product(
             "any id",
             "name",
@@ -140,7 +140,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `get Product should throw IllegalStateException when id is invalid UUID`() = testApplication {
+    fun `get Product should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         runCatching {
             sut.getProduct(invalidUUID)
@@ -238,7 +238,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `update Product should throw IllegalStateException when id is invalid UUID`() = testApplication {
+    fun `update Product should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         runCatching {
             sut.updateProduct(invalidUUID, null, 12.2f, null, null)
@@ -250,7 +250,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `update Product should throw IllegalStateException when new space id is invalid UUID`() = testApplication {
+    fun `update Product should throw IllegalArgumentException when new space id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         val product = Product(
             "any id",
@@ -270,7 +270,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `update Product should throw IllegalStateException when new SpaceUUID is unknown`() = testApplication {
+    fun `update Product should throw IllegalArgumentException when new SpaceUUID is unknown`() = testApplication {
         val product = Product(
             "any id",
             "name",
@@ -298,18 +298,18 @@ class PostgresProductRepositoryTest {
             spaceId.toString()
         )
         val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
-        sut.deleteProduct(createdProduct.id) shouldBe true
+        sut.deleteProduct(createdProduct.id) shouldBe createdProduct
         sut.getProduct(createdProduct.id) shouldBe null
 
     }
 
     @Test
     fun `delete Product should return false when Product not found`() = testApplication {
-        sut.deleteProduct(UUID.randomUUID().toString()) shouldBe false
+        sut.deleteProduct(UUID.randomUUID().toString()) shouldBe null
     }
 
     @Test
-    fun `delete Product should throw IllegalStateException when id is invalid UUID`() = testApplication {
+    fun `delete Product should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         runCatching {
             sut.deleteProduct(invalidUUID)
