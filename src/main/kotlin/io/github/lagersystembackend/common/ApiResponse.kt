@@ -28,4 +28,5 @@ object ErrorMessages {
     val BODY_NOT_SERIALIZED_STORAGE = ApiError("BODY_NOT_SERIALIZED" , "The request of specified storage is not in the expected format.")
     val BODY_NOT_SERIALIZED_SPACE = ApiError("BODY_NOT_SERIALIZED" , "The request of specified space is not in the expected format.")
     val BODY_NOT_SERIALIZED_PRODUCT = ApiError("BODY_NOT_SERIALIZED" , "The request of specified product is not in the expected format.")
+    val INVALID_DEPTH = ApiError("INVALID_DEPTH" , "The provided depth parameter is invalid.")
 }
