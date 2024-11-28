@@ -4,6 +4,7 @@ import io.github.lagersystembackend.common.ApiResponse
 import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.common.isUUID
 import io.github.lagersystembackend.common.ApiError
+import io.github.lagersystembackend.space.SpaceRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -13,7 +14,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.productRoutes(productRepository: ProductRepository) {
+fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: SpaceRepository) {
     route("/products") {
         get {
             call.respond(
@@ -75,7 +76,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                     errors.add(ErrorMessages.INVALID_UUID_SPACE)
                 }
 
-                if (addProductNetworkRequest.spaceId.isUUID() && !productRepository.spaceExists(addProductNetworkRequest.spaceId)) {
+                if (addProductNetworkRequest.spaceId.isUUID() && !spaceRepository.spaceExists(addProductNetworkRequest.spaceId)) {
                     errors.add(ErrorMessages.SPACE_NOT_FOUND)
                 }
             }

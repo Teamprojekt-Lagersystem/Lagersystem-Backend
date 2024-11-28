@@ -20,10 +20,6 @@ class PostgresProductRepository : ProductRepository {
         }.toProduct()
     }
 
-    override fun spaceExists(spaceId: String): Boolean = transaction {
-        SpaceEntity.findById(UUID.fromString(spaceId)) != null
-    }
-
     override fun getProduct(id: String): Product? = transaction {
         ProductEntity.findById(UUID.fromString(id))?.toProduct()
     }
