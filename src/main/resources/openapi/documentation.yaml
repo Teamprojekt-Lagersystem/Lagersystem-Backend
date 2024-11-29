@@ -52,22 +52,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
-                Example#2:
-                  description: ""
-                  value:
-                    errorMessage: "Body should be Serialized AddProductNetworkRequest"
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errorMessage: "Specified space not found"
+                    errors: []
         "201":
           description: "Created"
           content:
@@ -94,7 +79,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -105,7 +90,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Product not found"
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -131,7 +116,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -142,43 +127,28 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Product not found"
+                    errors: []
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Success_? extends NetworkProduct"
-  /products/moveProducts/{fromSpaceId}/{toSpaceId}:
-    post:
+  /products/moveProduct/{id}/{spaceId}:
+    patch:
       description: ""
       parameters:
-      - name: "fromSpaceId"
+      - name: "id"
         in: "path"
         required: true
         schema:
           type: "string"
-      - name: "toSpaceId"
+      - name: "spaceId"
         in: "path"
         required: true
         schema:
           type: "string"
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errorMessage: "Invalid UUID"
-                Example#2:
-                  description: ""
-                  value:
-                    errorMessage: "Invalid UUID"
         "404":
           description: "Not Found"
           content:
@@ -189,26 +159,18 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "No products found in specified space"
-                Example#2:
-                  description: ""
-                  value:
-                    errorMessage: "to Space Id not found"
-                Example#3:
-                  description: ""
-                  value:
-                    errorMessage: "from Space Id not found"
+                    errors: []
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends List<? extends Product>"
+                $ref: "#/components/schemas/Success_? extends NetworkProduct"
               examples:
                 Example#1:
                   description: ""
                   value:
-                    message: "Moved products"
+                    message: "Moved product"
                     data: "null"
   /spaces:
     get:
@@ -245,22 +207,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
-                Example#2:
-                  description: ""
-                  value:
-                    errorMessage: "Body should be Serialized AddSpaceNetworkRequest"
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errorMessage: "Specified storage not found"
+                    errors: []
         "201":
           description: "Created"
           content:
@@ -287,7 +234,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -298,7 +245,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Space not found"
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -324,7 +271,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -335,7 +282,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Space not found"
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -352,6 +299,17 @@ paths:
         schema:
           type: "string"
       responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -362,19 +320,8 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    message: "Listing every storage"
+                    message: "Listing storages"
                     data: "null"
-                Example#2:
-                  description: ""
-                  value:
-                    message: "Listing every storage"
-                    data: "null"
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
     post:
       description: ""
       requestBody:
@@ -394,11 +341,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
-                Example#2:
-                  description: ""
-                  value:
-                    errorMessage: "Body should be Serialized AddStorageNetworkRequest"
+                    errors: []
         "201":
           description: "Created"
           content:
@@ -425,7 +368,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -436,7 +379,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Storage not found"
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -467,7 +410,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Invalid UUID"
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -478,7 +421,7 @@ paths:
                 Example#1:
                   description: ""
                   value:
-                    errorMessage: "Storage not found"
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -515,21 +458,28 @@ components:
       - "name"
       - "description"
       - "spaceId"
+    ApiError:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+        message:
+          type: "string"
+        context:
+          type: "string"
+      required:
+      - "type"
+      - "message"
     Error:
       type: "object"
       properties:
-        errorMessage:
-          type: "string"
+        errors:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ApiError"
       required:
-      - "errorMessage"
+      - "errors"
     Success_? extends NetworkProduct:
-      type: "object"
-      properties:
-        message:
-          type: "string"
-        data:
-          type: "object"
-    Success_? extends List<? extends Product>:
       type: "object"
       properties:
         message:
