@@ -1,8 +1,10 @@
 package io.github.lagersystembackend.product
 
 import io.github.lagersystembackend.common.ApiResponse
+import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
+import io.github.lagersystembackend.space.SpaceRepository
 import io.kotest.matchers.shouldBe
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
@@ -22,12 +24,13 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class ProductRoutesKtTest {
-    val mockSpaceRepository = mockk<ProductRepository>()
+    val mockProductRepository = mockk<ProductRepository>()
+    val mockSpaceRepository = mockk<SpaceRepository>()
     fun ApplicationTestBuilder.createEnvironment() {
         application {
             configureHTTP()
             configureSerialization()
-            routing { productRoutes(mockSpaceRepository) }
+            routing { productRoutes(mockProductRepository, mockSpaceRepository) }
         }
     }
 
@@ -43,14 +46,10 @@ class ProductRoutesKtTest {
             Product(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", UUID.randomUUID().toString()),
             Product(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", UUID.randomUUID().toString())
         )
-        every { mockSpaceRepository.getProducts() } returns products
+        every { mockProductRepository.getProducts() } returns products
         client.get("/products").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Listing every product",
-                data = products.map { it.toNetworkProduct() }
-            )
-            Json.decodeFromString<ApiResponse.Success<List<NetworkProduct>>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<List<NetworkProduct>>(bodyAsText()) shouldBe products.map { it.toNetworkProduct() }
         }
     }
 
@@ -58,14 +57,10 @@ class ProductRoutesKtTest {
     fun `get Products should respond with emptyList when Repository is empty`() = testApplication {
         createEnvironment()
 
-        every { mockSpaceRepository.getProducts() } returns emptyList()
+        every { mockProductRepository.getProducts() } returns emptyList()
         client.get("/products").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Listing every product",
-                data = emptyList<NetworkProduct>()
-            )
-            Json.decodeFromString<ApiResponse.Success<List<NetworkProduct>>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<List<NetworkProduct>>(bodyAsText()) shouldBe emptyList<NetworkProduct>()
         }
     }
 
@@ -74,14 +69,10 @@ class ProductRoutesKtTest {
         createEnvironment()
         val product1 =
             Product(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", UUID.randomUUID().toString())
-        every { mockSpaceRepository.getProduct(product1.id) } returns product1
+        every { mockProductRepository.getProduct(product1.id) } returns product1
         client.get("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Found product: ${product1.id}",
-                data = product1.toNetworkProduct()
-            )
-            Json.decodeFromString<ApiResponse.Success<NetworkProduct>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe product1.toNetworkProduct()
         }
     }
 
@@ -91,7 +82,7 @@ class ProductRoutesKtTest {
         client.get("/products/${"invalid id"}").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Invalid UUID"
+                listOf(ErrorMessages.INVALID_UUID_PRODUCT)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -101,11 +92,11 @@ class ProductRoutesKtTest {
     fun `get Product should respond with NotFound when Product not found`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.getProduct(id) } returns null
+        every { mockProductRepository.getProduct(id) } returns null
         client.get("/products/${id}").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Product not found",
+                listOf(ErrorMessages.PRODUCT_NOT_FOUND)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -114,15 +105,12 @@ class ProductRoutesKtTest {
     @Test
     fun `delete Product should delete Product`() = testApplication {
         createEnvironment()
-        val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteProduct(id) } returns null
-        client.delete("/products/$id").apply {
-            status shouldBe HttpStatusCode.NotFound
-            val expectedResponse = ApiResponse.Error(
-                errorMessage = "Product not found"
-            )
-            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
-            verify { mockSpaceRepository.deleteProduct(id) }
+        val product1 = Product(UUID.randomUUID().toString(), "Product 1", 100f, "Description 1", "any id")
+        every { mockProductRepository.deleteProduct(product1.id) } returns product1
+        client.delete("/products/${product1.id}").apply {
+            status shouldBe HttpStatusCode.OK
+            Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe product1.toNetworkProduct()
+            verify { mockProductRepository.deleteProduct(product1.id) }
         }
     }
 
@@ -133,7 +121,7 @@ class ProductRoutesKtTest {
         client.delete("/products/$id").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Invalid UUID",
+                listOf(ErrorMessages.INVALID_UUID_PRODUCT)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -143,11 +131,11 @@ class ProductRoutesKtTest {
     fun `delete Product should respond with NotFound when Product not found`() = testApplication {
         createEnvironment()
         val id = UUID.randomUUID().toString()
-        every { mockSpaceRepository.deleteProduct(id) } returns null
+        every { mockProductRepository.deleteProduct(id) } returns null
         client.delete("/products/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Product not found",
+                listOf(ErrorMessages.PRODUCT_NOT_FOUND)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -166,7 +154,7 @@ class ProductRoutesKtTest {
             AddProductNetworkRequest("Product 1", 100f, "Description 1", UUID.randomUUID().toString())
         addProductNetworkRequest.run {
             val product = Product(id, name, price, description, spaceId)
-            every { mockSpaceRepository.createProduct(name, price, description, spaceId) } returns product
+            every { mockProductRepository.createProduct(name, price, description, spaceId) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
 
@@ -175,76 +163,75 @@ class ProductRoutesKtTest {
             contentType(ContentType.Application.Json)
         }.apply {
             status shouldBe HttpStatusCode.Created
-            val expectedResponse = ApiResponse.Success(
-                message = "Created product: $id",
-                data = Product(
+            val expectedResponse =
+                Product(
                     id,
                     addProductNetworkRequest.name,
                     addProductNetworkRequest.price,
                     addProductNetworkRequest.description,
                     addProductNetworkRequest.spaceId
                 ).toNetworkProduct()
-            )
-            Json.decodeFromString<ApiResponse.Success<NetworkProduct>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
 
         }
+    }
 
-        @Test
-        fun `post Product should create Product when size is null`() = testApplication {
-            createEnvironment()
-            val client = createClient {
-                install(ContentNegotiation) {
-                    json()
-                }
+    @Test
+    fun `post Product should create Product when price is null`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
             }
-            val id = UUID.randomUUID().toString()
-            val addProductNetworkRequest =
-                AddProductNetworkRequest("Space 1", null, "Description 1", UUID.randomUUID().toString())
-            addProductNetworkRequest.run {
-                val product = Product(id, name, price, description, spaceId)
-                every { mockSpaceRepository.createProduct(name, price, description, spaceId) } returns product
-            }
+        }
+        val id = UUID.randomUUID().toString()
+        val addProductNetworkRequest =
+            AddProductNetworkRequest("Space 1", null, "Description 1", UUID.randomUUID().toString())
+        addProductNetworkRequest.run {
+            val product = Product(id, name, price, description, spaceId)
+            every { mockProductRepository.createProduct(name, price, description, spaceId) } returns product
+            every { mockSpaceRepository.spaceExists(spaceId) } returns true
+        }
 
-            client.post("/products") {
-                setBody(addProductNetworkRequest)
-                contentType(ContentType.Application.Json)
-            }.apply {
-                status shouldBe HttpStatusCode.Created
-                val expectedResponse = ApiResponse.Success(
-                    message = "Product created: $id",
-                    data = Product(
-                        id,
-                        addProductNetworkRequest.name,
-                        null,
-                        addProductNetworkRequest.description,
-                        addProductNetworkRequest.spaceId
-                    ).toNetworkProduct()
-                )
-                Json.decodeFromString<ApiResponse.Success<NetworkProduct>>(bodyAsText()) shouldBe expectedResponse
+        client.post("/products") {
+            setBody(addProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.Created
+            val expectedResponse =
+                Product(
+                    id,
+                    addProductNetworkRequest.name,
+                    null,
+                    addProductNetworkRequest.description,
+                    addProductNetworkRequest.spaceId
+                ).toNetworkProduct()
+            Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
 
-            }
+        }
+    }
 
-            @Test
-            fun `post Product should respond BadRequest when invalid AddProductNetworkRequest`() = testApplication {
-                createEnvironment()
-                val badRequest = """
-            {
-                "name": "Space 1",
-                "prize": 100.0
-            }
-        """.trimIndent()
+    @Test
+    fun `post Product should respond BadRequest when invalid AddProductNetworkRequest`() = testApplication {
+        createEnvironment()
+        val badRequest = """
+    {
+        "name": "Space 1",
+        "prize": 100.0
+    }
+""".trimIndent()
 
-                client.post("/products") {
-                    setBody(badRequest)
-                    contentType(ContentType.Application.Json)
-                }.apply {
-                    status shouldBe HttpStatusCode.BadRequest
-                    val expectedResponse = ApiResponse.Error(
-                        errorMessage = "Body should be Serialized AddProductNetworkRequest"
-                    )
-                    Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
-                }
-            }
+        client.post("/products") {
+            setBody(badRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
 }
+
+
