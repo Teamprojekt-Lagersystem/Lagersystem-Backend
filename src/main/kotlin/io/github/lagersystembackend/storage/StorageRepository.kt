@@ -8,5 +8,4 @@ interface StorageRepository {
     fun deleteStorage(id: String): Storage?
     fun storageExists(id: String): Boolean
     fun moveStorage(id: String, newParentId: String?): Storage
-    fun isCircularReference(storageId: String, targetParentId: String): Boolean
 }

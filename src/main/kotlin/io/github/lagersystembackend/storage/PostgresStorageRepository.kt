@@ -58,14 +58,16 @@ class PostgresStorageRepository: StorageRepository {
             ?: throw IllegalArgumentException("Storage with ID $id not found")
 
         val newParent = newParentId?.let { StorageEntity.findById(UUID.fromString(it)) }
+
+        storage.subStorages.forEach { child ->
+            child.parent = if (storage.parent == null) {
+                null
+            } else {
+                storage.parent
+            }
+        }
+
         storage.parent = newParent
         storage.toStorage()
-    }
-
-    override fun isCircularReference(storageId: String, targetParentId: String): Boolean = transaction {
-        val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: return@transaction false
-        val targetParent = StorageEntity.findById(UUID.fromString(targetParentId)) ?: return@transaction false
-
-        generateSequence(targetParent) { it.parent }.any { it.id.value.toString() == storageId }
     }
 }

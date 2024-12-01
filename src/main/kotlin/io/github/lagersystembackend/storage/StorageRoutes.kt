@@ -139,12 +139,8 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 }
 
                 val targetParentId = moveRequest?.newParentId
-                if (targetParentId != null && storageRepository.isCircularReference(id, targetParentId)) {
-                    errors.add(ErrorMessages.CIRCULAR_REFERENCE)
-                    return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
-                }
-
                 val updatedStorage = storageRepository.moveStorage(id, targetParentId)
+
                 call.respond(
                     HttpStatusCode.OK,
                     ApiResponse.Success("Storage moved successfully", updatedStorage.toNetworkStorage())
