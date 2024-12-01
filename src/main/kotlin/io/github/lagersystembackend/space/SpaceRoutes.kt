@@ -17,7 +17,7 @@ import io.ktor.server.routing.route
 fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: StorageRepository) {
     route("/spaces") {
         get { call.respond(
-            ApiResponse.Success("Listing every space", spaceRepository.getSpaces().map { it.toNetworkSpace() })) }
+            spaceRepository.getSpaces().map { it.toNetworkSpace() }) }
 
         route("/{id}") {
             get {
@@ -38,7 +38,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Found space: $id", space.toNetworkSpace()))
+                call.respond(space.toNetworkSpace())
             }
 
             delete {
@@ -59,7 +59,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Space deleted: $id", deletedSpace.toNetworkSpace()))
+                call.respond(deletedSpace.toNetworkSpace())
             }
         }
 
@@ -88,7 +88,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
             }
 
             createdSpace?.let {
-                call.respond(HttpStatusCode.Created, ApiResponse.Success("Space created: ${it.id}", it.toNetworkSpace()))
+                call.respond(HttpStatusCode.Created, it.toNetworkSpace())
             }
         }
     }
