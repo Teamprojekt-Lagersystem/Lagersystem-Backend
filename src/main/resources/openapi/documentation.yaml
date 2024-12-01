@@ -251,6 +251,56 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Success_? extends NetworkSpace"
+  /spaces/{id}/move:
+    post:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveSpaceRequest"
+        required: true
+      responses:
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends NetworkSpace"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Space moved successfully"
+                    data: "null"
   /storages:
     get:
       description: ""
@@ -417,10 +467,6 @@ paths:
                   description: ""
                   value:
                     errors: []
-                Example#2:
-                  description: ""
-                  value:
-                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -532,6 +578,13 @@ components:
           type: "string"
         data:
           type: "object"
+    MoveSpaceRequest:
+      type: "object"
+      properties:
+        targetStorageId:
+          type: "string"
+      required:
+      - "targetStorageId"
     Success_? extends List<? extends NetworkStorage>:
       type: "object"
       properties:

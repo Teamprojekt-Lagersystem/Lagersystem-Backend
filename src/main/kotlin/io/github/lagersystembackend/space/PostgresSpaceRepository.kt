@@ -53,4 +53,15 @@ class PostgresSpaceRepository : SpaceRepository {
         spaceEntity?.toSpace()
     }
 
+    override fun moveSpace(spaceId: String, targetStorageId: String): Space = transaction {
+        val space = SpaceEntity.findById(UUID.fromString(spaceId))
+            ?: throw IllegalArgumentException("Space with ID $spaceId not found")
+
+        val targetStorage = StorageEntity.findById(UUID.fromString(targetStorageId))
+            ?: throw IllegalArgumentException("Storage with ID $targetStorageId not found")
+
+        space.storage = targetStorage
+
+        space.toSpace()
+    }
 }

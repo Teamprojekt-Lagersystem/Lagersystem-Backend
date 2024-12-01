@@ -43,6 +43,11 @@ data class AddSpaceNetworkRequest(
     val storageId: String
 )
 
+@Serializable
+data class MoveSpaceRequest(
+    val targetStorageId: String
+)
+
 object Spaces: UUIDTable() {
     val name = varchar("name", 255)
     val size = float("size").nullable()
