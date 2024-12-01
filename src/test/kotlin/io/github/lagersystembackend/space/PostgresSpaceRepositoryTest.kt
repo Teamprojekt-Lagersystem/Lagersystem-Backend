@@ -4,14 +4,9 @@ import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.product.PostgresProductRepository
 import io.github.lagersystembackend.product.Product
 import io.github.lagersystembackend.product.Products
-import io.github.lagersystembackend.space.PostgresSpaceRepository
-import io.github.lagersystembackend.space.Space
-import io.github.lagersystembackend.space.Spaces
-import io.github.lagersystembackend.space.Spaces.storageId
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
@@ -180,6 +175,11 @@ class PostgresSpaceRepositoryTest {
         sut.getSpace(createdSpace.id)!!.products shouldBe createdProducts
         sut.deleteSpace(createdSpace.id)
         productRepository.getProducts() shouldBe emptyList()
+    }
+
+    @Test
+    fun `spaceExists should return false when Storage not found`() = testApplication {
+        sut.spaceExists(UUID.randomUUID().toString()) shouldBe false
     }
 
 }

@@ -1,9 +1,10 @@
 package io.github.lagersystembackend.storage
 
+import io.github.lagersystembackend.common.ApiError
 import io.github.lagersystembackend.common.ApiResponse
+import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
-import io.github.lagersystembackend.space.NetworkSpace
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
@@ -16,7 +17,6 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.serialization.json.Json
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -46,11 +46,7 @@ class StorageRoutesKtTest {
         every { mockStorageRepository.getStorages() } returns storages
         client.get("/storages").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Listing every storage",
-                data = storages.map { it.toNetworkStorage() }
-            )
-            Json.decodeFromString<ApiResponse.Success<List<NetworkStorage>>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<List<NetworkStorage>>(bodyAsText()) shouldBe storages.map { it.toNetworkStorage() }
         }
     }
 
@@ -61,11 +57,7 @@ class StorageRoutesKtTest {
         every { mockStorageRepository.getStorages() } returns emptyList()
         client.get("/storages").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Listing every storage",
-                data = emptyList<NetworkStorage>()
-            )
-            Json.decodeFromString<ApiResponse.Success<List<NetworkStorage>>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<List<NetworkStorage>>(bodyAsText()) shouldBe emptyList<NetworkStorage>()
         }
     }
 
@@ -75,7 +67,7 @@ class StorageRoutesKtTest {
         client.get("/storages?depth=invalid").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Invalid 'depth' parameter 'invalid'. It must be a positive integer."
+                listOf(ErrorMessages.INVALID_DEPTH)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -88,11 +80,7 @@ class StorageRoutesKtTest {
         every { mockStorageRepository.getStorage(storage1.id) } returns storage1
         client.get("/storages/${storage1.id}").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Storage found: ${storage1.id}",
-                data = storage1.toNetworkStorage()
-            )
-            Json.decodeFromString<ApiResponse.Success<NetworkStorage>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe storage1.toNetworkStorage()
         }
     }
 
@@ -102,7 +90,7 @@ class StorageRoutesKtTest {
         client.get("/storages/${"invalid id"}").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Invalid UUID",
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -116,7 +104,7 @@ class StorageRoutesKtTest {
         client.get("/storages/${id}").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Storage not found",
+                listOf(ErrorMessages.STORAGE_NOT_FOUND)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -131,7 +119,7 @@ class StorageRoutesKtTest {
         client.get("/storages/${id}?depth=invalid").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Invalid 'depth' parameter 'invalid'. It must be a positive integer."
+                listOf(ErrorMessages.INVALID_DEPTH)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -144,11 +132,7 @@ class StorageRoutesKtTest {
         every { mockStorageRepository.deleteStorage(storage1.id) } returns storage1
         client.delete("/storages/${storage1.id}").apply {
             status shouldBe HttpStatusCode.OK
-            val expectedResponse = ApiResponse.Success(
-                message = "Storage deleted: ${storage1.id}",
-                data = storage1.toNetworkStorage()
-            )
-            Json.decodeFromString<ApiResponse.Success<NetworkStorage>>(bodyAsText()) shouldBe expectedResponse
+            Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe storage1.toNetworkStorage()
         }
     }
 
@@ -159,7 +143,7 @@ class StorageRoutesKtTest {
         client.delete("/storages/$id").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Invalid UUID",
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -173,7 +157,7 @@ class StorageRoutesKtTest {
         client.delete("/storages/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
-                errorMessage = "Storage not found",
+                listOf(ErrorMessages.STORAGE_NOT_FOUND)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
@@ -197,11 +181,7 @@ class StorageRoutesKtTest {
                 contentType(ContentType.Application.Json)
             }.apply {
                 status shouldBe HttpStatusCode.Created
-                val expectedResponse = ApiResponse.Success(
-                    message = "Storage created: ${storage.id}",
-                    data = storage.toNetworkStorage()
-                )
-                Json.decodeFromString<ApiResponse.Success<NetworkStorage>>(bodyAsText()) shouldBe expectedResponse
+                Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe storage.toNetworkStorage()
             }
         }
     }
@@ -223,7 +203,7 @@ class StorageRoutesKtTest {
             }.apply {
                 status shouldBe HttpStatusCode.BadRequest
                 val expectedResponse = ApiResponse.Error(
-                    errorMessage = "Invalid UUID",
+                    listOf(ErrorMessages.INVALID_UUID_STORAGE)
                 )
                 Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
             }
@@ -248,7 +228,7 @@ class StorageRoutesKtTest {
             }.apply {
                 status shouldBe HttpStatusCode.BadRequest
                 val expectedResponse = ApiResponse.Error(
-                    errorMessage = "Parent storage with ID $parentId not found",
+                    listOf(ApiError("STORAGE_NOT_FOUND", "The specified storage was not found.", "ID: $parentId"))
                 )
                 Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
             }
@@ -275,11 +255,7 @@ class StorageRoutesKtTest {
                 contentType(ContentType.Application.Json)
             }.apply {
                 status shouldBe HttpStatusCode.Created
-                val expectedResponse = ApiResponse.Success(
-                    message = "Storage created: ${storage.id}",
-                    data = storage.toNetworkStorage()
-                )
-                Json.decodeFromString<ApiResponse.Success<NetworkStorage>>(bodyAsText()) shouldBe expectedResponse
+                Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe storage.toNetworkStorage()
             }
         }
     }
