@@ -24,7 +24,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 .filter { it.parentId == null }
                 .map { it.toNetworkStorage(maxDepth = depth) }
 
-            call.respond(ApiResponse.Success("Listing storages", storages))
+            call.respond(storages)
         }
 
         route("/{id}") {
@@ -52,7 +52,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 }
 
                 val networkStorage = storage.toNetworkStorage(maxDepth = depth)
-                call.respond(ApiResponse.Success("Storage found: $id", networkStorage))
+                call.respond(networkStorage)
             }
 
             delete {
@@ -73,7 +73,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Storage deleted: $id", deletedStorage.toNetworkStorage()))
+                call.respond(deletedStorage.toNetworkStorage())
             }
             route("/move") {
                 post {
@@ -144,7 +144,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
             }
 
             createdStorage?.let {
-                call.respond(HttpStatusCode.Created, ApiResponse.Success("Storage created: ${it.id}", it.toNetworkStorage()))
+                call.respond(HttpStatusCode.Created, it.toNetworkStorage())
             }
         }
     }

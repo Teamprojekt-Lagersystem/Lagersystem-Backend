@@ -4,6 +4,7 @@ import io.github.lagersystembackend.common.ApiResponse
 import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.common.isUUID
 import io.github.lagersystembackend.common.ApiError
+import io.github.lagersystembackend.space.SpaceRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -13,14 +14,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.productRoutes(productRepository: ProductRepository) {
+fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: SpaceRepository) {
     route("/products") {
         get {
-            call.respond(
-                ApiResponse.Success(
-                    "Listing every product",
-                    productRepository.getProducts().map { it.toNetworkProduct() })
-            )
+            call.respond(productRepository.getProducts().map { it.toNetworkProduct() })
         }
 
         route("/{id}") {
@@ -41,7 +38,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                     return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Found product: $id", product.toNetworkProduct()))
+                call.respond(product.toNetworkProduct())
             }
 
             delete {
@@ -61,7 +58,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                     return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Deleted product: $id", deletedProduct.toNetworkProduct()))
+                call.respond(deletedProduct.toNetworkProduct())
             }
         }
         post {
@@ -75,7 +72,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
                     errors.add(ErrorMessages.INVALID_UUID_SPACE)
                 }
 
-                if (addProductNetworkRequest.spaceId.isUUID() && !productRepository.spaceExists(addProductNetworkRequest.spaceId)) {
+                if (addProductNetworkRequest.spaceId.isUUID() && !spaceRepository.spaceExists(addProductNetworkRequest.spaceId)) {
                     errors.add(ErrorMessages.SPACE_NOT_FOUND)
                 }
             }
@@ -91,7 +88,7 @@ fun Route.productRoutes(productRepository: ProductRepository) {
             createdProduct?.let {
                 call.respond(
                     HttpStatusCode.Created,
-                    ApiResponse.Success("Created product: ${it.id}", it.toNetworkProduct())
+                    it.toNetworkProduct()
                 )
             }
         }

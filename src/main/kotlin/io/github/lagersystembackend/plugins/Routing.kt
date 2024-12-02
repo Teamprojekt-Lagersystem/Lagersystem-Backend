@@ -28,8 +28,8 @@ fun Application.configureRouting(productRepository: ProductRepository, spaceRepo
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
         get("/") { call.respondRedirect("/swagger", true) }
 
-        productRoutes(productRepository)
-        spaceRoutes(spaceRepository)
+        productRoutes(productRepository, spaceRepository)
+        spaceRoutes(spaceRepository, storageRepository)
         storageRoutes(storageRepository)
     }
 }
