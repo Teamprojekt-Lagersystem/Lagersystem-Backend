@@ -112,10 +112,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     val targetParentId = moveRequest?.newParentId
                     val updatedStorage = storageRepository.moveStorage(id, targetParentId)
 
-                    call.respond(
-                        HttpStatusCode.OK,
-                        ApiResponse.Success("Storage moved successfully", updatedStorage.toNetworkStorage())
-                    )
+                    call.respond(updatedStorage.toNetworkStorage())
                 }
             }
         }

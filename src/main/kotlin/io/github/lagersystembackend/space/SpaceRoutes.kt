@@ -80,7 +80,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                         val targetStorageId = moveRequest.targetStorageId
                         if (!targetStorageId.isUUID()) {
                             errors.add(ErrorMessages.INVALID_UUID_STORAGE.withContext("Target Storage ID: $targetStorageId"))
-                        } else if (!spaceRepository.storageExists(targetStorageId)) {
+                        } else if (!storageRepository.storageExists(targetStorageId)) {
                             errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetStorageId"))
                         }
                     }
@@ -91,10 +91,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                     val movedSpace = spaceRepository.moveSpace(id, moveRequest!!.targetStorageId)
 
-                    call.respond(
-                        HttpStatusCode.OK,
-                        ApiResponse.Success("Space moved successfully", movedSpace.toNetworkSpace())
-                    )
+                    call.respond(movedSpace.toNetworkSpace())
                 }
             }
         }

@@ -21,8 +21,8 @@ data class Space(
     val name: String,
     val size: Float?,
     val description: String,
-    val storageId: String,
     val products: List<Product>,
+    val storageId: String
 )
 
 @Serializable
@@ -31,8 +31,8 @@ data class NetworkSpace(
     val name: String,
     val size: Float?,
     val description: String,
-    val storageId: String,
-    val products: List<NetworkProduct>?
+    val products: List<NetworkProduct>?,
+    val storageId: String
 )
 
 @Serializable
@@ -75,8 +75,8 @@ fun SpaceEntity.toSpace() = Space(
     name,
     size,
     description,
-    storage.id.value.toString(),
-    products.map { it.toProduct() }
+    products.map { it.toProduct() },
+    storage.id.value.toString()
 )
 
 fun NetworkSpace.toSpace() = Space(
@@ -84,8 +84,8 @@ fun NetworkSpace.toSpace() = Space(
     name,
     size,
     description,
-    storageId,
-    products?.map { it.toProduct() } ?: emptyList()
+    products?.map { it.toProduct() } ?: emptyList(),
+    storageId
 )
 
 fun Space.toNetworkSpace() = NetworkSpace(
@@ -93,6 +93,6 @@ fun Space.toNetworkSpace() = NetworkSpace(
     name,
     size,
     description,
-    storageId,
-    products.map { it.toNetworkProduct() }
+    products.map { it.toNetworkProduct() },
+    storageId
 )
