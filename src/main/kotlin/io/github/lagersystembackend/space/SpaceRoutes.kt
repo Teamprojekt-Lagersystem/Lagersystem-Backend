@@ -62,27 +62,32 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                 post {
                     val id = call.parameters["id"]!!
                     val errors = mutableListOf<ApiError>()
-                    val moveRequest = runCatching { call.receive<MoveSpaceRequest>() }.getOrNull()
 
                     if (!id.isUUID()) {
                         errors.add(ErrorMessages.INVALID_UUID_SPACE.withContext("ID: $id"))
+                    }
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val moveRequest = runCatching { call.receive<MoveSpaceRequest>() }.getOrNull()
+
+                    if (moveRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
                     val space = spaceRepository.getSpace(id)
                     if (space == null) {
                         errors.add(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $id"))
-                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    if (moveRequest == null) {
-                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
-                    } else {
-                        val targetStorageId = moveRequest.targetStorageId
-                        if (!targetStorageId.isUUID()) {
-                            errors.add(ErrorMessages.INVALID_UUID_STORAGE.withContext("Target Storage ID: $targetStorageId"))
-                        } else if (!storageRepository.storageExists(targetStorageId)) {
-                            errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetStorageId"))
-                        }
+                    val targetStorageId = moveRequest.targetStorageId
+                    if (!targetStorageId.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORAGE.withContext("Target Storage ID: $targetStorageId"))
+                    } else if (!storageRepository.storageExists(targetStorageId)) {
+                        errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetStorageId"))
                     }
 
                     if (errors.isNotEmpty()) {
