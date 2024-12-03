@@ -57,7 +57,11 @@ class PostgresStorageRepository: StorageRepository {
         val storage = StorageEntity.findById(UUID.fromString(id))
             ?: throw IllegalArgumentException("Storage with ID $id not found")
 
-        val newParent = newParentId?.let { StorageEntity.findById(UUID.fromString(it)) }
+        val newParent = newParentId?.let {
+            StorageEntity.findById(UUID.fromString(it))
+                ?: throw IllegalArgumentException("Storage with ID $newParentId not found")
+        }
+
         if (newParent != null && isCircularReference(id, newParentId)) {
             storage.subStorages.forEach { child ->
                 child.parent = if (storage.parent == null) {
