@@ -65,8 +65,6 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                     if (!id.isUUID()) {
                         errors.add(ErrorMessages.INVALID_UUID_SPACE.withContext("ID: $id"))
-                    }
-                    if (errors.isNotEmpty()) {
                         return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 

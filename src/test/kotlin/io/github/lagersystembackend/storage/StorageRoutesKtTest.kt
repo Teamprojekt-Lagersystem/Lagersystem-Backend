@@ -1,8 +1,6 @@
 package io.github.lagersystembackend.storage
 
-import io.github.lagersystembackend.common.ApiError
-import io.github.lagersystembackend.common.ApiResponse
-import io.github.lagersystembackend.common.ErrorMessages
+import io.github.lagersystembackend.common.*
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.kotest.matchers.shouldBe
@@ -260,27 +258,146 @@ class StorageRoutesKtTest {
         }
     }
 
+    @Test
+    fun `move Storage should respond with BadRequest when id is invalid`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val invalidId = "invalid-id"
+        val moveRequest = MoveStorageRequest(newParentId = UUID.randomUUID().toString())
+        every { mockStorageRepository.getStorage(any()) } returns null
 
+        client.post("/storages/$invalidId/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 
+    @Test
+    fun `move Storage should respond with BadRequest when request body is missing`() = testApplication {
+        createEnviroment()
+        val id = UUID.randomUUID().toString()
+        client.post("/storages/$id/move").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 
+    @Test
+    fun `move Storage should respond with BadRequest when newParentId is invalid`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val invalidParentId = "invalid-id"
+        val moveRequest = MoveStorageRequest(newParentId = invalidParentId)
+        client.post("/storages/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 
+    @Test
+    fun `move Storage should respond with NotFound when target Storage is not found`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val newParentId = UUID.randomUUID().toString()
+        val moveRequest = MoveStorageRequest(newParentId = newParentId)
+        every { mockStorageRepository.getStorage(any()) } returns null
 
+        client.post("/storages/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $newParentId"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+    @Test
+    fun `move Storage should respond with BadRequest when target parent Storage is not found`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val newParentId = UUID.randomUUID().toString()
+        val moveRequest = MoveStorageRequest(newParentId = newParentId)
 
+        every { mockStorageRepository.getStorage(id) } returns Storage(
+            id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf()
+        )
+        every { mockStorageRepository.getStorage(newParentId) } returns null
 
+        client.post("/storages/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $newParentId"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 
+    @Test
+    fun `move Storage should move successfully with valid input`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val newParentId = UUID.randomUUID().toString()
+        val moveRequest = MoveStorageRequest(newParentId = newParentId)
 
+        val storageA = Storage(id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf())
+        val storageParent = Storage(newParentId, "Storage Parent", "Description Parent", spaces = listOf(), parentId = null, subStorages = listOf())
 
+        every { mockStorageRepository.getStorage(id) } returns storageA
+        every { mockStorageRepository.getStorage(newParentId) } returns storageParent
+        every { mockStorageRepository.moveStorage(id, newParentId) } returns storageA.copy(parentId = newParentId)
 
-
-
-
-
-
-
-
-
-
-
-
+        client.post("/storages/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.OK
+            val expectedResponse = storageA.copy(parentId = newParentId).toNetworkStorage()
+            Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 
 }
