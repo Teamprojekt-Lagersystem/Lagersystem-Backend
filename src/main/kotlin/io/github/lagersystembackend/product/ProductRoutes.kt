@@ -95,23 +95,27 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
 
                 if (!id.isUUID()) {
                     errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
-                    //return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error("Invalid Product UUID"))
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                 }
 
                 val spaceId = call.parameters["spaceId"]!!
 
                 if (!spaceId.isUUID()) {
                     errors.add(ErrorMessages.INVALID_UUID_SPACE)
-                    //return@patch call.respond(
-                    //    HttpStatusCode.BadRequest, ApiResponse.Error("Invalid Sapce UUID")
-                    //)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                 }
+
+                if (!spaceRepository.spaceExists(spaceId)) {
+                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                    return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                }
+
                 val movedProduct = productRepository.moveProduct(id, spaceId)
                 if (movedProduct == null) {
                     errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
                     return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
-                call.respond(HttpStatusCode.OK, ApiResponse.Success("Moved product", movedProduct.toNetworkProduct()))
+                call.respond(movedProduct.toNetworkProduct())
             }
         }
     }

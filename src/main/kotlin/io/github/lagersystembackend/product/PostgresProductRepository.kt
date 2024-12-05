@@ -43,6 +43,10 @@ class PostgresProductRepository : ProductRepository {
         }?.toProduct()
     }
 
+    override fun spaceExists(id: String): Boolean = transaction {
+        SpaceEntity.findById(UUID.fromString(id)) != null
+    }
+
     override fun moveProduct(id: String, spaceId: String): Product? = transaction {
         SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("to Space not found")
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
