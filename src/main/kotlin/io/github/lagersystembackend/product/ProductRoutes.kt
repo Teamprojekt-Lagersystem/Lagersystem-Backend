@@ -13,11 +13,7 @@ import io.ktor.server.routing.*
 fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: SpaceRepository) {
     route("/products") {
         get {
-            call.respond(
-                ApiResponse.Success(
-                    "Listing every product",
-                    productRepository.getProducts().map { it.toNetworkProduct() })
-            )
+            call.respond(productRepository.getProducts().map { it.toNetworkProduct() })
         }
 
         route("/{id}") {
@@ -38,7 +34,7 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                     return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Found product: $id", product.toNetworkProduct()))
+                call.respond(product.toNetworkProduct())
             }
 
             delete {
@@ -58,7 +54,7 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                     return@delete call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                 }
 
-                call.respond(ApiResponse.Success("Deleted product: $id", deletedProduct.toNetworkProduct()))
+                call.respond(deletedProduct.toNetworkProduct())
             }
         }
         post {
@@ -88,7 +84,7 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
             createdProduct?.let {
                 call.respond(
                     HttpStatusCode.Created,
-                    ApiResponse.Success("Created product: ${it.id}", it.toNetworkProduct())
+                    it.toNetworkProduct()
                 )
             }
         }
