@@ -319,4 +319,60 @@ class PostgresProductRepositoryTest {
             this.message shouldBe "Invalid UUID string: $invalidUUID"
         }
     }
+
+    @Test
+    fun `moveProduct should return Product with new Space`() = testApplication {
+        val firstSpace = UUID.randomUUID();
+        val secondSpace = UUID.randomUUID();
+
+        val product = Product(
+            "any id",
+            "name",
+            null,
+            "description",
+            firstSpace.toString()
+        )
+
+        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        val movedProduct = sut.moveProduct(createdProduct.id, secondSpace.toString())
+
+        movedProduct shouldBe Product(
+            createdProduct.id,
+            createdProduct.name,
+            createdProduct.price,
+            createdProduct.description,
+            secondSpace.toString()
+        )
+    }
+
+    @Test
+    fun `moveProduct should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
+        val invalidUUID = "Invalid UUID"
+        runCatching {
+            sut.moveProduct(invalidUUID, spaceId.toString())
+        }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "to Space not found"
+        }
+    }
+
+    @Test
+    fun `moveProduct should throw IllegalArgumentException when to SpaceUUID is unknown`() = testApplication {
+        val product = Product(
+            "any id",
+            "name",
+            null,
+            "description",
+            spaceId.toString()
+        )
+        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        runCatching {
+            sut.moveProduct(createdProduct.id, UUID.randomUUID().toString())
+        }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Space not found"
+        }
+    }
 }
