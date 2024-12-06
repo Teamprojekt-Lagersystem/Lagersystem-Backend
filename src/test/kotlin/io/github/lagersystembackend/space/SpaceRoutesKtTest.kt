@@ -314,4 +314,31 @@ class SpaceRoutesKtTest {
         }
     }
 
+    @Test
+    fun `POST move should respond with NotFound when space is not found`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val targetStorageId = UUID.randomUUID().toString()
+        val moveRequest = MoveSpaceRequest(targetStorageId = targetStorageId)
+
+        every { mockSpaceRepository.getSpace(id) } returns null
+        every { mockStorageRepository.storageExists(targetStorageId) } returns true
+
+        client.post("/spaces/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $id"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
 }

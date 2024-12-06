@@ -114,8 +114,8 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                         return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                     }
 
-                    val updatedStorage = storageRepository.moveStorage(id, targetParentId)
-                    call.respond(updatedStorage.toNetworkStorage())
+                    val movedStorage = storageRepository.moveStorage(id, targetParentId)
+                    call.respond(movedStorage.toNetworkStorage())
                 }
             }
         }
