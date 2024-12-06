@@ -379,7 +379,7 @@ class PostgresProductRepositoryTest {
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
-            this.message shouldBe "to Space not found"
+            this.message shouldBe "target Space not found"
         }
     }
 
