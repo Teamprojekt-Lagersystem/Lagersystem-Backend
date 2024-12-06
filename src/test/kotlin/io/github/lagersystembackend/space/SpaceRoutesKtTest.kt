@@ -1,7 +1,6 @@
 package io.github.lagersystembackend.space
 
-import io.github.lagersystembackend.common.ApiResponse
-import io.github.lagersystembackend.common.ErrorMessages
+import io.github.lagersystembackend.common.*
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.github.lagersystembackend.storage.StorageRepository
@@ -212,6 +211,107 @@ class SpaceRoutesKtTest {
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
+    @Test
+    fun `POST move should respond with BadRequest when id is invalid`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val invalidId = "not-a-uuid"
+        val moveRequest = MoveSpaceRequest(targetStorageId = UUID.randomUUID().toString())
+        every { mockSpaceRepository.getSpace(any()) } returns null
+        every { mockStorageRepository.storageExists(any()) } returns true
 
+        client.post("/spaces/$invalidId/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_SPACE.withContext("ID: $invalidId"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `POST move should respond with BadRequest when body is not serialized`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+
+        every { mockSpaceRepository.getSpace(id) } returns null
+        every { mockStorageRepository.storageExists(any()) } returns true
+
+        client.post("/spaces/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody("invalid body")
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `POST move should respond with BadRequest when targetStorageId is invalid`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val moveRequest = MoveSpaceRequest(targetStorageId = "invalid-uuid")
+
+        every { mockSpaceRepository.getSpace(id) } returns mockk()
+        every { mockStorageRepository.storageExists(any()) } returns true
+
+        client.post("/spaces/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_STORAGE.withContext("Target Storage ID: invalid-uuid"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `POST move should respond with NotFound when targetStorageId storage is not found`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val targetStorageId = UUID.randomUUID().toString()
+        val moveRequest = MoveSpaceRequest(targetStorageId = targetStorageId)
+
+        every { mockSpaceRepository.getSpace(id) } returns mockk()
+        every { mockStorageRepository.storageExists(targetStorageId) } returns false
+
+        client.post("/spaces/$id/move") {
+            contentType(ContentType.Application.Json)
+            setBody(moveRequest)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetStorageId"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 
 }

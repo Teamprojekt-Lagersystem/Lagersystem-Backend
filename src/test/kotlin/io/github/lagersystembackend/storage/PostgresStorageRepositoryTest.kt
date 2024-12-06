@@ -190,4 +190,112 @@ class PostgresStorageRepositoryTest {
     fun `storageExists should return false when Storage not found`() = testApplication {
         sut.storageExists(UUID.randomUUID().toString()) shouldBe false
     }
+
+    @Test
+    fun `move Storage should update parent and return updated Storage`() = testApplication {
+            val rootStorage = insertRootStorage()
+            val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+            val newParentStorage = sut.createStorage("NewParentStorage", "Another storage", parentId = null)
+
+            val movedStorage = sut.moveStorage(subStorage.id, newParentStorage.id)
+
+            movedStorage.parentId shouldBe newParentStorage.id
+            sut.getStorage(movedStorage.id)!!.apply {
+                parentId shouldBe newParentStorage.id
+            }
+
+            val originalParent = sut.getStorage(rootStorage.id)!!
+            originalParent.subStorages.none { it.id == subStorage.id } shouldBe true
+
+            val newParent = sut.getStorage(newParentStorage.id)!!
+            newParent.subStorages.any { it.id == movedStorage.id } shouldBe true
+        }
+
+    @Test
+    fun `move Storage should handle null parent correctly`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+
+        val movedStorage = sut.moveStorage(subStorage.id, null)
+
+        movedStorage.parentId shouldBe null
+        sut.getStorage(movedStorage.id)!!.apply {
+            parentId shouldBe null
+        }
+
+        val originalParent = sut.getStorage(rootStorage.id)!!
+        originalParent.subStorages.none { it.id == movedStorage.id } shouldBe true
+    }
+
+
+    @Test
+    fun `move Storage should throw IllegalArgumentException when storage is not found`() = testApplication {
+        val newParentStorage = sut.createStorage("NewParentStorage", "Another storage", parentId = null)
+
+        val invalidStorageId = UUID.randomUUID().toString()
+        runCatching { sut.moveStorage(invalidStorageId, newParentStorage.id) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Storage with ID $invalidStorageId not found"
+        }
+    }
+
+    @Test
+    fun `move Storage should throw IllegalArgumentException when new parent is not found`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+
+        val invalidParentId = UUID.randomUUID().toString()
+        runCatching { sut.moveStorage(subStorage.id, invalidParentId) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Storage with ID $invalidParentId not found"
+        }
+    }
+
+    @Test
+    fun `isCircularReference should return true for circular references`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val subStorage1 = sut.createStorage("SubStorage1", "First sub-storage", rootStorage.id)
+        val subStorage2 = sut.createStorage("SubStorage2", "Second sub-storage", subStorage1.id)
+
+        // Try to set rootStorage as a child of subStorage2
+        sut.isCircularReference(rootStorage.id, subStorage2.id) shouldBe true
+    }
+
+    @Test
+    fun `isCircularReference should return false when no circular references`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val rootStorage2 = insertRootStorage()
+        sut.isCircularReference(rootStorage.id, rootStorage2.id) shouldBe false
+    }
+
+    @Test
+    fun `moveStorage should correctly adjust hierarchy when circular reference is detected`() = testApplication {
+        val storageA = sut.createStorage("A", "Storage A", null)
+        val storageB = sut.createStorage("B", "Storage B", storageA.id)
+        val storageC = sut.createStorage("C", "Storage C", storageB.id)
+
+        sut.moveStorage(storageA.id, storageC.id)
+
+        val updatedStorageB = sut.getStorage(storageB.id)!!
+        updatedStorageB.parentId shouldBe null
+        val updatedStorageC = sut.getStorage(storageC.id)!!
+        updatedStorageC.parentId shouldBe storageB.id
+        val updatedStorageA = sut.getStorage(storageA.id)!!
+        updatedStorageA.parentId shouldBe storageC.id
+
+        val storageD = sut.createStorage("D", "Storage D", null)
+        val storageE = sut.createStorage("E", "Storage E", storageD.id)
+        sut.moveStorage(storageB.id, storageE.id)
+
+        val finalStorageB = sut.getStorage(storageB.id)!!
+        finalStorageB.parentId shouldBe storageE.id
+        val finalStorageC = sut.getStorage(storageC.id)!!
+        finalStorageC.parentId shouldBe storageB.id
+        val finalStorageA = sut.getStorage(storageA.id)!!
+        finalStorageA.parentId shouldBe storageC.id
+        val finalStorageE = sut.getStorage(storageE.id)!!
+        finalStorageE.parentId shouldBe storageD.id
+    }
 }
