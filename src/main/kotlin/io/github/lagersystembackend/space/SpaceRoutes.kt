@@ -92,7 +92,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                         return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    val movedSpace = spaceRepository.moveSpace(id, moveRequest!!.targetStorageId)
+                    val movedSpace = spaceRepository.moveSpace(id, moveRequest.targetStorageId)
 
                     call.respond(movedSpace.toNetworkSpace())
                 }

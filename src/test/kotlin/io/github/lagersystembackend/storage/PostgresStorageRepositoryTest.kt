@@ -192,7 +192,7 @@ class PostgresStorageRepositoryTest {
     }
 
     @Test
-    fun `move Storage should update parent and return updated Storage`() = testApplication {
+    fun `move Storage should update parentId and return updated Storage`() = testApplication {
             val rootStorage = insertRootStorage()
             val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
             val newParentStorage = sut.createStorage("NewParentStorage", "Another storage", parentId = null)
