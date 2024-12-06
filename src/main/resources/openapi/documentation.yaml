@@ -26,13 +26,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends List<? extends NetworkProduct>"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    message: "Listing every product"
-                    data: "null"
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkProduct"
     post:
       description: ""
       requestBody:
@@ -58,7 +54,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkProduct"
+                $ref: "#/components/schemas/NetworkProduct"
   /products/{id}:
     delete:
       description: ""
@@ -96,7 +92,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkProduct"
+                $ref: "#/components/schemas/NetworkProduct"
     get:
       description: ""
       parameters:
@@ -133,7 +129,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkProduct"
+                $ref: "#/components/schemas/NetworkProduct"
   /products/moveProduct/{id}/{spaceId}:
     patch:
       description: ""
@@ -149,6 +145,21 @@ paths:
         schema:
           type: "string"
       responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -160,18 +171,16 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkProduct"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    message: "Moved product"
-                    data: "null"
+                $ref: "#/components/schemas/NetworkProduct"
   /spaces:
     get:
       description: ""
@@ -181,13 +190,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends List<? extends NetworkSpace>"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    message: "Listing every space"
-                    data: "null"
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkSpace"
     post:
       description: ""
       requestBody:
@@ -213,7 +218,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkSpace"
+                $ref: "#/components/schemas/NetworkSpace"
   /spaces/{id}:
     delete:
       description: ""
@@ -251,7 +256,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkSpace"
+                $ref: "#/components/schemas/NetworkSpace"
     get:
       description: ""
       parameters:
@@ -288,7 +293,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkSpace"
+                $ref: "#/components/schemas/NetworkSpace"
   /storages:
     get:
       description: ""
@@ -315,13 +320,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends List<? extends NetworkStorage>"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    message: "Listing storages"
-                    data: "null"
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkStorage"
     post:
       description: ""
       requestBody:
@@ -347,7 +348,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+                $ref: "#/components/schemas/NetworkStorage"
   /storages/{id}:
     delete:
       description: ""
@@ -385,7 +386,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+                $ref: "#/components/schemas/NetworkStorage"
     get:
       description: ""
       parameters:
@@ -427,21 +428,28 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+                $ref: "#/components/schemas/NetworkStorage"
 components:
   schemas:
-    Success:
+    NetworkProduct:
       type: "object"
       properties:
-        message:
+        id:
           type: "string"
-    Success_? extends List<? extends NetworkProduct>:
-      type: "object"
-      properties:
-        message:
+        name:
           type: "string"
-        data:
-          type: "object"
+        price:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+        spaceId:
+          type: "string"
+      required:
+      - "id"
+      - "name"
+      - "description"
+      - "spaceId"
     AddProductNetworkRequest:
       type: "object"
       properties:
@@ -479,20 +487,29 @@ components:
             $ref: "#/components/schemas/ApiError"
       required:
       - "errors"
-    Success_? extends NetworkProduct:
+    NetworkSpace:
       type: "object"
       properties:
-        message:
+        id:
           type: "string"
-        data:
-          type: "object"
-    Success_? extends List<? extends NetworkSpace>:
-      type: "object"
-      properties:
-        message:
+        name:
           type: "string"
-        data:
-          type: "object"
+        size:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+        products:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/NetworkProduct"
+        storageId:
+          type: "string"
+      required:
+      - "id"
+      - "name"
+      - "description"
+      - "storageId"
     AddSpaceNetworkRequest:
       type: "object"
       properties:
@@ -509,20 +526,29 @@ components:
       - "name"
       - "description"
       - "storageId"
-    Success_? extends NetworkSpace:
+    NetworkStorage:
       type: "object"
       properties:
-        message:
+        id:
           type: "string"
-        data:
-          type: "object"
-    Success_? extends List<? extends NetworkStorage>:
-      type: "object"
-      properties:
-        message:
+        name:
           type: "string"
-        data:
-          type: "object"
+        description:
+          type: "string"
+        spaces:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/NetworkSpace"
+        subStorages:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/NetworkStorage"
+      required:
+      - "id"
+      - "name"
+      - "description"
+      - "spaces"
+      - "subStorages"
     AddStorageNetworkRequest:
       type: "object"
       properties:
@@ -535,10 +561,3 @@ components:
       required:
       - "name"
       - "description"
-    Success_? extends NetworkStorage:
-      type: "object"
-      properties:
-        message:
-          type: "string"
-        data:
-          type: "object"
