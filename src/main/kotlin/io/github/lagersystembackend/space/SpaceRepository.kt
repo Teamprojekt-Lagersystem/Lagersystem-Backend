@@ -7,4 +7,5 @@ interface SpaceRepository {
     fun updateSpace(id: String, name: String?, size: Float?, description: String?): Space?
     fun deleteSpace(id: String): Space?
     fun spaceExists(id: String): Boolean
+    fun moveSpace(spaceId: String, targetStorageId: String): Space
 }

@@ -22,7 +22,9 @@ import kotlin.test.Test
 class PostgresSpaceRepositoryTest {
     val sut = PostgresSpaceRepository()
     val exampleStorageId = UUID.randomUUID()
+    val targetStorageId = UUID.randomUUID()
     lateinit var exampleStorageEntity: StorageEntity
+    lateinit var targetStorageEntity: StorageEntity
 
     fun insertSpace(): Space = transaction {
         SpaceEntity.new {
@@ -41,6 +43,10 @@ class PostgresSpaceRepositoryTest {
             exampleStorageEntity = StorageEntity.new(id = exampleStorageId) {
                 name = "storage name"
                 description = "storage description"
+            }
+            targetStorageEntity = StorageEntity.new(id = targetStorageId) {
+                name = "storage name2"
+                description = "storage description2"
             }
         }
     }
@@ -182,4 +188,68 @@ class PostgresSpaceRepositoryTest {
         sut.spaceExists(UUID.randomUUID().toString()) shouldBe false
     }
 
+    @Test
+    fun `moveSpace should move space to new storage`() = testApplication {
+        val createdSpace = insertSpace()
+        val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
+
+        movedSpace.storageId shouldBe targetStorageId.toString()
+    }
+
+    @Test
+    fun `moveSpace should throw IllegalArgumentException when space not found`() = testApplication {
+        val invalidSpaceId = UUID.randomUUID().toString()
+        runCatching { sut.moveSpace(invalidSpaceId, targetStorageId.toString()) }
+            .exceptionOrNull().run {
+                this shouldNotBe null
+                this!!::class shouldBe IllegalArgumentException::class
+                this.message shouldBe "Space with ID $invalidSpaceId not found"
+            }
+    }
+
+    @Test
+    fun `moveSpace should throw IllegalArgumentException when target storage not found`() = testApplication {
+        val invalidStorageId = UUID.randomUUID().toString()
+        val createdSpace = insertSpace()
+        runCatching { sut.moveSpace(createdSpace.id, invalidStorageId) }
+            .exceptionOrNull().run {
+                this shouldNotBe null
+                this!!::class shouldBe IllegalArgumentException::class
+                this.message shouldBe "Storage with ID $invalidStorageId not found"
+            }
+    }
+
+    @Test
+    fun `moveSpace should return space with updated storage after successful move`() = testApplication {
+        val createdSpace = insertSpace()
+        val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
+
+        movedSpace.storageId shouldBe targetStorageId.toString()
+    }
+
+    @Test
+    fun `moveSpace should keep other properties of the space intact after move`() = testApplication {
+        val createdSpace = insertSpace()
+        val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
+
+        movedSpace.name shouldBe createdSpace.name
+        movedSpace.description shouldBe createdSpace.description
+        movedSpace.size shouldBe createdSpace.size
+    }
+
+    @Test
+    fun `moveSpace should keep products after move`() = testApplication {
+        val createdSpace = insertSpace()
+        val products = listOf(
+            Product("anyId", "Product1", 100f, "Space description", createdSpace.id),
+            Product("anyId", "Product2", 200f, "Space description", createdSpace.id),
+            Product("anyId", "Product3", 300f, "Space description", createdSpace.id)
+        )
+        val productRepository = PostgresProductRepository()
+        val createdProducts = products.map { it.run { productRepository.createProduct(name, price, description, createdSpace.id) } }
+
+        sut.getSpace(createdSpace.id)!!.products shouldBe createdProducts
+        val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
+        movedSpace.products shouldBe createdProducts
+    }
 }

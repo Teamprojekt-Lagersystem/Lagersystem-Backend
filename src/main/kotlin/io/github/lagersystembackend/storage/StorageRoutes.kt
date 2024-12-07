@@ -55,7 +55,6 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 call.respond(networkStorage)
             }
 
-
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
@@ -75,6 +74,49 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 }
 
                 call.respond(deletedStorage.toNetworkStorage())
+            }
+            route("/move") {
+                post {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val moveRequest = runCatching { call.receive<MoveStorageRequest>() }.getOrNull()
+                    if (moveRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val targetParentId = moveRequest.newParentId
+                    if (targetParentId != null) {
+                        if (!targetParentId.isUUID()) {
+                            errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        } else {
+                            val targetStorage = storageRepository.getStorage(targetParentId)
+                            if (targetStorage == null) {
+                                errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetParentId"))
+                            }
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val storage = storageRepository.getStorage(id)
+                    if (storage == null) {
+                        errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val movedStorage = storageRepository.moveStorage(id, targetParentId)
+                    call.respond(movedStorage.toNetworkStorage())
+                }
             }
         }
         post {

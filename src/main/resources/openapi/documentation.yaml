@@ -55,44 +55,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
-  /products/{id}:
-    delete:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/NetworkProduct"
     get:
       description: ""
       parameters:
@@ -156,10 +118,6 @@ paths:
                   description: ""
                   value:
                     errors: []
-                Example#2:
-                  description: ""
-                  value:
-                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -168,10 +126,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  description: ""
-                  value:
-                    errors: []
-                Example#2:
                   description: ""
                   value:
                     errors: []
@@ -215,12 +169,6 @@ paths:
                     errors: []
         "201":
           description: "Created"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/NetworkSpace"
-  /spaces/{id}:
-    delete:
       description: ""
       parameters:
       - name: "id"
@@ -256,8 +204,6 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkSpace"
-    get:
       description: ""
       parameters:
       - name: "id"
@@ -265,9 +211,15 @@ paths:
         required: true
         schema:
           type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveSpaceRequest"
+        required: true
       responses:
-        "400":
-          description: "Bad Request"
+        "404":
+          description: "Not Found"
           content:
             '*/*':
               schema:
@@ -277,8 +229,6 @@ paths:
                   description: ""
                   value:
                     errors: []
-        "404":
-          description: "Not Found"
           content:
             '*/*':
               schema:
@@ -293,7 +243,6 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkSpace"
   /storages:
     get:
       description: ""
@@ -309,20 +258,11 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/Success_? extends List<? extends NetworkStorage>"
               examples:
                 Example#1:
                   description: ""
                   value:
-                    errors: []
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/NetworkStorage"
     post:
       description: ""
       requestBody:
@@ -428,7 +368,6 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStorage"
 components:
   schemas:
     NetworkProduct:
@@ -531,9 +470,6 @@ components:
       properties:
         id:
           type: "string"
-        name:
-          type: "string"
-        description:
           type: "string"
         spaces:
           type: "array"
@@ -560,4 +496,3 @@ components:
           type: "string"
       required:
       - "name"
-      - "description"
