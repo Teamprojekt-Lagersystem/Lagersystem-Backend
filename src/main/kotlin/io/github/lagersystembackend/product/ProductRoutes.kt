@@ -8,11 +8,7 @@ import io.github.lagersystembackend.space.SpaceRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
+import io.ktor.server.routing.*
 
 fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: SpaceRepository) {
     route("/products") {
@@ -90,6 +86,36 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                     HttpStatusCode.Created,
                     it.toNetworkProduct()
                 )
+            }
+        }
+        route("/moveProduct/{id}/{spaceId}") {
+            patch {
+                val errors = mutableListOf<ApiError>()
+                val id = call.parameters["id"]!!
+
+                if (!id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                val spaceId = call.parameters["spaceId"]!!
+
+                if (!spaceId.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                if (!spaceRepository.spaceExists(spaceId)) {
+                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                    return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                }
+
+                val movedProduct = productRepository.moveProduct(id, spaceId)
+                if (movedProduct == null) {
+                    errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
+                    return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                }
+                call.respond(movedProduct.toNetworkProduct())
             }
         }
     }

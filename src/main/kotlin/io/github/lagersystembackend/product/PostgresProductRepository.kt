@@ -43,6 +43,14 @@ class PostgresProductRepository : ProductRepository {
         }?.toProduct()
     }
 
+    override fun moveProduct(id: String, spaceId: String): Product? = transaction {
+        val targetSpace = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("target Space not found")
+        ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
+            product.space = targetSpace
+        }?.toProduct()
+
+    }
+
     override fun deleteProduct(id: String): Product? = transaction {
         ProductEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toProduct()
     }
