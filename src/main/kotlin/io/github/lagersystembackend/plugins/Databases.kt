@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.plugins
 
+import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.Spaces
 import io.github.lagersystembackend.storage.StorageToStorages
@@ -18,6 +19,6 @@ fun configureDatabases(isTest: Boolean = false) {
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(Spaces, Products, Storages, StorageToStorages)
+        SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
     }
 }

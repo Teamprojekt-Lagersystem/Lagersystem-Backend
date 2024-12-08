@@ -79,15 +79,6 @@ fun SpaceEntity.toSpace() = Space(
     storage.id.value.toString()
 )
 
-fun NetworkSpace.toSpace() = Space(
-    id,
-    name,
-    size,
-    description,
-    products?.map { it.toProduct() } ?: emptyList(),
-    storageId
-)
-
 fun Space.toNetworkSpace() = NetworkSpace(
     id,
     name,

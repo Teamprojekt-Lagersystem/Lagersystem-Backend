@@ -2,7 +2,6 @@ package io.github.lagersystembackend.common
 
 import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class ApiResponse {
     @Serializable
     data class Error(val errors: List<ApiError>) : ApiResponse()
@@ -15,7 +14,6 @@ fun ApiError.withContext(context: String?): ApiError {
     return ApiError(this.type, this.message, context)
 }
 
-@Serializable
 object ErrorMessages {
     val INVALID_UUID_STORAGE = ApiError("INVALID_UUID" , "The provided storage ID is not a valid UUID.")
     val INVALID_UUID_SPACE = ApiError("INVALID_UUID" , "The provided space ID is not a valid UUID.")
