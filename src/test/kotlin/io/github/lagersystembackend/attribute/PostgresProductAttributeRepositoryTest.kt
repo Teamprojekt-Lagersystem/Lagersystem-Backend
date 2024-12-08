@@ -6,6 +6,9 @@ import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.product.toProduct
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
+import io.github.lagersystembackend.storage.StorageEntity
+import io.github.lagersystembackend.storage.StorageToStorages
+import io.github.lagersystembackend.storage.Storages
 import io.kotest.matchers.maps.shouldContain
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -20,6 +23,7 @@ import kotlin.test.Test
 
 class PostgresProductAttributeRepositoryTest {
     val sut = PostgresProductAttributeRepository()
+    val storageId = UUID.randomUUID()
     val spaceId = UUID.randomUUID()
     val productId = UUID.randomUUID()
 
@@ -27,11 +31,16 @@ class PostgresProductAttributeRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(ProductAttributes, Products, Spaces)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, ProductAttributes, Products)
             transaction {
+                val storage = StorageEntity.new(id = storageId) {
+                    name = "storage name"
+                    description = "storage description"
+                }
                 val space = SpaceEntity.new(id = spaceId) {
                     name = "space name"
                     description = "space description"
+                    this.storage = storage
                 }
                 ProductEntity.new(id = productId) {
                     name = "product name"

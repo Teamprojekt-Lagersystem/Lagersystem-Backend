@@ -69,11 +69,3 @@ fun Product.toNetworkProduct() = NetworkProduct(
     attributes,
     spaceId
 )
-
-fun NetworkProduct.toProduct() = Product(
-    id,
-    name,
-    price,
-    description,
-    spaceId
-)

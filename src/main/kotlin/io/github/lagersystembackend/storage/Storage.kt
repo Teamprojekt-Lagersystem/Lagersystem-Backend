@@ -95,17 +95,6 @@ fun StorageEntity.toStorage(): Storage {
     )
 }
 
-fun NetworkStorage.toStorage(): Storage {
-    return Storage(
-        id = id,
-        name = name,
-        description = description,
-        spaces = spaces.map { it.toSpace() },
-        parentId = null,
-        subStorages = subStorages.map { it.toStorage() }
-    )
-}
-
 fun Storage.toNetworkStorage(maxDepth: Int? = null) = toNetworkStorage(0, maxDepth)
 
 private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage {

@@ -279,7 +279,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `delete Product should return true when Product is deleted`() = testApplication {
+    fun `delete Product should return deleted Product`() = testApplication {
         val product = Product(
             "any id",
             "name",
@@ -294,7 +294,7 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `delete Product should return false when Product not found`() = testApplication {
+    fun `delete Product should return null when Product not found`() = testApplication {
         sut.deleteProduct(UUID.randomUUID().toString()) shouldBe null
     }
 

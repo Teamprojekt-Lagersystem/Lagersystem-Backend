@@ -106,7 +106,7 @@ class ProductRoutesKtTest {
     @Test
     fun `delete Product should delete Product`() = testApplication {
         createEnvironment()
-        val product1 = Product(UUID.randomUUID().toString(), "Product 1", 100f, "Description 1", "any id")
+        val product1 = Product(UUID.randomUUID().toString(), "Product 1", "Description 1", emptyMap(), "any id")
         every { mockProductRepository.deleteProduct(product1.id) } returns product1
         client.delete("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -168,8 +168,8 @@ class ProductRoutesKtTest {
                 Product(
                     id,
                     addProductNetworkRequest.name,
-                    addProductNetworkRequest.price,
                     addProductNetworkRequest.description,
+                    emptyMap(),
                     addProductNetworkRequest.spaceId
                 ).toNetworkProduct()
             Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
@@ -203,8 +203,8 @@ class ProductRoutesKtTest {
                 Product(
                     id,
                     addProductNetworkRequest.name,
-                    null,
                     addProductNetworkRequest.description,
+                    emptyMap(),
                     addProductNetworkRequest.spaceId
                 ).toNetworkProduct()
             Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
