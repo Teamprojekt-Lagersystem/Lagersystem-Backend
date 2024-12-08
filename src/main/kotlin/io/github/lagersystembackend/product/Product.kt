@@ -42,7 +42,7 @@ data class AddProductNetworkRequest(
 object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
-    val space = reference("space", Spaces)
+    val spaceId = reference("spaceId", Spaces)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -51,7 +51,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by Products.name
     var description by Products.description
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
-    var space by SpaceEntity referencedOn Products.space
+    var space by SpaceEntity referencedOn Products.spaceId
 }
 
 fun ProductEntity.toProduct() = Product(
@@ -67,5 +67,13 @@ fun Product.toNetworkProduct() = NetworkProduct(
     name,
     description,
     attributes,
+    spaceId
+)
+
+fun NetworkProduct.toProduct() = Product(
+    id,
+    name,
+    price,
+    description,
     spaceId
 )

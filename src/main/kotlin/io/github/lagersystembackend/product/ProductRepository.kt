@@ -5,5 +5,5 @@ interface ProductRepository {
     fun getProduct(id: String): Product?
     fun getProducts(): List<Product>
     fun updateProduct(id: String, name: String?, description: String?, spaceId: String?): Product?
-    fun deleteProduct(id: String): Boolean
+    fun deleteProduct(id: String): Product?
 }

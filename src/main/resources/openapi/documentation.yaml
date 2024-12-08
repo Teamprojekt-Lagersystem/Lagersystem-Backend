@@ -1,7 +1,7 @@
 openapi: "3.1.0"
 info:
-  title: "Lagersystem_Backend API"
-  description: "Lagersystem_Backend API"
+  title: "io_github_Lagersystem_Backend API"
+  description: "io_github_Lagersystem_Backend API"
   version: "1.0.0"
 paths:
   /:
@@ -26,9 +26,13 @@ paths:
           content:
             '*/*':
               schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/NetworkProduct"
+                $ref: "#/components/schemas/Success_? extends List<? extends NetworkProduct>"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Listing every product"
+                    data: "null"
     post:
       description: ""
       requestBody:
@@ -43,19 +47,18 @@ paths:
           content:
             '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Body should be Serialized AddProductNetworkRequest"
+                  description: ""
+                  value:
+                    errors: []
         "201":
           description: "Created"
           content:
             '*/*':
               schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Product created"
+                $ref: "#/components/schemas/Success_? extends NetworkProduct"
   /products/{id}:
     delete:
       description: ""
@@ -69,30 +72,31 @@ paths:
         "400":
           description: "Bad Request"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Invalid UUID"
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Product not found"
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Product deleted"
+                $ref: "#/components/schemas/Success_? extends NetworkProduct"
     get:
       description: ""
       parameters:
@@ -105,27 +109,31 @@ paths:
         "400":
           description: "Bad Request"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Invalid UUID"
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Product not found"
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkProduct"
+                $ref: "#/components/schemas/Success_? extends NetworkProduct"
   /spaces:
     get:
       description: ""
@@ -135,9 +143,13 @@ paths:
           content:
             '*/*':
               schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/NetworkSpace"
+                $ref: "#/components/schemas/Success_? extends List<? extends NetworkSpace>"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Listing every space"
+                    data: "null"
     post:
       description: ""
       requestBody:
@@ -152,19 +164,18 @@ paths:
           content:
             '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Body should be Serialized AddSpaceNetworkRequest"
+                  description: ""
+                  value:
+                    errors: []
         "201":
           description: "Created"
           content:
             '*/*':
               schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Space created"
+                $ref: "#/components/schemas/Success_? extends NetworkSpace"
   /spaces/{id}:
     delete:
       description: ""
@@ -178,30 +189,31 @@ paths:
         "400":
           description: "Bad Request"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Invalid UUID"
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Space not found"
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Space deleted"
+                $ref: "#/components/schemas/Success_? extends NetworkSpace"
     get:
       description: ""
       parameters:
@@ -214,51 +226,284 @@ paths:
         "400":
           description: "Bad Request"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Invalid UUID"
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
-            text/plain:
+            '*/*':
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  value: "Space not found"
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkSpace"
+                $ref: "#/components/schemas/Success_? extends NetworkSpace"
+  /spaces/{id}/move:
+    post:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveSpaceRequest"
+        required: true
+      responses:
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends NetworkSpace"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Space moved successfully"
+                    data: "null"
+  /storages:
+    get:
+      description: ""
+      parameters:
+      - name: "depth"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends List<? extends NetworkStorage>"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Listing storages"
+                    data: "null"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddStorageNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+  /storages/{id}:
+    delete:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "depth"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+  /storages/{id}/move:
+    post:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveStorageRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Success_? extends NetworkStorage"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    message: "Storage moved successfully"
+                    data: "null"
 components:
   schemas:
-    NetworkProduct:
+    Success:
       type: "object"
       properties:
-        id:
+        message:
           type: "string"
-        name:
+    Success_? extends List<? extends NetworkProduct>:
+      type: "object"
+      properties:
+        message:
           type: "string"
-        price:
-          type: "number"
-          format: "float"
-        description:
-          type: "string"
-        attributes:
-          type: "string"
-        spaceId:
-          type: "string"
-      required:
-      - "id"
-      - "name"
-      - "description"
-      - "attributes"
-      - "spaceId"
+        data:
+          type: "object"
     AddProductNetworkRequest:
       type: "object"
       properties:
@@ -275,26 +520,41 @@ components:
       - "name"
       - "description"
       - "spaceId"
-    NetworkSpace:
+    ApiError:
       type: "object"
       properties:
-        id:
+        type:
           type: "string"
-        name:
+        message:
           type: "string"
-        size:
-          type: "number"
-          format: "float"
-        description:
+        context:
           type: "string"
-        products:
+      required:
+      - "type"
+      - "message"
+    Error:
+      type: "object"
+      properties:
+        errors:
           type: "array"
           items:
-            $ref: "#/components/schemas/NetworkProduct"
+            $ref: "#/components/schemas/ApiError"
       required:
-      - "id"
-      - "name"
-      - "description"
+      - "errors"
+    Success_? extends NetworkProduct:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+        data:
+          type: "object"
+    Success_? extends List<? extends NetworkSpace>:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+        data:
+          type: "object"
     AddSpaceNetworkRequest:
       type: "object"
       properties:
@@ -305,6 +565,54 @@ components:
           format: "float"
         description:
           type: "string"
+        storageId:
+          type: "string"
       required:
       - "name"
       - "description"
+      - "storageId"
+    Success_? extends NetworkSpace:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+        data:
+          type: "object"
+    MoveSpaceRequest:
+      type: "object"
+      properties:
+        targetStorageId:
+          type: "string"
+      required:
+      - "targetStorageId"
+    Success_? extends List<? extends NetworkStorage>:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+        data:
+          type: "object"
+    AddStorageNetworkRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        description:
+          type: "string"
+        parentId:
+          type: "string"
+      required:
+      - "name"
+      - "description"
+    Success_? extends NetworkStorage:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+        data:
+          type: "object"
+    MoveStorageRequest:
+      type: "object"
+      properties:
+        newParentId:
+          type: "string"
