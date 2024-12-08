@@ -26,8 +26,11 @@ class ProductAttributeEntity(id: EntityID<Int>) : IntEntity(id) {
 
 
 fun ProductAttributeEntity.toAttribute() = when (type) {
-    "string" -> Attribute.StringAttribute(value)
-    "number" -> Attribute.NumberAttribute(value.toFloat())
-    "boolean" -> Attribute.BooleanAttribute(value.toBoolean())
+    Attribute.StringAttribute.TYPE -> Attribute.StringAttribute(value)
+    Attribute.NumberAttribute.TYPE -> Attribute.NumberAttribute(value.toFloat())
+    Attribute.BooleanAttribute.TYPE -> Attribute.BooleanAttribute(value.toBoolean())
+    Attribute.ListAttribute.type(Attribute.StringAttribute.TYPE) -> Attribute.ListAttribute.fromStings(value.split(","))
+    Attribute.ListAttribute.type(Attribute.NumberAttribute.TYPE) -> Attribute.ListAttribute.fromNumbers(value.split(",").map { it.toFloat() })
+    Attribute.ListAttribute.type(Attribute.BooleanAttribute.TYPE) -> Attribute.ListAttribute.fromBooleans(value.split(",").map { it.toBoolean() })
     else -> throw IllegalArgumentException("Unknown attribute type: $type")
 }

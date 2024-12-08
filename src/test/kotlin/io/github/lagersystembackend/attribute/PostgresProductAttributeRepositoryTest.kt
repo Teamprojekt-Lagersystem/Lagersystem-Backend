@@ -90,6 +90,46 @@ class PostgresProductAttributeRepositoryTest {
     }
 
     @Test
+    fun `create String AttributeList should return String AttributeList`() = testApplication {
+        val expectedAttribute = Attribute.ListAttribute.fromStings(listOf("some value", "some other value"))
+        val key = "someKey"
+
+        sut.createOrUpdateAttribute(key, expectedAttribute, productId.toString()).apply {
+            this shouldBe expectedAttribute
+        }
+        transaction {
+            ProductEntity.findById(productId)!!.toProduct()
+        }.attributes shouldContain (key to expectedAttribute)
+    }
+
+
+    @Test
+    fun `create Number AttributeList should return Number AttributeList`() = testApplication {
+        val expectedAttribute = Attribute.ListAttribute.fromNumbers(listOf(1f, 2.2f, 3f, 4f))
+        val key = "someKey"
+
+        sut.createOrUpdateAttribute(key, expectedAttribute, productId.toString()).apply {
+            this shouldBe expectedAttribute
+        }
+        transaction {
+            ProductEntity.findById(productId)!!.toProduct()
+        }.attributes shouldContain (key to expectedAttribute)
+    }
+
+    @Test
+    fun `create Boolean AttributeList should return Boolean AttributeList`() = testApplication {
+        val expectedAttribute = Attribute.ListAttribute.fromBooleans(listOf(true, false, false, true))
+        val key = "someKey"
+
+        sut.createOrUpdateAttribute(key, expectedAttribute, productId.toString()).apply {
+            this shouldBe expectedAttribute
+        }
+        transaction {
+            ProductEntity.findById(productId)!!.toProduct()
+        }.attributes shouldContain (key to expectedAttribute)
+    }
+
+    @Test
     fun `create Attribute should throw IllegalArgumentException when Product not found`() = testApplication {
         val expectedAttribute = Attribute.BooleanAttribute(true)
 
@@ -141,6 +181,19 @@ class PostgresProductAttributeRepositoryTest {
     }
 
     @Test
+    fun `create Attribute should replace existing AttributeList`() = testApplication {
+        val attribute = Attribute.ListAttribute.fromBooleans(listOf(true, false, false, true))
+        val key = "someKey"
+        sut.createOrUpdateAttribute(key, attribute, productId.toString())
+        val updatedAttribute = Attribute.NumberAttribute(12321f)
+        sut.createOrUpdateAttribute(key, updatedAttribute, productId.toString()) shouldBe updatedAttribute
+
+        transaction {
+            ProductEntity.findById(productId)!!.toProduct()
+        }.attributes shouldContain (key to updatedAttribute)
+    }
+
+    @Test
     fun `delete Attribute should return true when deleted`() = testApplication {
         val attribute = Attribute.StringAttribute("someValue")
         val key = "someKey"
@@ -155,6 +208,26 @@ class PostgresProductAttributeRepositoryTest {
     fun `delete Attribute should return false when not found`() = testApplication {
         val key = "someKey"
         sut.deleteAttribute(key, productId.toString()) shouldBe false
+    }
+
+    @Test
+    fun `get Attribute with wrong type should throw IllegalArgumentException`() = testApplication {
+        val attribute = Attribute.StringAttribute("someValue")
+        val key = "someKey"
+        transaction {
+            ProductAttributeEntity.new {
+                this.product = ProductEntity.findById(productId)!!
+                this.key = key
+                this.type = "invalidType"
+                this.value = attribute.value()
+            }
+        }
+        runCatching { transaction { ProductEntity.findById(productId)!!.toProduct() } }
+            .exceptionOrNull().run {
+                this shouldNotBe null
+                this!!::class shouldBe IllegalArgumentException::class
+                this.message shouldBe "Unknown attribute type: invalidType"
+            }
     }
 
 }
