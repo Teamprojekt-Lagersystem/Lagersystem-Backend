@@ -232,6 +232,61 @@ class ProductRoutesKtTest {
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
+
+    @Test
+    fun `patch moveProduct should respond BadRequest when Product Id invalid`() = testApplication {
+        createEnvironment()
+        client.patch("/products/moveProduct/${"invalid id"}/${UUID.randomUUID()}").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_PRODUCT)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch moveProduct should respond BadRequest when Space Id invalid`() = testApplication {
+        createEnvironment()
+        client.patch("/products/moveProduct/${UUID.randomUUID()}/${"invalid id"}").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch moveProduct should respond NotFound when Space not found`() = testApplication {
+        createEnvironment()
+        val productId = UUID.randomUUID().toString()
+        val spaceId = UUID.randomUUID().toString()
+        every { mockSpaceRepository.spaceExists(spaceId) } returns false
+        client.patch("/products/moveProduct/$productId/$spaceId").apply {
+            status shouldBe HttpStatusCode.NotFound
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.SPACE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch moveProduct should respond NotFound when Product not found`() = testApplication {
+        createEnvironment()
+        val productId = UUID.randomUUID().toString()
+        val spaceId = UUID.randomUUID().toString()
+        every { mockSpaceRepository.spaceExists(spaceId) } returns true
+        every { mockProductRepository.moveProduct(productId, spaceId) } returns null
+        client.patch("/products/moveProduct/$productId/$spaceId").apply {
+            status shouldBe HttpStatusCode.NotFound
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.PRODUCT_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 }
 
 
