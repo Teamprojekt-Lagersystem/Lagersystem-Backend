@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.storage
 
+import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.PostgresSpaceRepository
@@ -31,14 +32,14 @@ class PostgresStorageRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Products, Spaces, Storages, StorageToStorages)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
         }
     }
 
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Products, Spaces, Storages, StorageToStorages)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
         }
     }
 

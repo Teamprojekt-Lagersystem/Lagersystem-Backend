@@ -1,5 +1,9 @@
 package io.github.lagersystembackend.product
 
+import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.attribute.ProductAttributes
+import io.github.lagersystembackend.attribute.toAttribute
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
 import kotlinx.serialization.Serializable
@@ -13,8 +17,8 @@ import java.util.UUID
 data class Product(
     val id: String,
     val name: String,
-    val price: Float?,
     val description: String,
+    val attributes: Map<String, Attribute>,
     val spaceId: String
 )
 
@@ -22,15 +26,14 @@ data class Product(
 data class NetworkProduct(
     val id: String,
     val name: String,
-    val price: Float?,
     val description: String,
+    val attributes: Map<String, Attribute>,
     val spaceId: String
 )
 
 @Serializable
 data class AddProductNetworkRequest(
     val name: String,
-    val price: Float?,
     val description: String,
     val spaceId: String
 )
@@ -38,7 +41,6 @@ data class AddProductNetworkRequest(
 
 object Products: UUIDTable() {
     val name = varchar("name", 255)
-    val price = float("price").nullable()
     val description = text("description")
     val spaceId = reference("spaceId", Spaces)
 }
@@ -47,31 +49,23 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<ProductEntity>(Products)
 
     var name by Products.name
-    var price by Products.price
     var description by Products.description
-    var space by SpaceEntity referencedOn  Products.spaceId
+    val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
+    var space by SpaceEntity referencedOn Products.spaceId
 }
 
 fun ProductEntity.toProduct() = Product(
     id.value.toString(),
     name,
-    price,
     description,
+    attributes.associate { it.key to it.toAttribute() },
     space.id.value.toString()
 )
 
 fun Product.toNetworkProduct() = NetworkProduct(
     id,
     name,
-    price,
     description,
-    spaceId
-)
-
-fun NetworkProduct.toProduct() = Product(
-    id,
-    name,
-    price,
-    description,
+    attributes,
     spaceId
 )

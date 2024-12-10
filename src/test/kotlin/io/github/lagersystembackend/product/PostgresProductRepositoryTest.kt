@@ -1,5 +1,9 @@
 package io.github.lagersystembackend.product
 
+import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.PostgresProductAttributeRepository
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.space.Space
 import io.github.lagersystembackend.space.SpaceEntity
@@ -29,7 +33,7 @@ class PostgresProductRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Products, Spaces, Storages, StorageToStorages)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
             exampleStorageEntity = StorageEntity.new(id = storageId) {
                 name = "storage name"
                 description = "storage description"
@@ -46,7 +50,7 @@ class PostgresProductRepositoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Products, Spaces, Storages, StorageToStorages)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
         }
     }
 
@@ -55,14 +59,13 @@ class PostgresProductRepositoryTest {
         val expectedProduct = Product(
             "any id",
             "name",
-            1.2f,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
 
-        expectedProduct.run { sut.createProduct(name, price, description, spaceId.toString()) }.apply {
+        expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }.apply {
             name shouldBe expectedProduct.name
-            price shouldBe expectedProduct.price
             description shouldBe expectedProduct.description
             this.spaceId shouldBe expectedProduct.spaceId
         }
@@ -73,12 +76,12 @@ class PostgresProductRepositoryTest {
         val expectedProduct = Product(
             "any id",
             "name",
-            1.2f,
             "description",
+            emptyMap(),
             UUID.randomUUID().toString()
         )
         runCatching {
-            expectedProduct.run { sut.createProduct(name, price, description, spaceId.toString()) }
+            expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -91,12 +94,12 @@ class PostgresProductRepositoryTest {
         val expectedProduct = Product(
             "any id",
             "name",
-            1.2f,
             "description",
+            emptyMap(),
             "Invalid UUID"
         )
         runCatching {
-            expectedProduct.run { sut.createProduct(name, price, description, spaceId.toString()) }
+            expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -105,32 +108,15 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `create Product should return Product when prize is null`() = testApplication {
-        val expectedProduct = Product(
-            "any id",
-            "name",
-            null,
-            "description",
-            spaceId.toString()
-        )
-        expectedProduct.run { sut.createProduct(name, price, description, spaceId.toString()) }.apply {
-            name shouldBe expectedProduct.name
-            price shouldBe null
-            description shouldBe expectedProduct.description
-            this.spaceId shouldBe expectedProduct.spaceId
-        }
-    }
-
-    @Test
     fun `get Product should return Product`() = testApplication {
         val expectedProduct = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
-        val createdProduct = expectedProduct.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        val createdProduct = expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
         sut.getProduct(createdProduct.id) shouldBe createdProduct
     }
 
@@ -157,26 +143,30 @@ class PostgresProductRepositoryTest {
             Product(
                 "any id",
                 "name1",
-                null,
                 "description",
+                emptyMap(),
                 spaceId.toString()
             ),
             Product(
                 "any id",
                 "name2",
-                null,
                 "description",
+                mapOf(
+                    "someKey" to Attribute.NumberAttribute(1.2f),
+                    "someOtherKey" to Attribute.StringAttribute("some text"),
+                    "someBooleanKey" to Attribute.BooleanAttribute(true)
+                ),
                 spaceId.toString()
             ),
             Product(
                 "any id",
                 "name3",
-                null,
                 "description",
+                emptyMap(),
                 spaceId.toString()
             )
         )
-        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, price, description, spaceId) } }
+        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, spaceId) } }
         sut.getProducts() shouldBe expectedProducts
     }
 
@@ -186,12 +176,12 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `update Product should update all attributes Product`() = testApplication {
+    fun `update Product should update Product`() = testApplication {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
         val secondSpaceId = UUID.randomUUID()
@@ -202,14 +192,14 @@ class PostgresProductRepositoryTest {
                 storage = exampleStorageEntity
             }.toSpace()
         }
-        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
-        val updatedProduct = sut.updateProduct(createdProduct.id, "new name", 1.2f, "new description", secondSpaceId.toString())
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description", secondSpaceId.toString())
 
         updatedProduct shouldBe Product(
             createdProduct.id,
             "new name",
-            1.2f,
             "new description",
+            emptyMap(),
             secondSpaceId.toString()
         )
     }
@@ -219,12 +209,12 @@ class PostgresProductRepositoryTest {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
-        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
-        val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null, null)
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
 
         updatedProduct shouldBe createdProduct
     }
@@ -232,7 +222,7 @@ class PostgresProductRepositoryTest {
     @Test
     fun `update Product should return null when Product not found`() = testApplication {
 
-        val updatedProduct = sut.updateProduct(UUID.randomUUID().toString(), "any new name", null, null, null)
+        val updatedProduct = sut.updateProduct(UUID.randomUUID().toString(), "any new name", null, null)
 
         updatedProduct shouldBe null
     }
@@ -241,7 +231,7 @@ class PostgresProductRepositoryTest {
     fun `update Product should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         runCatching {
-            sut.updateProduct(invalidUUID, null, 12.2f, null, null)
+            sut.updateProduct(invalidUUID, null, null, null)
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -255,13 +245,13 @@ class PostgresProductRepositoryTest {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
-        product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        product.run { sut.createProduct(name, description, spaceId.toString()) }
         runCatching {
-            sut.updateProduct(invalidUUID, null, 12.2f, null, invalidUUID)
+            sut.updateProduct(invalidUUID, null, null, invalidUUID)
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -274,13 +264,13 @@ class PostgresProductRepositoryTest {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
-        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         runCatching {
-            sut.updateProduct(createdProduct.id, null, 12.2f, null, spaceId = UUID.randomUUID().toString())
+            sut.updateProduct(createdProduct.id, null, null, spaceId = UUID.randomUUID().toString())
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -289,22 +279,22 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
-    fun `delete Product should return true when Product is deleted`() = testApplication {
+    fun `delete Product should return deleted Product`() = testApplication {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
-        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         sut.deleteProduct(createdProduct.id) shouldBe createdProduct
         sut.getProduct(createdProduct.id) shouldBe null
 
     }
 
     @Test
-    fun `delete Product should return false when Product not found`() = testApplication {
+    fun `delete Product should return null when Product not found`() = testApplication {
         sut.deleteProduct(UUID.randomUUID().toString()) shouldBe null
     }
 
@@ -321,12 +311,27 @@ class PostgresProductRepositoryTest {
     }
 
     @Test
+    fun `delete Product should delete all of its attributes`() = testApplication {
+        val product = sut.createProduct("name", "description", spaceId.toString())
+        val productAttributeRepository = PostgresProductAttributeRepository()
+        product.run {
+            productAttributeRepository.createOrUpdateAttribute("someKey", Attribute.NumberAttribute(1.2f), id)
+            productAttributeRepository.createOrUpdateAttribute("someOtherKey", Attribute.StringAttribute("some text"), id)
+            productAttributeRepository.createOrUpdateAttribute("someBooleanKey", Attribute.BooleanAttribute(true), id)
+        }
+        transaction { ProductAttributeEntity.all().count() } shouldBe 3
+        sut.getProduct(product.id)!!.attributes.size shouldBe 3
+        sut.deleteProduct(product.id)
+        transaction { ProductAttributeEntity.all().count() } shouldBe 0
+    }
+
+    @Test
     fun `moveProduct should return Product with new Space`() = testApplication {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
 
@@ -339,14 +344,14 @@ class PostgresProductRepositoryTest {
             }.toSpace()
         }
 
-        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         val movedProduct = sut.moveProduct(createdProduct.id, secondSpaceId.toString())
 
         movedProduct shouldBe Product(
             createdProduct.id,
             createdProduct.name,
-            createdProduct.price,
             createdProduct.description,
+            emptyMap(),
             secondSpaceId.toString()
         )
     }
@@ -369,11 +374,11 @@ class PostgresProductRepositoryTest {
         val product = Product(
             "any id",
             "name",
-            null,
             "description",
+            emptyMap(),
             spaceId.toString()
         )
-        val createdProduct = product.run { sut.createProduct(name, price, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         runCatching {
             sut.moveProduct(createdProduct.id, UUID.randomUUID().toString())
         }.exceptionOrNull().run {
