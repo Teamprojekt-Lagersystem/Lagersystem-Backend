@@ -324,4 +324,76 @@ class PostgresProductRepositoryTest {
         sut.deleteProduct(product.id)
         transaction { ProductAttributeEntity.all().count() } shouldBe 0
     }
+
+    @Test
+    fun `moveProduct should return Product with new Space`() = testApplication {
+        val product = Product(
+            "any id",
+            "name",
+            "description",
+            emptyMap(),
+            spaceId.toString()
+        )
+
+        val secondSpaceId = UUID.randomUUID()
+        transaction {
+            SpaceEntity.new(id = secondSpaceId) {
+                name = "second space name"
+                description = "second space description"
+                storage = exampleStorageEntity
+            }.toSpace()
+        }
+
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val movedProduct = sut.moveProduct(createdProduct.id, secondSpaceId.toString())
+
+        movedProduct shouldBe Product(
+            createdProduct.id,
+            createdProduct.name,
+            createdProduct.description,
+            emptyMap(),
+            secondSpaceId.toString()
+        )
+    }
+
+    @Test
+    fun `moveProduct should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
+        val invalidUUID = "Invalid UUID"
+        runCatching {
+            sut.moveProduct(invalidUUID, spaceId.toString())
+        }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Invalid UUID string: Invalid UUID"
+        }
+    }
+
+
+    @Test
+    fun `moveProduct should throw IllegalArgumentException when to SpaceUUID is unknown`() = testApplication {
+        val product = Product(
+            "any id",
+            "name",
+            "description",
+            emptyMap(),
+            spaceId.toString()
+        )
+        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        runCatching {
+            sut.moveProduct(createdProduct.id, UUID.randomUUID().toString())
+        }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "target Space not found"
+        }
+    }
+
+    @Test
+    fun `moveProduct should throw IllegalArgumentException when product is not found`() = testApplication {
+        runCatching {
+            sut.moveProduct(UUID.randomUUID().toString(), spaceId.toString())
+        }.exceptionOrNull().run {
+            this shouldBe  null
+        }
+    }
 }
