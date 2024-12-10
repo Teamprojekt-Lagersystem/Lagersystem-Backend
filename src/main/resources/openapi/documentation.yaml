@@ -130,6 +130,57 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
+  /v1/products/moveProduct/{id}/{spaceId}:
+    patch:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "spaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkProduct"
   /v1/spaces:
     get:
       description: ""
