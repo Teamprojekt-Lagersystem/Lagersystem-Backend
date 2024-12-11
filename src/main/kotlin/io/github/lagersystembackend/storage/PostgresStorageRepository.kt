@@ -2,6 +2,7 @@ package io.github.lagersystembackend.storage
 
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 
 import java.util.UUID
 
@@ -15,6 +16,7 @@ class PostgresStorageRepository: StorageRepository {
         val newStorage = StorageEntity.new {
             this.name = name
             this.description = description
+            this.creationTime = LocalDateTime.now()
         }
         parent?.run { subStorages = SizedCollection(subStorages + newStorage) }
         newStorage.parent = parent

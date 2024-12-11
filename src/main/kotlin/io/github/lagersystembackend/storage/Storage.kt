@@ -11,7 +11,10 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 data class Storage(
@@ -20,7 +23,8 @@ data class Storage(
     val description: String,
     val spaces: List<Space>,
     val parentId: String?,
-    val subStorages: List<Storage>
+    val subStorages: List<Storage>,
+    val creationTime: LocalDateTime
 )
 
 @Serializable
@@ -29,7 +33,8 @@ data class NetworkStorage(
     val name: String,
     val description: String,
     val spaces: List<NetworkSpace>,
-    val subStorages: List<NetworkStorage>
+    val subStorages: List<NetworkStorage>,
+    val creationTime: String
 )
 
 @Serializable
@@ -47,6 +52,7 @@ data class MoveStorageRequest(
 object Storages: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
+    val creationTime = datetime("creationTime")
 }
 
 object StorageToStorages: Table() {
@@ -75,6 +81,7 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
                 }
             }
         }
+    var creationTime by Storages.creationTime
 
     override fun delete() {
         spaces.forEach { it.delete() }
@@ -91,7 +98,8 @@ fun StorageEntity.toStorage(): Storage {
         description = description,
         spaces = spaces.map { it.toSpace() },
         parentId = parent?.id?.value?.toString(),
-        subStorages = subStorages.map { it.toStorage() }
+        subStorages = subStorages.map { it.toStorage() },
+        creationTime = creationTime
     )
 }
 
@@ -108,6 +116,7 @@ private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage
         name = name,
         description = description,
         spaces = spaces.map { it.toNetworkSpace() },
-        subStorages = subStorages
+        subStorages = subStorages,
+        creationTime = creationTime.format(DateTimeFormatter.ISO_DATE_TIME)
     )
 }

@@ -13,6 +13,9 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.datetime
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 
@@ -22,7 +25,8 @@ data class Space(
     val size: Float?,
     val description: String,
     val products: List<Product>,
-    val storageId: String
+    val storageId: String,
+    val creationTime: LocalDateTime
 )
 
 @Serializable
@@ -32,7 +36,8 @@ data class NetworkSpace(
     val size: Float?,
     val description: String,
     val products: List<NetworkProduct>?,
-    val storageId: String
+    val storageId: String,
+    val creationTime: String
 )
 
 @Serializable
@@ -53,6 +58,7 @@ object Spaces: UUIDTable() {
     val size = float("size").nullable()
     val description = text("description")
     val storageId = reference("storageId", Storages)
+    val creationTime = datetime("creationTime")
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -63,6 +69,7 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Spaces.description
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
+    var creationTime by Spaces.creationTime
 
     override fun delete() {
         products.forEach { it.delete() }
@@ -76,7 +83,8 @@ fun SpaceEntity.toSpace() = Space(
     size,
     description,
     products.map { it.toProduct() },
-    storage.id.value.toString()
+    storage.id.value.toString(),
+    creationTime
 )
 
 fun Space.toNetworkSpace() = NetworkSpace(
@@ -85,5 +93,6 @@ fun Space.toNetworkSpace() = NetworkSpace(
     size,
     description,
     products.map { it.toNetworkProduct() },
-    storageId
+    storageId,
+    creationTime.format(DateTimeFormatter.ISO_DATE_TIME)
 )

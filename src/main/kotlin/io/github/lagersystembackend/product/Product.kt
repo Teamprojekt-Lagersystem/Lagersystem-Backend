@@ -11,6 +11,9 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.datetime
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 
@@ -19,7 +22,8 @@ data class Product(
     val name: String,
     val description: String,
     val attributes: Map<String, Attribute>,
-    val spaceId: String
+    val spaceId: String,
+    val creationTime: LocalDateTime
 )
 
 @Serializable
@@ -28,7 +32,8 @@ data class NetworkProduct(
     val name: String,
     val description: String,
     val attributes: Map<String, Attribute>,
-    val spaceId: String
+    val spaceId: String,
+    val creationTime: String
 )
 
 @Serializable
@@ -43,6 +48,7 @@ object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
     val spaceId = reference("spaceId", Spaces)
+    val creationTime = datetime("creationTime")
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -52,6 +58,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Products.description
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
     var space by SpaceEntity referencedOn Products.spaceId
+    var creationTime by Products.creationTime
 }
 
 fun ProductEntity.toProduct() = Product(
@@ -59,7 +66,8 @@ fun ProductEntity.toProduct() = Product(
     name,
     description,
     attributes.associate { it.key to it.toAttribute() },
-    space.id.value.toString()
+    space.id.value.toString(),
+    creationTime
 )
 
 fun Product.toNetworkProduct() = NetworkProduct(
@@ -67,5 +75,6 @@ fun Product.toNetworkProduct() = NetworkProduct(
     name,
     description,
     attributes,
-    spaceId
+    spaceId,
+    creationTime.format(DateTimeFormatter.ISO_DATE_TIME)
 )
