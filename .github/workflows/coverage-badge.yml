@@ -1,0 +1,50 @@
+name: Create coverage badge
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Start Database
+        run: docker-compose -f db/docker-compose.yml up -d
+
+      - name: Generate coverage output
+        run: |
+          echo "COVERAGE=$(${{github.workspace}}/gradlew -q printLineCoverage)" >> $GITHUB_ENV
+
+      - name: Stop Database
+        if: always()
+        run: docker-compose -f db/docker-compose.yml down
+
+      - name: Update dynamic badge gist
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{secrets.GIST_SECRET}}
+          gistID: 8f4f400c842a9ece03ad543db3a395dc
+          filename: lagersystem-backend-coverage-badge.json
+          label: coverage
+          message: ${{env.COVERAGE}}%
+          valColorRange: ${{env.COVERAGE}}
+          minColorRange: 0
+          maxColorRange: 100
