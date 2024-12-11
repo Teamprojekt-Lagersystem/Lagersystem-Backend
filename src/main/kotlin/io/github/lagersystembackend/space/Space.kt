@@ -13,6 +13,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -58,7 +59,7 @@ object Spaces: UUIDTable() {
     val size = float("size").nullable()
     val description = text("description")
     val storageId = reference("storageId", Storages)
-    val creationTime = datetime("creationTime")
+    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {

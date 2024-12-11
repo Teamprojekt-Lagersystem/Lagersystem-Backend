@@ -2,6 +2,7 @@ package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresProductRepository : ProductRepository {
@@ -16,7 +17,7 @@ class PostgresProductRepository : ProductRepository {
             this.name = name
             this.description = description
             this.space = space
-            this.creationTime = LocalDateTime.now()
+            this.creationTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }.toProduct()
     }
 

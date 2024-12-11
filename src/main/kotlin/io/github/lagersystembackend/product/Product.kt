@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -48,7 +49,7 @@ object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
     val spaceId = reference("spaceId", Spaces)
-    val creationTime = datetime("creationTime")
+    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {

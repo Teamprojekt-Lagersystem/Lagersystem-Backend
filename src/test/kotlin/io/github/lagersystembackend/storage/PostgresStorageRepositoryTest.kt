@@ -12,6 +12,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -47,7 +48,7 @@ class PostgresStorageRepositoryTest {
     fun `create Storage should return Storage`() = testApplication {
         val rootStorage = insertRootStorage()
         val expectedStorage =
-            Storage("anyId", "Storage", "Storage description", emptyList(), rootStorage.id, emptyList())
+            Storage("anyId", "Storage", "Storage description", emptyList(), rootStorage.id, emptyList(), LocalDateTime.now())
         val createdStorage = expectedStorage.run { sut.createStorage(name, description, parentId) }
 
         createdStorage.apply {
@@ -94,9 +95,9 @@ class PostgresStorageRepositoryTest {
     @Test
     fun `get Storages should return List of Storages`() = testApplication {
         val expectedStorages = listOf(
-            Storage("anyId", "root1", "Storage description", spaces = emptyList(), parentId = null, subStorages =  emptyList()),
-            Storage("anyId", "root2", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList()),
-            Storage("anyId", "root3", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList())
+            Storage("anyId", "root1", "Storage description", spaces = emptyList(), parentId = null, subStorages =  emptyList(), creationTime = LocalDateTime.now()),
+            Storage("anyId", "root2", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), creationTime = LocalDateTime.now()),
+            Storage("anyId", "root3", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), creationTime = LocalDateTime.now())
         )
         val createdStorages = expectedStorages.map { it.run { sut.createStorage(name, description, parentId) } }
         sut.getStorages() shouldBe createdStorages
@@ -169,9 +170,9 @@ class PostgresStorageRepositoryTest {
     fun `delete Storage should delete spaces`() = testApplication {
         val rootStorage = insertRootStorage()
         val spaces = listOf(
-            Space("anyId", "Space1", 100f, "Space description", emptyList(), rootStorage.id),
-            Space("anyId", "Space2", 200f, "Space description", emptyList(), rootStorage.id),
-            Space("anyId", "Space3", 300f, "Space description", emptyList(), rootStorage.id)
+            Space("anyId", "Space1", 100f, "Space description", emptyList(), rootStorage.id, LocalDateTime.now()),
+            Space("anyId", "Space2", 200f, "Space description", emptyList(), rootStorage.id, LocalDateTime.now()),
+            Space("anyId", "Space3", 300f, "Space description", emptyList(), rootStorage.id, LocalDateTime.now())
         )
         val spaceRepository = PostgresSpaceRepository()
         val createdSpaces = spaces.map { it.run { spaceRepository.createSpace(name, size, description, storageId) } }

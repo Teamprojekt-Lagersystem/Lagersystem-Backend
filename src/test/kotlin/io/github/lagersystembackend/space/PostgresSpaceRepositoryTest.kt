@@ -13,6 +13,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -62,7 +63,7 @@ class PostgresSpaceRepositoryTest {
     @Test
     fun `create Space should return Space`() = testApplication {
         val expectedSpace =
-            Space("anyId", "Space", 100f,"Space description", emptyList(), exampleStorageId.toString())
+            Space("anyId", "Space", 100f,"Space description", emptyList(), exampleStorageId.toString(), LocalDateTime.now())
         val createdStorage = expectedSpace.run { sut.createSpace(name, size, description, storageId) }
 
         createdStorage.apply {
@@ -108,13 +109,14 @@ class PostgresSpaceRepositoryTest {
 
     @Test
     fun `get Spaces should return List of Spaces`() = testApplication {
+        val createTime = LocalDateTime.now()
         val expectedSpaces = listOf(
-            Space("anyId", "Space1", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString()),
-            Space("anyId", "Space2", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString()),
-            Space("anyId", "Space3", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString())
+            Space("anyId", "Space1", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime),
+            Space("anyId", "Space2", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime),
+            Space("anyId", "Space3", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime)
         )
-        val createdStorages = expectedSpaces.map { it.run { sut.createSpace(name, size, description, storageId) } }
-        sut.getSpaces() shouldBe createdStorages
+        val createdSpaces = expectedSpaces.map { it.run { sut.createSpace(name, size, description, storageId) } }
+        sut.getSpaces() shouldBe createdSpaces
     }
 
     @Test
@@ -172,9 +174,9 @@ class PostgresSpaceRepositoryTest {
     fun `delete Space should delete products`() = testApplication {
         val createdSpace = insertSpace()
         val products = listOf(
-            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id),
-            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id),
-            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id)
+            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
+            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
+            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now())
         )
         val productRepository = PostgresProductRepository()
         val createdProducts = products.map { it.run { productRepository.createProduct(name, description, spaceId) } }
@@ -242,9 +244,9 @@ class PostgresSpaceRepositoryTest {
     fun `moveSpace should keep products after move`() = testApplication {
         val createdSpace = insertSpace()
         val products = listOf(
-            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id),
-            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id),
-            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id)
+            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
+            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
+            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now())
         )
         val productRepository = PostgresProductRepository()
         val createdProducts = products.map { it.run { productRepository.createProduct(name, description, createdSpace.id) } }

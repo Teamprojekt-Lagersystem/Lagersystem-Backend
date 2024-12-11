@@ -3,6 +3,7 @@ package io.github.lagersystembackend.space
 import io.github.lagersystembackend.storage.StorageEntity
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresSpaceRepository : SpaceRepository {
@@ -18,7 +19,7 @@ class PostgresSpaceRepository : SpaceRepository {
             this.size = size
             this.description = description
             this.storage = storage
-            this.creationTime = LocalDateTime.now()
+            this.creationTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }.toSpace()
     }
 

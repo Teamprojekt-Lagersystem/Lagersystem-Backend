@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -41,8 +42,8 @@ class SpaceRoutesKtTest {
     fun `get Spaces should respond with List of NetworkSpaces`() = testApplication {
         createEnvironment()
         val spaces = listOf(
-            Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf()),
-            Space(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", storageId = "any id", products = listOf())
+            Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now()),
+            Space(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now())
         )
         every { mockSpaceRepository.getSpaces() } returns spaces
         client.get("/spaces").apply {
@@ -65,7 +66,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `get Space by ID should respond with NetworkSpace`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now())
         every { mockSpaceRepository.getSpace(space1.id) } returns space1
         client.get("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -102,7 +103,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `delete Space should delete Space`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now())
         every { mockSpaceRepository.deleteSpace(space1.id) } returns space1
         client.delete("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -151,7 +152,7 @@ class SpaceRoutesKtTest {
         val storageId = UUID.randomUUID().toString()
         val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", 100f, "Description 1", storageId = storageId)
         addSpaceNetworkRequest.run {
-            val space = Space(id, name, size, description, products = listOf(), storageId)
+            val space = Space(id, name, size, description, products = listOf(), storageId, LocalDateTime.now())
             every { mockSpaceRepository.createSpace(name, size, description, storageId) } returns space
             every { mockStorageRepository.storageExists(storageId) } returns true
             client.post("/spaces") {
@@ -177,7 +178,7 @@ class SpaceRoutesKtTest {
         val storageId = UUID.randomUUID().toString()
         val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, "Description 1", storageId = storageId)
         addSpaceNetworkRequest.run {
-            val space = Space(id, name, size, description, products = listOf(), storageId)
+            val space = Space(id, name, size, description, products = listOf(), storageId, LocalDateTime.now())
             every { mockSpaceRepository.createSpace(name, size, description, storageId) } returns space
             every { mockStorageRepository.storageExists(storageId) } returns true
             client.post("/spaces") {

@@ -17,6 +17,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -61,7 +62,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
 
         expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }.apply {
@@ -78,7 +80,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            LocalDateTime.now()
         )
         runCatching {
             expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
@@ -96,7 +99,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            "Invalid UUID"
+            "Invalid UUID",
+            LocalDateTime.now()
         )
         runCatching {
             expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
@@ -114,7 +118,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         val createdProduct = expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
         sut.getProduct(createdProduct.id) shouldBe createdProduct
@@ -145,7 +150,8 @@ class PostgresProductRepositoryTest {
                 "name1",
                 "description",
                 emptyMap(),
-                spaceId.toString()
+                spaceId.toString(),
+                LocalDateTime.now()
             ),
             Product(
                 "any id",
@@ -156,14 +162,16 @@ class PostgresProductRepositoryTest {
                     "someOtherKey" to Attribute.StringAttribute("some text"),
                     "someBooleanKey" to Attribute.BooleanAttribute(true)
                 ),
-                spaceId.toString()
+                spaceId.toString(),
+                LocalDateTime.now()
             ),
             Product(
                 "any id",
                 "name3",
                 "description",
                 emptyMap(),
-                spaceId.toString()
+                spaceId.toString(),
+                LocalDateTime.now()
             )
         )
         expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, spaceId) } }
@@ -182,7 +190,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         val secondSpaceId = UUID.randomUUID()
         transaction {
@@ -200,7 +209,8 @@ class PostgresProductRepositoryTest {
             "new name",
             "new description",
             emptyMap(),
-            secondSpaceId.toString()
+            secondSpaceId.toString(),
+            createdProduct.creationTime
         )
     }
 
@@ -211,7 +221,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
@@ -247,7 +258,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         product.run { sut.createProduct(name, description, spaceId.toString()) }
         runCatching {
@@ -266,7 +278,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         runCatching {
@@ -285,7 +298,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         sut.deleteProduct(createdProduct.id) shouldBe createdProduct
@@ -332,7 +346,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
 
         val secondSpaceId = UUID.randomUUID()
@@ -352,7 +367,8 @@ class PostgresProductRepositoryTest {
             createdProduct.name,
             createdProduct.description,
             emptyMap(),
-            secondSpaceId.toString()
+            secondSpaceId.toString(),
+            createdProduct.creationTime
         )
     }
 
@@ -376,7 +392,8 @@ class PostgresProductRepositoryTest {
             "name",
             "description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
+            LocalDateTime.now()
         )
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         runCatching {

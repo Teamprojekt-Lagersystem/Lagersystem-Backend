@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import java.time.LocalDateTime
@@ -52,7 +53,7 @@ data class MoveStorageRequest(
 object Storages: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
-    val creationTime = datetime("creationTime")
+    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
 }
 
 object StorageToStorages: Table() {
