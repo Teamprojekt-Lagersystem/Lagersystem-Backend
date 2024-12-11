@@ -13,11 +13,13 @@ class PostgresProductRepository : ProductRepository {
         spaceId: String
     ): Product = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: return@transaction throw IllegalArgumentException("Space not found")
+        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         ProductEntity.new {
             this.name = name
             this.description = description
             this.space = space
-            this.creationTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
+            this.creationTime = createTime
+            this.updatedAt = createTime
         }.toProduct()
     }
 
@@ -39,6 +41,7 @@ class PostgresProductRepository : ProductRepository {
             name?.let { product.name = it }
             description?.let { product.description = it }
             spaceId?.let { product.space = SpaceEntity.findById(UUID.fromString(it)) ?: throw IllegalArgumentException("Space not found") }
+            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
     }
 
@@ -46,6 +49,7 @@ class PostgresProductRepository : ProductRepository {
         val targetSpace = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("target Space not found")
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             product.space = targetSpace
+            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
 
     }

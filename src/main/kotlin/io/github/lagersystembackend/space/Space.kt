@@ -27,7 +27,8 @@ data class Space(
     val description: String,
     val products: List<Product>,
     val storageId: String,
-    val creationTime: LocalDateTime
+    val creationTime: LocalDateTime,
+    val updatedAt: LocalDateTime
 )
 
 @Serializable
@@ -38,7 +39,8 @@ data class NetworkSpace(
     val description: String,
     val products: List<NetworkProduct>?,
     val storageId: String,
-    val creationTime: String
+    val creationTime: String,
+    val updatedAt: String
 )
 
 @Serializable
@@ -60,6 +62,7 @@ object Spaces: UUIDTable() {
     val description = text("description")
     val storageId = reference("storageId", Storages)
     val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").defaultExpression(CurrentDateTime)
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -71,6 +74,7 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
     var creationTime by Spaces.creationTime
+    var updatedAt by Spaces.updatedAt
 
     override fun delete() {
         products.forEach { it.delete() }
@@ -85,7 +89,8 @@ fun SpaceEntity.toSpace() = Space(
     description,
     products.map { it.toProduct() },
     storage.id.value.toString(),
-    creationTime
+    creationTime,
+    updatedAt
 )
 
 fun Space.toNetworkSpace() = NetworkSpace(
@@ -95,5 +100,6 @@ fun Space.toNetworkSpace() = NetworkSpace(
     description,
     products.map { it.toNetworkProduct() },
     storageId,
-    creationTime.format(DateTimeFormatter.ISO_DATE_TIME)
+    creationTime.format(DateTimeFormatter.ISO_DATE_TIME),
+    updatedAt.format(DateTimeFormatter.ISO_DATE_TIME)
 )

@@ -24,7 +24,8 @@ data class Product(
     val description: String,
     val attributes: Map<String, Attribute>,
     val spaceId: String,
-    val creationTime: LocalDateTime
+    val creationTime: LocalDateTime,
+    val updatedAt: LocalDateTime
 )
 
 @Serializable
@@ -34,7 +35,8 @@ data class NetworkProduct(
     val description: String,
     val attributes: Map<String, Attribute>,
     val spaceId: String,
-    val creationTime: String
+    val creationTime: String,
+    val updatedAt: String
 )
 
 @Serializable
@@ -50,6 +52,7 @@ object Products: UUIDTable() {
     val description = text("description")
     val spaceId = reference("spaceId", Spaces)
     val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").defaultExpression(CurrentDateTime)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -60,6 +63,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
     var space by SpaceEntity referencedOn Products.spaceId
     var creationTime by Products.creationTime
+    var updatedAt by Products.updatedAt
 }
 
 fun ProductEntity.toProduct() = Product(
@@ -68,7 +72,8 @@ fun ProductEntity.toProduct() = Product(
     description,
     attributes.associate { it.key to it.toAttribute() },
     space.id.value.toString(),
-    creationTime
+    creationTime,
+    updatedAt
 )
 
 fun Product.toNetworkProduct() = NetworkProduct(
@@ -77,5 +82,6 @@ fun Product.toNetworkProduct() = NetworkProduct(
     description,
     attributes,
     spaceId,
-    creationTime.format(DateTimeFormatter.ISO_DATE_TIME)
+    creationTime.format(DateTimeFormatter.ISO_DATE_TIME),
+    updatedAt.format(DateTimeFormatter.ISO_DATE_TIME),
 )

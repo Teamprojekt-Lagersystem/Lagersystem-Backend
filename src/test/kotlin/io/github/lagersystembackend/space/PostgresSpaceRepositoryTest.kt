@@ -8,6 +8,9 @@ import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
+import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
@@ -63,7 +66,7 @@ class PostgresSpaceRepositoryTest {
     @Test
     fun `create Space should return Space`() = testApplication {
         val expectedSpace =
-            Space("anyId", "Space", 100f,"Space description", emptyList(), exampleStorageId.toString(), LocalDateTime.now())
+            Space("anyId", "Space", 100f,"Space description", emptyList(), exampleStorageId.toString(), LocalDateTime.now(), LocalDateTime.now())
         val createdStorage = expectedSpace.run { sut.createSpace(name, size, description, storageId) }
 
         createdStorage.apply {
@@ -71,6 +74,7 @@ class PostgresSpaceRepositoryTest {
             size shouldBe expectedSpace.size
             description shouldBe expectedSpace.description
             storageId shouldBe expectedSpace.storageId
+            creationTime shouldBeEqual updatedAt
         }
     }
 
@@ -111,9 +115,9 @@ class PostgresSpaceRepositoryTest {
     fun `get Spaces should return List of Spaces`() = testApplication {
         val createTime = LocalDateTime.now()
         val expectedSpaces = listOf(
-            Space("anyId", "Space1", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime),
-            Space("anyId", "Space2", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime),
-            Space("anyId", "Space3", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime)
+            Space("anyId", "Space1", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
+            Space("anyId", "Space2", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
+            Space("anyId", "Space3", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
         )
         val createdSpaces = expectedSpaces.map { it.run { sut.createSpace(name, size, description, storageId) } }
         sut.getSpaces() shouldBe createdSpaces
@@ -127,6 +131,7 @@ class PostgresSpaceRepositoryTest {
             this shouldBe updatedSpace
             name shouldBe "newName"
             description shouldBe createdSpace.description
+            createdSpace.updatedAt shouldBeLessThan updatedSpace!!.updatedAt
         }
     }
 
@@ -174,9 +179,9 @@ class PostgresSpaceRepositoryTest {
     fun `delete Space should delete products`() = testApplication {
         val createdSpace = insertSpace()
         val products = listOf(
-            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
-            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
-            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now())
+            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now())
         )
         val productRepository = PostgresProductRepository()
         val createdProducts = products.map { it.run { productRepository.createProduct(name, description, spaceId) } }
@@ -197,6 +202,14 @@ class PostgresSpaceRepositoryTest {
         val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
 
         movedSpace.storageId shouldBe targetStorageId.toString()
+    }
+
+    @Test
+    fun `moveSpace should update updatedAt timestamp`() = testApplication {
+        val createdSpace = insertSpace()
+        val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
+
+        createdSpace.updatedAt shouldBeLessThan movedSpace.updatedAt
     }
 
     @Test
@@ -244,9 +257,9 @@ class PostgresSpaceRepositoryTest {
     fun `moveSpace should keep products after move`() = testApplication {
         val createdSpace = insertSpace()
         val products = listOf(
-            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
-            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now()),
-            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now())
+            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now())
         )
         val productRepository = PostgresProductRepository()
         val createdProducts = products.map { it.run { productRepository.createProduct(name, description, createdSpace.id) } }

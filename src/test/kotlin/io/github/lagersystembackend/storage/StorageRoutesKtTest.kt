@@ -39,8 +39,8 @@ class StorageRoutesKtTest {
     fun `get Storages should respond with List of Parent NetworkStorages`() = testApplication {
         createEnviroment()
         val storages = listOf(
-            Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(),parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now()),
-            Storage(UUID.randomUUID().toString(), "Storage 2", "Description 2", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
+            Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(),parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Storage(UUID.randomUUID().toString(), "Storage 2", "Description 2", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         )
         every { mockStorageRepository.getStorages() } returns storages
         client.get("/storages").apply {
@@ -75,7 +75,7 @@ class StorageRoutesKtTest {
     @Test
     fun `get Storage by ID should respond with NetworkStorage`() = testApplication {
         createEnviroment()
-        val storage1 = Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
+        val storage1 = Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockStorageRepository.getStorage(storage1.id) } returns storage1
         client.get("/storages/${storage1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -113,7 +113,7 @@ class StorageRoutesKtTest {
     fun `get Storage by id should respond with Bad Request when depth parameter is invalid`() = testApplication {
         createEnviroment()
         val id = UUID.randomUUID().toString()
-        val storage = Storage(id, "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
+        val storage = Storage(id, "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockStorageRepository.getStorage(id) } returns storage
         client.get("/storages/${id}?depth=invalid").apply {
             status shouldBe HttpStatusCode.BadRequest
@@ -127,7 +127,7 @@ class StorageRoutesKtTest {
     @Test
     fun `delete Storage should delete Storage`() = testApplication {
         createEnviroment()
-        val storage1 = Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
+        val storage1 = Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockStorageRepository.deleteStorage(storage1.id) } returns storage1
         client.delete("/storages/${storage1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -173,7 +173,7 @@ class StorageRoutesKtTest {
         val id = UUID.randomUUID().toString()
         val addStorageNetworkRequest = AddStorageNetworkRequest("Storage 1", "Description 1", parentId = null)
         addStorageNetworkRequest.run {
-            val storage = Storage(id, name, description, spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
+            val storage = Storage(id, name, description, spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
             every { mockStorageRepository.createStorage(name, description, parentId) } returns storage
             client.post("/storages") {
                 setBody(addStorageNetworkRequest)
@@ -245,8 +245,8 @@ class StorageRoutesKtTest {
         val parentId = UUID.randomUUID().toString()
         val addStorageNetworkRequest = AddStorageNetworkRequest("Storage 1", "Description 1", parentId = parentId)
         addStorageNetworkRequest.run {
-            val storageParent = Storage(parentId, "Storage Parent", "Description Parent", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
-            val storage = Storage(UUID.randomUUID().toString(), name, description, spaces = listOf(), parentId = parentId, subStorages = listOf(), creationTime = LocalDateTime.now())
+            val storageParent = Storage(parentId, "Storage Parent", "Description Parent", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+            val storage = Storage(UUID.randomUUID().toString(), name, description, spaces = listOf(), parentId = parentId, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
             every { mockStorageRepository.getStorage(parentId) } returns storageParent
             every { mockStorageRepository.createStorage(name, description, parentId) } returns storage
             client.post("/storages") {
@@ -356,7 +356,7 @@ class StorageRoutesKtTest {
         val moveRequest = MoveStorageRequest(newParentId = newParentId)
 
         every { mockStorageRepository.getStorage(id) } returns Storage(
-            id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), LocalDateTime.now()
+            id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), LocalDateTime.now(), LocalDateTime.now()
         )
         every { mockStorageRepository.getStorage(newParentId) } returns null
 
@@ -384,8 +384,8 @@ class StorageRoutesKtTest {
         val newParentId = UUID.randomUUID().toString()
         val moveRequest = MoveStorageRequest(newParentId = newParentId)
 
-        val storageA = Storage(id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
-        val storageParent = Storage(newParentId, "Storage Parent", "Description Parent", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now())
+        val storageA = Storage(id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val storageParent = Storage(newParentId, "Storage Parent", "Description Parent", spaces = listOf(), parentId = null, subStorages = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
 
         every { mockStorageRepository.getStorage(id) } returns storageA
         every { mockStorageRepository.getStorage(newParentId) } returns storageParent

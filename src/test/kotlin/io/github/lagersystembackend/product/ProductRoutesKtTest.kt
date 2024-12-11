@@ -45,8 +45,8 @@ class ProductRoutesKtTest {
     fun `get Products should respond with List of NetworkProducts`() = testApplication {
         createEnvironment()
         val products = listOf(
-            Product(UUID.randomUUID().toString(), "Space 1",  "Description 1",  emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now()),
-            Product(UUID.randomUUID().toString(), "Space 2", "Description 2", mapOf("someKey" to Attribute.NumberAttribute(123f)), UUID.randomUUID().toString(), LocalDateTime.now())
+            Product(UUID.randomUUID().toString(), "Space 1",  "Description 1",  emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now()),
+            Product(UUID.randomUUID().toString(), "Space 2", "Description 2", mapOf("someKey" to Attribute.NumberAttribute(123f)), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
         )
         every { mockProductRepository.getProducts() } returns products
         client.get("/products").apply {
@@ -70,7 +70,7 @@ class ProductRoutesKtTest {
     fun `get Product by ID should respond with NetworkProduct`() = testApplication {
         createEnvironment()
         val product1 =
-            Product(UUID.randomUUID().toString(), "Space 1", "Description 1", emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now())
+            Product(UUID.randomUUID().toString(), "Space 1", "Description 1", emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
         every { mockProductRepository.getProduct(product1.id) } returns product1
         client.get("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -107,7 +107,7 @@ class ProductRoutesKtTest {
     @Test
     fun `delete Product should delete Product`() = testApplication {
         createEnvironment()
-        val product1 = Product(UUID.randomUUID().toString(), "Product 1", "Description 1", emptyMap(), "any id", LocalDateTime.now())
+        val product1 = Product(UUID.randomUUID().toString(), "Product 1", "Description 1", emptyMap(), "any id", LocalDateTime.now(), LocalDateTime.now())
         every { mockProductRepository.deleteProduct(product1.id) } returns product1
         client.delete("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -156,7 +156,7 @@ class ProductRoutesKtTest {
         val addProductNetworkRequest =
             AddProductNetworkRequest("Product 1", "Description 1", UUID.randomUUID().toString())
         addProductNetworkRequest.run {
-            val product = Product(id, name, description, emptyMap(), spaceId, createTime)
+            val product = Product(id, name, description, emptyMap(), spaceId, createTime, createTime)
             every { mockProductRepository.createProduct(name, description, spaceId) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
@@ -173,6 +173,7 @@ class ProductRoutesKtTest {
                     addProductNetworkRequest.description,
                     emptyMap(),
                     addProductNetworkRequest.spaceId,
+                    createTime,
                     createTime
                 ).toNetworkProduct()
             Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
@@ -193,7 +194,7 @@ class ProductRoutesKtTest {
         val addProductNetworkRequest =
             AddProductNetworkRequest("Space 1", "Description 1", UUID.randomUUID().toString())
         addProductNetworkRequest.run {
-            val product = Product(id, name, description, emptyMap(), spaceId, createTime)
+            val product = Product(id, name, description, emptyMap(), spaceId, createTime, createTime)
             every { mockProductRepository.createProduct(name, description, spaceId) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
@@ -210,6 +211,7 @@ class ProductRoutesKtTest {
                     addProductNetworkRequest.description,
                     emptyMap(),
                     addProductNetworkRequest.spaceId,
+                    createTime,
                     createTime
                 ).toNetworkProduct()
             Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse

@@ -14,12 +14,14 @@ class PostgresSpaceRepository : SpaceRepository {
         storageId: String
     ): Space = transaction {
         val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: throw IllegalArgumentException("Storage not found")
+        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         SpaceEntity.new {
             this.name = name
             this.size = size
             this.description = description
             this.storage = storage
-            this.creationTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
+            this.creationTime = createTime
+            this.updatedAt = createTime
         }.toSpace()
     }
 
@@ -41,6 +43,7 @@ class PostgresSpaceRepository : SpaceRepository {
             name?.let { space.name = it }
             size?.let { space.size = it }
             description?.let { space.description = it }
+            space.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toSpace()
     }
 
@@ -63,7 +66,7 @@ class PostgresSpaceRepository : SpaceRepository {
             ?: throw IllegalArgumentException("Storage with ID $targetStorageId not found")
 
         space.storage = targetStorage
-
+        space.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         space.toSpace()
     }
 }
