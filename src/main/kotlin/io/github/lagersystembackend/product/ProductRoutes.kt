@@ -57,6 +57,47 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                 call.respond(deletedProduct.toNetworkProduct())
             }
         }
+        route("/update") {
+            patch {
+                val errors = mutableListOf<ApiError>()
+                val updateProductNetworkRequest = runCatching { call.receive<UpdateProductNetworkRequest>() }.onFailure {
+                    // Log the error for debugging purposes
+                    println("Failed to deserialize request body: ${it.message}")
+                }.getOrNull()
+
+                if (updateProductNetworkRequest == null) {
+                    errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                if (!updateProductNetworkRequest.id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
+                }
+
+                if (updateProductNetworkRequest.spaceId != null && !updateProductNetworkRequest.spaceId.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                }
+
+                if (updateProductNetworkRequest.spaceId != null && !spaceRepository.spaceExists(updateProductNetworkRequest.spaceId)) {
+                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                val updatedProduct = updateProductNetworkRequest.let {
+                    productRepository.updateProduct(it.id, it.name, it.description, it.spaceId)
+                }
+
+                updatedProduct?.let {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        it.toNetworkProduct()
+                    )
+                }
+            }
+        }
         post {
             val errors = mutableListOf<ApiError>()
             val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()

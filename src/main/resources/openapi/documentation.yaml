@@ -181,6 +181,37 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
+  /v1/products/update:
+    patch:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkProduct"
   /v1/spaces:
     get:
       description: ""
@@ -535,10 +566,9 @@ components:
           type: "string"
         name:
           type: "string"
-        price:
-          type: "number"
-          format: "float"
         description:
+          type: "string"
+        attributes:
           type: "string"
         spaceId:
           type: "string"
@@ -546,15 +576,13 @@ components:
       - "id"
       - "name"
       - "description"
+      - "attributes"
       - "spaceId"
     AddProductNetworkRequest:
       type: "object"
       properties:
         name:
           type: "string"
-        price:
-          type: "number"
-          format: "float"
         description:
           type: "string"
         spaceId:
@@ -584,6 +612,19 @@ components:
             $ref: "#/components/schemas/ApiError"
       required:
       - "errors"
+    UpdateProductNetworkRequest:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+        spaceId:
+          type: "string"
+      required:
+      - "id"
     NetworkSpace:
       type: "object"
       properties:
