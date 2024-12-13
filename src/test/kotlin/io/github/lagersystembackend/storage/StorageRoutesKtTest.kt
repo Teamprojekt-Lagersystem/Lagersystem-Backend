@@ -259,6 +259,97 @@ class StorageRoutesKtTest {
     }
 
     @Test
+    fun `patch Storage should respond with NetworkStorage`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
+        val storage = Storage(id, "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf())
+        every { mockStorageRepository.updateStorage(id, updateStorageNetworkRequest.name, updateStorageNetworkRequest.description) } returns storage
+        every { mockStorageRepository.storageExists(id) } returns true
+        client.patch("/storages/update") {
+            setBody(updateStorageNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.OK
+            Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe storage.toNetworkStorage()
+        }
+    }
+
+    @Test
+    fun `patch Storage should respond with BadRequest when id is invalid`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = "invalid id"
+        val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
+        every { mockStorageRepository.storageExists(id) } returns false
+        client.patch("/storages/update") {
+            setBody(updateStorageNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(
+                    ErrorMessages.INVALID_UUID_STORAGE,
+                    ErrorMessages.STORAGE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch Storage should respond with NotFound when Storage not found`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
+        every { mockStorageRepository.storageExists(id) } returns false
+        client.patch("/storages/update") {
+            setBody(updateStorageNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch Storage should respond with BadRequest when request body is missing`() = testApplication {
+        createEnviroment()
+        val badRequest = """
+            {
+                "name": "Storage 1",
+                "description": "Description 1"
+            }
+        """.trimIndent()
+        client.patch("/storages/update") {
+            setBody(badRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
     fun `move Storage should respond with BadRequest when id is invalid`() = testApplication {
         createEnviroment()
         val client = createClient {
