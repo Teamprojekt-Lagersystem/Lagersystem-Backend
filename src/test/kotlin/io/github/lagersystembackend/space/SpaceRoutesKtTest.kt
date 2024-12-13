@@ -211,6 +211,102 @@ class SpaceRoutesKtTest {
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
+
+    @Test
+    fun `patch update should update Space`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+
+        val id = UUID.randomUUID().toString()
+        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(id, "Space 1", 100f, "Description 1")
+        updateSpaceNetworkRequest.run {
+            val space = Space(id, name!!, size!!, description!!, products = listOf(), storageId = "any id")
+            every { mockSpaceRepository.spaceExists(id) } returns true
+            every { mockSpaceRepository.updateSpace(id, name, size, description) } returns space
+            client.patch("/spaces/update") {
+                setBody(updateSpaceNetworkRequest)
+                contentType(ContentType.Application.Json)
+            }.apply {
+                status shouldBe HttpStatusCode.OK
+                Json.decodeFromString<NetworkSpace>(bodyAsText()) shouldBe space.toNetworkSpace()
+            }
+        }
+    }
+
+    @Test
+    fun `patch update should respond with BadRequest when invalid UpdateSpaceNetworkRequest`() = testApplication {
+        createEnvironment()
+        val badRequest = """
+            {
+                "name": "Space 1",
+                "size": 100.0
+            }
+        """.trimIndent()
+
+        client.patch("/spaces/update") {
+            setBody(badRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch update should respond with BadRequest when id is invalid`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val invalidId = "not-a-uuid"
+        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(invalidId, "Space 1", 100f, "Description 1")
+        every { mockSpaceRepository.spaceExists(invalidId) } returns false
+        client.patch("/spaces/update") {
+            setBody(updateSpaceNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(
+                    ErrorMessages.INVALID_UUID_SPACE,
+                    ErrorMessages.SPACE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch update should respond with NotFound when Space not found`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(id, "Space 1", 100f, "Description 1")
+        every { mockSpaceRepository.spaceExists(id) } returns false
+        client.patch("/spaces/update") {
+            setBody(updateSpaceNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.SPACE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
     @Test
     fun `POST move should respond with BadRequest when id is invalid`() = testApplication {
         createEnvironment()

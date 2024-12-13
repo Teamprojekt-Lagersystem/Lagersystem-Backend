@@ -363,13 +363,6 @@ class ProductRoutesKtTest {
         }
     }
 
-
-
-
-
-
-
-
     @Test
     fun `patch moveProduct should respond BadRequest when Product Id invalid`() = testApplication {
         createEnvironment()
