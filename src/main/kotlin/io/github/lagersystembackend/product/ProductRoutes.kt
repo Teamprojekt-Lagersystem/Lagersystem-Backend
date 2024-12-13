@@ -57,13 +57,41 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                 call.respond(deletedProduct.toNetworkProduct())
             }
         }
+        post {
+            val errors = mutableListOf<ApiError>()
+            val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()
+
+            if (addProductNetworkRequest == null) {
+                errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+            } else {
+                if (!addProductNetworkRequest.spaceId.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                }
+
+                if (addProductNetworkRequest.spaceId.isUUID() && !spaceRepository.spaceExists(addProductNetworkRequest.spaceId)) {
+                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                }
+            }
+
+            if (errors.isNotEmpty()) {
+                return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+            }
+
+            val createdProduct = addProductNetworkRequest?.let {
+                productRepository.createProduct(it.name, it.description, it.spaceId)
+            }
+
+            createdProduct?.let {
+                call.respond(
+                    HttpStatusCode.Created,
+                    it.toNetworkProduct()
+                )
+            }
+        }
         route("/update") {
             patch {
                 val errors = mutableListOf<ApiError>()
-                val updateProductNetworkRequest = runCatching { call.receive<UpdateProductNetworkRequest>() }.onFailure {
-                    // Log the error for debugging purposes
-                    println("Failed to deserialize request body: ${it.message}")
-                }.getOrNull()
+                val updateProductNetworkRequest = runCatching { call.receive<UpdateProductNetworkRequest>() }.getOrNull()
 
                 if (updateProductNetworkRequest == null) {
                     errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
@@ -96,37 +124,6 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                         it.toNetworkProduct()
                     )
                 }
-            }
-        }
-        post {
-            val errors = mutableListOf<ApiError>()
-            val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()
-
-            if (addProductNetworkRequest == null) {
-                errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
-            } else {
-                if (!addProductNetworkRequest.spaceId.isUUID()) {
-                    errors.add(ErrorMessages.INVALID_UUID_SPACE)
-                }
-
-                if (addProductNetworkRequest.spaceId.isUUID() && !spaceRepository.spaceExists(addProductNetworkRequest.spaceId)) {
-                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
-                }
-            }
-
-            if (errors.isNotEmpty()) {
-                return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
-            }
-
-            val createdProduct = addProductNetworkRequest?.let {
-                productRepository.createProduct(it.name, it.description, it.spaceId)
-            }
-
-            createdProduct?.let {
-                call.respond(
-                    HttpStatusCode.Created,
-                    it.toNetworkProduct()
-                )
             }
         }
         route("/moveProduct/{id}/{spaceId}") {
