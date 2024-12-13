@@ -370,6 +370,37 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkSpace"
+  /v1/spaces/update:
+    patch:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkSpace"
   /v1/storages:
     get:
       description: ""
@@ -671,6 +702,20 @@ components:
           type: "string"
       required:
       - "targetStorageId"
+    UpdateSpaceNetworkRequest:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        size:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+      required:
+      - "id"
     NetworkStorage:
       type: "object"
       properties:
