@@ -313,6 +313,60 @@ class ProductRoutesKtTest {
         }
     }
 
+    @Test
+    fun `patch update Product should respond BadRequest when Space Id is invalid`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val invalidId = "invalid-id"
+        val updateProductNetworkRequest = UpdateProductNetworkRequest(UUID.randomUUID().toString(), "Product 1", "Description 1", invalidId)
+        updateProductNetworkRequest.run {
+            every { mockSpaceRepository.spaceExists(spaceId!!) } returns true
+        }
+        client.patch("/products/update") {
+            setBody(updateProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch update Product should respond BadRequest when Space not found`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val updateProductNetworkRequest = UpdateProductNetworkRequest(id, "Product 1", "Description 1", UUID.randomUUID().toString())
+        updateProductNetworkRequest.run {
+            every { mockSpaceRepository.spaceExists(spaceId!!) } returns false
+        }
+        client.patch("/products/update") {
+            setBody(updateProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.SPACE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+
+
+
+
 
 
 
