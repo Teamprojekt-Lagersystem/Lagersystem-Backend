@@ -7,7 +7,7 @@ import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.Space
 import io.github.lagersystembackend.space.Spaces
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.date.shouldBeBefore
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -57,7 +57,8 @@ class PostgresStorageRepositoryTest {
             name shouldBe expectedStorage.name
             description shouldBe expectedStorage.description
             parentId shouldBe expectedStorage.parentId
-            creationTime shouldBeEqual updatedAt
+            createdAt shouldBeBefore LocalDateTime.now()
+            updatedAt shouldBe null
         }
         sut.getStorage(rootStorage.id)!!.subStorages shouldContain createdStorage
     }
@@ -98,9 +99,9 @@ class PostgresStorageRepositoryTest {
     @Test
     fun `get Storages should return List of Storages`() = testApplication {
         val expectedStorages = listOf(
-            Storage("anyId", "root1", "Storage description", spaces = emptyList(), parentId = null, subStorages =  emptyList(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
-            Storage("anyId", "root2", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
-            Storage("anyId", "root3", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+            Storage("anyId", "root1", "Storage description", spaces = emptyList(), parentId = null, subStorages =  emptyList(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Storage("anyId", "root2", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Storage("anyId", "root3", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         )
         val createdStorages = expectedStorages.map { it.run { sut.createStorage(name, description, parentId) } }
         sut.getStorages() shouldBe createdStorages
@@ -114,7 +115,7 @@ class PostgresStorageRepositoryTest {
             this shouldBe updatedStorage
             name shouldBe "newName"
             description shouldBe rootStorage.description
-            rootStorage.updatedAt shouldBeLessThan updatedStorage!!.updatedAt
+            rootStorage.createdAt shouldBeBefore updatedStorage?.updatedAt!!
         }
     }
 
@@ -225,7 +226,7 @@ class PostgresStorageRepositoryTest {
 
         val movedStorage = sut.moveStorage(subStorage.id, newParentStorage.id)
 
-        rootStorage.updatedAt shouldBeLessThan movedStorage.updatedAt
+        rootStorage.createdAt shouldBeBefore movedStorage.updatedAt!!
     }
 
     @Test

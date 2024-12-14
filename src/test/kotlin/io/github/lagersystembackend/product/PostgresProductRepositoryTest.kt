@@ -12,7 +12,7 @@ import io.github.lagersystembackend.space.toSpace
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
-import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.date.shouldBeBefore
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -20,6 +20,7 @@ import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -69,12 +70,15 @@ class PostgresProductRepositoryTest {
             LocalDateTime.now()
         )
 
+
         expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }.apply {
             name shouldBe expectedProduct.name
             description shouldBe expectedProduct.description
             spaceId shouldBe expectedProduct.spaceId
-            creationTime shouldBeEqual updatedAt
+            createdAt shouldBeBefore LocalDateTime.now()
+            updatedAt shouldBe null
         }
+
     }
 
     @Test
@@ -221,11 +225,11 @@ class PostgresProductRepositoryTest {
             "new description",
             emptyMap(),
             secondSpaceId.toString(),
-            createdProduct.creationTime,
+            createdProduct.createdAt,
             updatedProduct!!.updatedAt
         )
 
-        createdProduct.updatedAt shouldBeLessThan updatedProduct.updatedAt
+        createdProduct.createdAt shouldBeBefore updatedProduct.updatedAt!!
     }
 
     @Test
@@ -242,8 +246,7 @@ class PostgresProductRepositoryTest {
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
 
-        updatedProduct shouldBe createdProduct.copy(updatedAt = updatedProduct!!.updatedAt)
-        createdProduct.updatedAt shouldBeLessThan updatedProduct.updatedAt
+        createdProduct.createdAt shouldBeBefore updatedProduct?.updatedAt!!
     }
 
     @Test
@@ -388,7 +391,7 @@ class PostgresProductRepositoryTest {
             createdProduct.description,
             emptyMap(),
             secondSpaceId.toString(),
-            createdProduct.creationTime,
+            createdProduct.createdAt,
             movedProduct!!.updatedAt
         )
     }
@@ -417,7 +420,7 @@ class PostgresProductRepositoryTest {
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
         val movedProduct = sut.moveProduct(createdProduct.id, secondSpaceId.toString())
 
-        createdProduct.updatedAt shouldBeLessThan movedProduct!!.updatedAt
+        createdProduct.createdAt shouldBeBefore movedProduct?.updatedAt!!
     }
 
     @Test

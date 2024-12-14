@@ -42,8 +42,8 @@ class SpaceRoutesKtTest {
     fun `get Spaces should respond with List of NetworkSpaces`() = testApplication {
         createEnvironment()
         val spaces = listOf(
-            Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
-            Space(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+            Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Space(UUID.randomUUID().toString(), "Space 2", 200f, "Description 2", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         )
         every { mockSpaceRepository.getSpaces() } returns spaces
         client.get("/spaces").apply {
@@ -66,7 +66,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `get Space by ID should respond with NetworkSpace`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockSpaceRepository.getSpace(space1.id) } returns space1
         client.get("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -103,7 +103,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `delete Space should delete Space`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), creationTime = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", 100f, "Description 1", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockSpaceRepository.deleteSpace(space1.id) } returns space1
         client.delete("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK

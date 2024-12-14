@@ -25,8 +25,8 @@ data class Storage(
     val spaces: List<Space>,
     val parentId: String?,
     val subStorages: List<Storage>,
-    val creationTime: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime?
 )
 
 @Serializable
@@ -36,8 +36,8 @@ data class NetworkStorage(
     val description: String,
     val spaces: List<NetworkSpace>,
     val subStorages: List<NetworkStorage>,
-    val creationTime: String,
-    val updatedAt: String,
+    val createdAt: String,
+    val updatedAt: String?
 )
 
 @Serializable
@@ -55,8 +55,8 @@ data class MoveStorageRequest(
 object Storages: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
-    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
-    val updatedAt = datetime("updatedAt").defaultExpression(CurrentDateTime)
+    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").nullable()
 }
 
 object StorageToStorages: Table() {
@@ -85,7 +85,7 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
                 }
             }
         }
-    var creationTime by Storages.creationTime
+    var createdAt by Storages.createdAt
     var updatedAt by Storages.updatedAt
 
     override fun delete() {
@@ -104,7 +104,7 @@ fun StorageEntity.toStorage(): Storage {
         spaces = spaces.map { it.toSpace() },
         parentId = parent?.id?.value?.toString(),
         subStorages = subStorages.map { it.toStorage() },
-        creationTime = creationTime,
+        createdAt = createdAt,
         updatedAt = updatedAt,
     )
 }
@@ -123,7 +123,7 @@ private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage
         description = description,
         spaces = spaces.map { it.toNetworkSpace() },
         subStorages = subStorages,
-        creationTime = creationTime.format(DateTimeFormatter.ISO_DATE_TIME),
-        updatedAt = updatedAt.format(DateTimeFormatter.ISO_DATE_TIME),
+        createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
+        updatedAt = updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
     )
 }

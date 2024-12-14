@@ -18,8 +18,6 @@ class PostgresStorageRepository: StorageRepository {
         val newStorage = StorageEntity.new {
             this.name = name
             this.description = description
-            this.creationTime = createTime
-            this.updatedAt = createTime
         }
         parent?.run { subStorages = SizedCollection(subStorages + newStorage) }
         newStorage.parent = parent

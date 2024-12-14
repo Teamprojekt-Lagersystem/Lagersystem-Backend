@@ -24,8 +24,8 @@ data class Product(
     val description: String,
     val attributes: Map<String, Attribute>,
     val spaceId: String,
-    val creationTime: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime?
 )
 
 @Serializable
@@ -35,8 +35,8 @@ data class NetworkProduct(
     val description: String,
     val attributes: Map<String, Attribute>,
     val spaceId: String,
-    val creationTime: String,
-    val updatedAt: String
+    val createdAt: String,
+    val updatedAt: String?
 )
 
 @Serializable
@@ -51,8 +51,8 @@ object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
     val spaceId = reference("spaceId", Spaces)
-    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
-    val updatedAt = datetime("updatedAt").defaultExpression(CurrentDateTime)
+    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").nullable()
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -62,7 +62,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Products.description
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
     var space by SpaceEntity referencedOn Products.spaceId
-    var creationTime by Products.creationTime
+    var createdAt by Products.createdAt
     var updatedAt by Products.updatedAt
 }
 
@@ -72,7 +72,7 @@ fun ProductEntity.toProduct() = Product(
     description,
     attributes.associate { it.key to it.toAttribute() },
     space.id.value.toString(),
-    creationTime,
+    createdAt,
     updatedAt
 )
 
@@ -82,6 +82,6 @@ fun Product.toNetworkProduct() = NetworkProduct(
     description,
     attributes,
     spaceId,
-    creationTime.format(DateTimeFormatter.ISO_DATE_TIME),
-    updatedAt.format(DateTimeFormatter.ISO_DATE_TIME),
+    createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
+    updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
 )

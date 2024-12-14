@@ -8,7 +8,7 @@ import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
-import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.date.shouldBeBefore
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -74,7 +74,8 @@ class PostgresSpaceRepositoryTest {
             size shouldBe expectedSpace.size
             description shouldBe expectedSpace.description
             storageId shouldBe expectedSpace.storageId
-            creationTime shouldBeEqual updatedAt
+            createdAt shouldBeBefore LocalDateTime.now()
+            updatedAt shouldBe null
         }
     }
 
@@ -131,7 +132,7 @@ class PostgresSpaceRepositoryTest {
             this shouldBe updatedSpace
             name shouldBe "newName"
             description shouldBe createdSpace.description
-            createdSpace.updatedAt shouldBeLessThan updatedSpace!!.updatedAt
+            createdSpace.createdAt shouldBeBefore updatedSpace?.updatedAt!!
         }
     }
 
@@ -206,10 +207,10 @@ class PostgresSpaceRepositoryTest {
 
     @Test
     fun `moveSpace should update updatedAt timestamp`() = testApplication {
-        val createdSpace = insertSpace()
+        val createdSpace = insertSpace().copy(updatedAt = LocalDateTime.now())
         val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
 
-        createdSpace.updatedAt shouldBeLessThan movedSpace.updatedAt
+        createdSpace.createdAt shouldBeBefore movedSpace.updatedAt!!
     }
 
     @Test

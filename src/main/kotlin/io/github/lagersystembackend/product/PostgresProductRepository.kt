@@ -18,8 +18,6 @@ class PostgresProductRepository : ProductRepository {
             this.name = name
             this.description = description
             this.space = space
-            this.creationTime = createTime
-            this.updatedAt = createTime
         }.toProduct()
     }
 

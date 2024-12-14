@@ -27,8 +27,8 @@ data class Space(
     val description: String,
     val products: List<Product>,
     val storageId: String,
-    val creationTime: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime?
 )
 
 @Serializable
@@ -39,8 +39,8 @@ data class NetworkSpace(
     val description: String,
     val products: List<NetworkProduct>?,
     val storageId: String,
-    val creationTime: String,
-    val updatedAt: String
+    val createdAt: String,
+    val updatedAt: String?
 )
 
 @Serializable
@@ -61,8 +61,8 @@ object Spaces: UUIDTable() {
     val size = float("size").nullable()
     val description = text("description")
     val storageId = reference("storageId", Storages)
-    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime)
-    val updatedAt = datetime("updatedAt").defaultExpression(CurrentDateTime)
+    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").nullable()
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -73,7 +73,7 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Spaces.description
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
-    var creationTime by Spaces.creationTime
+    var createdAt by Spaces.createdAt
     var updatedAt by Spaces.updatedAt
 
     override fun delete() {
@@ -89,7 +89,7 @@ fun SpaceEntity.toSpace() = Space(
     description,
     products.map { it.toProduct() },
     storage.id.value.toString(),
-    creationTime,
+    createdAt,
     updatedAt
 )
 
@@ -100,6 +100,6 @@ fun Space.toNetworkSpace() = NetworkSpace(
     description,
     products.map { it.toNetworkProduct() },
     storageId,
-    creationTime.format(DateTimeFormatter.ISO_DATE_TIME),
-    updatedAt.format(DateTimeFormatter.ISO_DATE_TIME)
+    createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
+    updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
 )

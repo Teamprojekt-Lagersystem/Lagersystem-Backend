@@ -20,8 +20,6 @@ class PostgresSpaceRepository : SpaceRepository {
             this.size = size
             this.description = description
             this.storage = storage
-            this.creationTime = createTime
-            this.updatedAt = createTime
         }.toSpace()
     }
 
