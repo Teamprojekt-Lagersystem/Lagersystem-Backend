@@ -118,6 +118,48 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     call.respond(movedStorage.toNetworkStorage())
                 }
             }
+            route("/copy") {
+                post {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val copyRequest = runCatching { call.receive<CopyStorageRequest>() }.getOrNull()
+                    if (copyRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val newParentId = copyRequest.newParentId
+                    if (newParentId != null) {
+                        if (!newParentId.isUUID()) {
+                            errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        } else {
+                            val targetStorage = storageRepository.getStorage(newParentId)
+                            if (targetStorage == null) {
+                                errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $newParentId"))
+                            }
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val storage = storageRepository.getStorage(id)
+                    if (storage == null) {
+                        errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val copiedStorage = storageRepository.copyStorage(id, newParentId)
+                    call.respond(HttpStatusCode.Created, copiedStorage.toNetworkStorage())
+                }
+            }
         }
         post {
             val errors = mutableListOf<ApiError>()
