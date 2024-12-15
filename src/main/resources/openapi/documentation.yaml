@@ -206,6 +206,17 @@ paths:
                   description: ""
                   value:
                     errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
         "200":
           description: "OK"
           content:
@@ -634,12 +645,17 @@ components:
           type: "string"
         spaceId:
           type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "attributes"
       - "spaceId"
+      - "createdAt"
     AddProductNetworkRequest:
       type: "object"
       properties:
@@ -703,11 +719,16 @@ components:
             $ref: "#/components/schemas/NetworkProduct"
         storageId:
           type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "storageId"
+      - "createdAt"
     AddSpaceNetworkRequest:
       type: "object"
       properties:
@@ -762,12 +783,17 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/NetworkStorage"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "spaces"
       - "subStorages"
+      - "createdAt"
     AddStorageNetworkRequest:
       type: "object"
       properties:
