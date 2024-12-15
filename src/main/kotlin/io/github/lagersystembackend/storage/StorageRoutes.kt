@@ -134,7 +134,7 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     errors.add(ErrorMessages.INVALID_UUID_STORAGE)
                 }
 
-                if (!storageRepository.storageExists(updateStorageRequest.id)) {
+                if (updateStorageRequest.id.isUUID() && !storageRepository.storageExists(updateStorageRequest.id)) {
                     errors.add(ErrorMessages.STORAGE_NOT_FOUND)
                 }
 

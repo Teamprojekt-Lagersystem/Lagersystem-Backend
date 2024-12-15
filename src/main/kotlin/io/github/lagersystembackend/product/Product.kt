@@ -43,7 +43,6 @@ data class UpdateProductNetworkRequest(
     val id: String,
     val name: String? = null,
     val description: String? = null,
-    val spaceId: String? = null
 )
 
 

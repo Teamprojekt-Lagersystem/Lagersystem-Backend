@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.space
 
+import io.github.lagersystembackend.common.isUUID
 import io.github.lagersystembackend.storage.StorageEntity
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID

@@ -184,23 +184,15 @@ class PostgresProductRepositoryTest {
             emptyMap(),
             spaceId.toString()
         )
-        val secondSpaceId = UUID.randomUUID()
-        transaction {
-            SpaceEntity.new(id = secondSpaceId) {
-                name = "second space name"
-                description = "second space description"
-                storage = exampleStorageEntity
-            }.toSpace()
-        }
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
-        val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description", secondSpaceId.toString())
+        val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description")
 
         updatedProduct shouldBe Product(
             createdProduct.id,
             "new name",
             "new description",
             emptyMap(),
-            secondSpaceId.toString()
+            spaceId.toString()
         )
     }
 
@@ -214,7 +206,7 @@ class PostgresProductRepositoryTest {
             spaceId.toString()
         )
         val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
-        val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
+        val updatedProduct = sut.updateProduct(createdProduct.id, null, null)
 
         updatedProduct shouldBe createdProduct
     }
@@ -222,7 +214,7 @@ class PostgresProductRepositoryTest {
     @Test
     fun `update Product should return null when Product not found`() = testApplication {
 
-        val updatedProduct = sut.updateProduct(UUID.randomUUID().toString(), "any new name", null, null)
+        val updatedProduct = sut.updateProduct(UUID.randomUUID().toString(), "any new name", null)
 
         updatedProduct shouldBe null
     }
@@ -231,50 +223,11 @@ class PostgresProductRepositoryTest {
     fun `update Product should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         runCatching {
-            sut.updateProduct(invalidUUID, null, null, null)
+            sut.updateProduct(invalidUUID, null, null)
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
             this.message shouldBe "Invalid UUID string: $invalidUUID"
-        }
-    }
-
-    @Test
-    fun `update Product should throw IllegalArgumentException when new space id is invalid UUID`() = testApplication {
-        val invalidUUID = "Invalid UUID"
-        val product = Product(
-            "any id",
-            "name",
-            "description",
-            emptyMap(),
-            spaceId.toString()
-        )
-        product.run { sut.createProduct(name, description, spaceId.toString()) }
-        runCatching {
-            sut.updateProduct(invalidUUID, null, null, invalidUUID)
-        }.exceptionOrNull().run {
-            this shouldNotBe null
-            this!!::class shouldBe IllegalArgumentException::class
-            this.message shouldBe "Invalid UUID string: $invalidUUID"
-        }
-    }
-
-    @Test
-    fun `update Product should throw IllegalArgumentException when new SpaceUUID is unknown`() = testApplication {
-        val product = Product(
-            "any id",
-            "name",
-            "description",
-            emptyMap(),
-            spaceId.toString()
-        )
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
-        runCatching {
-            sut.updateProduct(createdProduct.id, null, null, spaceId = UUID.randomUUID().toString())
-        }.exceptionOrNull().run {
-            this shouldNotBe null
-            this!!::class shouldBe IllegalArgumentException::class
-            this.message shouldBe "Space not found"
         }
     }
 

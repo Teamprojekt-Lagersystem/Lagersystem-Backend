@@ -277,8 +277,7 @@ class SpaceRoutesKtTest {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
                 listOf(
-                    ErrorMessages.INVALID_UUID_SPACE,
-                    ErrorMessages.SPACE_NOT_FOUND)
+                    ErrorMessages.INVALID_UUID_SPACE)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }

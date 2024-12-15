@@ -29,13 +29,11 @@ class PostgresProductRepository : ProductRepository {
     override fun updateProduct(
         id: String,
         name: String?,
-        description: String?,
-        spaceId: String?
+        description: String?
     ): Product? = transaction {
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             name?.let { product.name = it }
             description?.let { product.description = it }
-            spaceId?.let { product.space = SpaceEntity.findById(UUID.fromString(it)) ?: throw IllegalArgumentException("Space not found") }
         }?.toProduct()
     }
 

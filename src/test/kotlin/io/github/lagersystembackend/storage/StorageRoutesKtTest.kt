@@ -298,8 +298,7 @@ class StorageRoutesKtTest {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
                 listOf(
-                    ErrorMessages.INVALID_UUID_STORAGE,
-                    ErrorMessages.STORAGE_NOT_FOUND)
+                    ErrorMessages.INVALID_UUID_STORAGE)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }

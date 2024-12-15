@@ -138,7 +138,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     errors.add(ErrorMessages.INVALID_UUID_SPACE)
                 }
 
-                if (!spaceRepository.spaceExists(updateSpaceNetworkRequest.id)) {
+                if (updateSpaceNetworkRequest.id.isUUID() && !spaceRepository.spaceExists(updateSpaceNetworkRequest.id)) {
                     errors.add(ErrorMessages.SPACE_NOT_FOUND)
                 }
 
@@ -146,7 +146,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                 }
 
-                val updatedSpace =  updateSpaceNetworkRequest.let {
+                val updatedSpace = updateSpaceNetworkRequest.let {
                     spaceRepository.updateSpace(it.id, it.name, it.size, it.description)
                 }
 
