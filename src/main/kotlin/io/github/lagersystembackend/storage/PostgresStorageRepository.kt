@@ -2,6 +2,8 @@ package io.github.lagersystembackend.storage
 
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 import java.util.UUID
 
@@ -12,6 +14,7 @@ class PostgresStorageRepository: StorageRepository {
         parentId: String?,
     ): Storage = transaction {
         val parent = parentId?.let { StorageEntity.findById(UUID.fromString(it)) }
+        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         val newStorage = StorageEntity.new {
             this.name = name
             this.description = description
@@ -38,6 +41,7 @@ class PostgresStorageRepository: StorageRepository {
         StorageEntity.findByIdAndUpdate(UUID.fromString(id)) { storage ->
             name?.let { storage.name = it }
             description?.let { storage.description = it }
+            storage.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toStorage()
     }
 
@@ -73,6 +77,7 @@ class PostgresStorageRepository: StorageRepository {
         }
 
         storage.parent = newParent
+        storage.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         storage.toStorage()
     }
 

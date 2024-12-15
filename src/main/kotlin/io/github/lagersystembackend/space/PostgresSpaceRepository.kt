@@ -3,6 +3,8 @@ package io.github.lagersystembackend.space
 import io.github.lagersystembackend.common.isUUID
 import io.github.lagersystembackend.storage.StorageEntity
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresSpaceRepository : SpaceRepository {
@@ -13,6 +15,7 @@ class PostgresSpaceRepository : SpaceRepository {
         storageId: String
     ): Space = transaction {
         val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: throw IllegalArgumentException("Storage not found")
+        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         SpaceEntity.new {
             this.name = name
             this.size = size
@@ -39,6 +42,7 @@ class PostgresSpaceRepository : SpaceRepository {
             name?.let { space.name = it }
             size?.let { space.size = it }
             description?.let { space.description = it }
+            space.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toSpace()
     }
 
@@ -61,7 +65,7 @@ class PostgresSpaceRepository : SpaceRepository {
             ?: throw IllegalArgumentException("Storage with ID $targetStorageId not found")
 
         space.storage = targetStorage
-
+        space.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         space.toSpace()
     }
 }
