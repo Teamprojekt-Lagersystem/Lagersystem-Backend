@@ -1,6 +1,8 @@
 package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresProductRepository : ProductRepository {
@@ -11,6 +13,7 @@ class PostgresProductRepository : ProductRepository {
         spaceId: String
     ): Product = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: return@transaction throw IllegalArgumentException("Space not found")
+        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         ProductEntity.new {
             this.name = name
             this.description = description
@@ -36,6 +39,7 @@ class PostgresProductRepository : ProductRepository {
             name?.let { product.name = it }
             description?.let { product.description = it }
             spaceId?.let { product.space = SpaceEntity.findById(UUID.fromString(it)) ?: throw IllegalArgumentException("Space not found") }
+            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
     }
 
@@ -43,6 +47,7 @@ class PostgresProductRepository : ProductRepository {
         val targetSpace = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("target Space not found")
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             product.space = targetSpace
+            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
 
     }
