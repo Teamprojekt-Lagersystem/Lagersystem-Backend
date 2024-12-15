@@ -269,7 +269,8 @@ class StorageRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
-        val storage = Storage(id, "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf())
+        val createTime = LocalDateTime.now()
+        val storage = Storage(id, "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), createTime, createTime)
         every { mockStorageRepository.updateStorage(id, updateStorageNetworkRequest.name, updateStorageNetworkRequest.description) } returns storage
         every { mockStorageRepository.storageExists(id) } returns true
         client.patch("/storages/update") {

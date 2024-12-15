@@ -216,7 +216,7 @@ class PostgresProductRepositoryTest {
             "new name",
             "new description",
             emptyMap(),
-            spaceId.toString()
+            spaceId.toString(),
             createdProduct.createdAt,
             updatedProduct!!.updatedAt
         )

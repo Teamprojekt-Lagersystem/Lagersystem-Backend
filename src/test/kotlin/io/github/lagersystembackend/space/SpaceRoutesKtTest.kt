@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.json.Json
+import net.bytebuddy.asm.Advice.Local
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -224,8 +225,9 @@ class SpaceRoutesKtTest {
 
         val id = UUID.randomUUID().toString()
         val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(id, "Space 1", 100f, "Description 1")
+        val createTime = LocalDateTime.now()
         updateSpaceNetworkRequest.run {
-            val space = Space(id, name!!, size!!, description!!, products = listOf(), storageId = "any id")
+            val space = Space(id, name!!, size!!, description!!, products = listOf(), storageId = "any id", createTime, createTime)
             every { mockSpaceRepository.spaceExists(id) } returns true
             every { mockSpaceRepository.updateSpace(id, name, size, description) } returns space
             client.patch("/spaces/update") {

@@ -252,8 +252,9 @@ class ProductRoutesKtTest {
         val id = UUID.randomUUID().toString()
         val spaceId = UUID.randomUUID().toString()
         val updateProductNetworkRequest = UpdateProductNetworkRequest(id, "Product 1", "Description 1")
+        val createTime = LocalDateTime.now()
         updateProductNetworkRequest.run {
-            val product = Product(id, name!!, description!!, emptyMap(), spaceId)
+            val product = Product(id, name!!, description!!, emptyMap(), spaceId, createTime, createTime)
             every { mockProductRepository.updateProduct(id, name, description) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
@@ -268,7 +269,9 @@ class ProductRoutesKtTest {
                 updateProductNetworkRequest.name!!,
                 updateProductNetworkRequest.description!!,
                 emptyMap(),
-                spaceId
+                spaceId,
+                createTime,
+                createTime
             ).toNetworkProduct()
             Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
         }
