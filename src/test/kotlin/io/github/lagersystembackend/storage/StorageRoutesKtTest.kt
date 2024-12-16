@@ -3,6 +3,8 @@ package io.github.lagersystembackend.storage
 import io.github.lagersystembackend.common.*
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
+import io.github.lagersystembackend.product.Product
+import io.github.lagersystembackend.space.Space
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
@@ -399,5 +401,218 @@ class StorageRoutesKtTest {
             Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe expectedResponse
         }
     }
+    @Test
+    fun `copyStorage should duplicate storage structure and return the copied storage`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val rootStorageId = UUID.randomUUID().toString()
+        val subStorageId = UUID.randomUUID().toString()
+        val spaceId = UUID.randomUUID().toString()
+        val productId = UUID.randomUUID().toString()
+        val rootStorage = Storage(
+            rootStorageId,
+            "Root Storage",
+            "Description Root",
+            spaces = listOf(),
+            parentId = null,
+            subStorages = listOf(
+                Storage(
+                    subStorageId,
+                    "Sub Storage",
+                    "Description Sub",
+                    spaces = listOf(
+                        Space(
+                            spaceId,
+                            "Space",
+                            0.5f,
+                            "A space",
+                            storageId = subStorageId,
+                            products = listOf(
+                                Product(
+                                    productId,
+                                    "Product",
+                                    "A product",
+                                    attributes = emptyMap(),
+                                    spaceId = spaceId
+                                )
+                            )
+                        )
+                    ),
+                    parentId = rootStorageId,
+                    subStorages = listOf()
+                )
+            )
+        )
+        every { mockStorageRepository.getStorage(rootStorageId) } returns rootStorage
+        every { mockStorageRepository.copyStorage(rootStorageId, null) } answers {
+            rootStorage.copy(
+                id = UUID.randomUUID().toString(),
+                name = "${rootStorage.name} (Copy)",
+                subStorages = rootStorage.subStorages.map { subStorage ->
+                    subStorage.copy(
+                        id = UUID.randomUUID().toString(),
+                        name = "${subStorage.name} (Copy)",
+                        spaces = subStorage.spaces.map { space ->
+                            space.copy(
+                                id = UUID.randomUUID().toString(),
+                                name = "${space.name} (Copy)",
+                                products = space.products.map { product ->
+                                    product.copy(
+                                        id = UUID.randomUUID().toString(),
+                                        name = "${product.name} (Copy)"
+                                    )
+                                }
+                            )
+                        }
+                    )
+                }
+            )
+        }
+        val copyRequest = CopyStorageRequest()
 
+        val response = client.post("/storages/$rootStorageId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody(copyRequest)
+        }
+
+        response.status shouldBe HttpStatusCode.Created
+
+        val expectedCopiedStorage = mockStorageRepository.copyStorage(rootStorageId, null).toNetworkStorage()
+        val actualCopiedStorage = Json.decodeFromString<NetworkStorage>(response.bodyAsText())
+
+        expectedCopiedStorage.apply {
+            actualCopiedStorage.apply {
+                name shouldBe "${this.name}"
+                description shouldBe this@apply.description
+                subStorages.size shouldBe this@apply.subStorages.size
+                subStorages.zip(this@apply.subStorages).forEach { (expectedSub, actualSub) ->
+                    expectedSub.apply {
+                        actualSub.apply {
+                            name shouldBe "${this.name}"
+                            description shouldBe this@apply.description
+                            spaces.size shouldBe this@apply.spaces.size
+                            spaces.zip(this@apply.spaces).forEach { (expectedSpace, actualSpace) ->
+                                expectedSpace.apply {
+                                    actualSpace.apply {
+                                        name shouldBe "${this.name}"
+                                        description shouldBe this@apply.description
+                                        products?.size shouldBe this@apply.products?.size
+                                        products?.zip(this@apply.products ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
+                                            expectedProduct.apply {
+                                                actualProduct.apply {
+                                                    name shouldBe "${this.name}"
+                                                    description shouldBe this@apply.description
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @Test
+    fun `copy should return BadRequest if id is not a valid UUID`() = testApplication {
+        createEnviroment()
+        val invalidId = "invalid-uuid"
+        client.post("/storages/$invalidId/copy").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+    @Test
+    fun `copy should respond with BadRequest when request body is missing or not serialized properly`() = testApplication {
+        createEnviroment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val validId = UUID.randomUUID().toString()
+
+        client.post("/storages/$validId/copy").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+
+        client.post("/storages/$validId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("{ invalid json }") // Invalid JSON
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+    @Test
+    fun `copy should respond with BadRequest when newParentId is not a valid UUID`() = testApplication {
+        createEnviroment()
+        val validId = UUID.randomUUID().toString()
+
+        client.post("/storages/$validId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"newParentId": "invalid-uuid"}""")
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+    @Test
+    fun `copy should respond with NotFound when storage is not found`() = testApplication {
+        createEnviroment()
+        val invalidId = UUID.randomUUID().toString()
+
+        every { mockStorageRepository.getStorage(invalidId) } returns null
+
+        client.post("/storages/$invalidId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("{}")
+        }.apply {
+            status shouldBe HttpStatusCode.NotFound
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+    @Test
+    fun `copy should respond with BadRequest when newParentId storage does not exist`() = testApplication {
+        createEnviroment()
+        val validId = UUID.randomUUID().toString()
+        val nonExistentParentId = UUID.randomUUID().toString()
+
+        val originalStorage = Storage(validId, "Original Storage", "Description", spaces = listOf(), parentId = null, subStorages = listOf())
+        every { mockStorageRepository.getStorage(validId) } returns originalStorage
+        every { mockStorageRepository.getStorage(nonExistentParentId) } returns null
+
+        client.post("/storages/$validId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"newParentId": "$nonExistentParentId"}""")
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $nonExistentParentId"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
 }
+

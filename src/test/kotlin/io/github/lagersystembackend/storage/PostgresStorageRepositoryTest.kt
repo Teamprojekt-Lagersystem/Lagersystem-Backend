@@ -2,6 +2,8 @@ package io.github.lagersystembackend.storage
 
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
+import io.github.lagersystembackend.product.PostgresProductRepository
+import io.github.lagersystembackend.product.ProductRepository
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.Space
@@ -298,5 +300,61 @@ class PostgresStorageRepositoryTest {
         finalStorageA.parentId shouldBe storageC.id
         val finalStorageE = sut.getStorage(storageE.id)!!
         finalStorageE.parentId shouldBe storageD.id
+    }
+    @Test
+    fun `copyStorage should correctly duplicate storage structure including spaces and products`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+        val spaceRepository = PostgresSpaceRepository()
+        val productRepository = PostgresProductRepository()
+        val space = spaceRepository.createSpace("Space", 0.5f, "A space", subStorage.id)
+        val product = productRepository.createProduct("Product", "A product", space.id)
+
+        val copiedStorage = sut.copyStorage(rootStorage.id, null)
+
+        copiedStorage.name shouldBe "${rootStorage.name} (Copy)"
+        copiedStorage.description shouldBe rootStorage.description
+        copiedStorage.parentId shouldBe null
+        copiedStorage.subStorages.size shouldBe 1
+
+        val copiedSubStorage = copiedStorage.subStorages.first()
+        copiedSubStorage.name shouldBe "${subStorage.name} (Copy)"
+        copiedSubStorage.description shouldBe subStorage.description
+        copiedSubStorage.parentId shouldBe copiedStorage.id
+
+        copiedSubStorage.spaces.size shouldBe 1
+        val copiedSpace = copiedSubStorage.spaces.first()
+        copiedSpace.name shouldBe "${space.name} (Copy)"
+        copiedSpace.size shouldBe space.size
+        copiedSpace.description shouldBe space.description
+        copiedSpace.storageId shouldBe copiedSubStorage.id
+
+        copiedSpace.products.size shouldBe 1
+        val copiedProduct = copiedSpace.products.first()
+        copiedProduct.name shouldBe "${product.name} (Copy)"
+        copiedProduct.description shouldBe product.description
+        copiedProduct.spaceId shouldBe copiedSpace.id
+        copiedProduct.attributes shouldBe emptyMap()
+    }
+    @Test
+    fun `copyStorage should throw IllegalArgumentException when original storage not found`() = testApplication {
+        val invalidId = UUID.randomUUID().toString()
+
+        runCatching { sut.copyStorage(invalidId, null) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Storage with ID $invalidId not found"
+        }
+    }
+    @Test
+    fun `copyStorage should throw IllegalArgumentException when parent storage not found`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val invalidParentId = UUID.randomUUID().toString()
+
+        runCatching { sut.copyStorage(rootStorage.id, invalidParentId) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Parent storage with ID $invalidParentId not found"
+        }
     }
 }

@@ -87,6 +87,7 @@ class PostgresStorageRepository: StorageRepository {
 
     override fun copyStorage(id: String, newParentId: String?): Storage {
         return transaction {
+
             val originalStorage = StorageEntity.findById(UUID.fromString(id))
                 ?: throw IllegalArgumentException("Storage with ID $id not found")
 
@@ -103,11 +104,26 @@ class PostgresStorageRepository: StorageRepository {
             newStorageEntity.parent = newParent
 
             originalStorage.spaces.forEach { space ->
-                SpaceEntity.new {
+                val newSpaceEntity = SpaceEntity.new {
                     name = space.name + " (Copy)"
+                    size = space.size
                     description = space.description
                     storage = newStorageEntity
                 }
+                space.products.forEach { product ->
+                    val newProductEntity = ProductEntity.new {
+                        name = product.name + " (Copy)"
+                        description = product.description
+                        this.space = newSpaceEntity
+                    }
+                    product.attributes.forEach { attribute ->
+                        ProductAttributeEntity.new {
+                            this.key = attribute.key
+                            this.value = attribute.value
+                            this.product = newProductEntity
+                        }
+                    }
+                    }
             }
 
             originalStorage.subStorages.forEach { subStorage ->
@@ -117,38 +133,4 @@ class PostgresStorageRepository: StorageRepository {
             newStorageEntity.toStorage()
         }
     }
-
-    private fun copySpace(original: SpaceEntity, newStorage: StorageEntity): SpaceEntity {
-        val newSpace = SpaceEntity.new {
-            name = original.name + " (Copy)"
-            size = original.size
-            description = original.description
-            storage = newStorage
-        }
-
-        original.products.forEach { product ->
-            copyProduct(product, newSpace)
-        }
-
-        return newSpace
-    }
-    private fun copyProduct(original: ProductEntity, newSpace: SpaceEntity): ProductEntity {
-        val newProduct = ProductEntity.new {
-            name = original.name + " (Copy)"
-            description = original.description
-            space = newSpace
-        }
-
-        original.attributes.forEach { attribute ->
-            ProductAttributeEntity.new {
-                product = newProduct
-                key = attribute.key
-                type = attribute.type
-                value = attribute.value
-            }
-        }
-
-        return newProduct
-    }
-
 }
