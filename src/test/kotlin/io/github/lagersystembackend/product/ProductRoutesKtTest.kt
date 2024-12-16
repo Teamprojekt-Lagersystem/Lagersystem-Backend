@@ -242,6 +242,90 @@ class ProductRoutesKtTest {
     }
 
     @Test
+    fun `patch update Product should respond with NetworkProduct`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val id = UUID.randomUUID().toString()
+        val spaceId = UUID.randomUUID().toString()
+        val updateProductNetworkRequest = UpdateProductNetworkRequest(id, "Product 1", "Description 1")
+        val createTime = LocalDateTime.now()
+        updateProductNetworkRequest.run {
+            val product = Product(id, name!!, description!!, emptyMap(), spaceId, createTime, createTime)
+            every { mockProductRepository.updateProduct(id, name, description) } returns product
+            every { mockSpaceRepository.spaceExists(spaceId) } returns true
+        }
+
+        client.patch("/products/update") {
+            setBody(updateProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.OK
+            val expectedResponse = Product(
+                id,
+                updateProductNetworkRequest.name!!,
+                updateProductNetworkRequest.description!!,
+                emptyMap(),
+                spaceId,
+                createTime,
+                createTime
+            ).toNetworkProduct()
+            Json.decodeFromString<NetworkProduct>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch update Product should respond BadRequest when invalid UpdateProductNetworkRequest`() = testApplication {
+        createEnvironment()
+        val badRequest = """
+    {
+        "name": "Space 1",
+        "prize": 100.0
+    }
+""".trimIndent()
+
+        client.patch("/products/update") {
+            setBody(badRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `patch update Product should respond BadRequest when Product Id is invalid`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val invalidId = "invalid-id"
+        val spaceId = UUID.randomUUID().toString()
+        val updateProductNetworkRequest = UpdateProductNetworkRequest(invalidId, "Product 1", "Description 1")
+        updateProductNetworkRequest.run {
+            every { mockSpaceRepository.spaceExists(spaceId) } returns true
+        }
+        client.patch("/products/update") {
+            setBody(updateProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_PRODUCT)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
     fun `patch moveProduct should respond BadRequest when Product Id invalid`() = testApplication {
         createEnvironment()
         client.patch("/products/moveProduct/${"invalid id"}/${UUID.randomUUID()}").apply {

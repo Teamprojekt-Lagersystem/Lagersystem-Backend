@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.storage
 
 import io.github.lagersystembackend.common.*
+import io.github.lagersystembackend.space.spaceRoutes
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -116,6 +117,37 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
 
                     val movedStorage = storageRepository.moveStorage(id, targetParentId)
                     call.respond(movedStorage.toNetworkStorage())
+                }
+            }
+        }
+        route("/update") {
+            patch {
+                val errors = mutableListOf<ApiError>()
+                val updateStorageRequest = runCatching { call.receive<UpdateStorageNetworkRequest>() }.getOrNull()
+
+                if (updateStorageRequest == null) {
+                    errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                if (!updateStorageRequest.id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                }
+
+                if (updateStorageRequest.id.isUUID() && !storageRepository.storageExists(updateStorageRequest.id)) {
+                    errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                val updatedStorage = storageRepository.let {
+                    it.updateStorage(updateStorageRequest.id, updateStorageRequest.name, updateStorageRequest.description)
+                }
+
+                updatedStorage?.let {
+                    call.respond(it.toNetworkStorage())
                 }
             }
         }

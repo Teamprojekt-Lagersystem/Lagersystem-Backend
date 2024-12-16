@@ -46,6 +46,13 @@ data class AddProductNetworkRequest(
     val spaceId: String
 )
 
+@Serializable
+data class UpdateProductNetworkRequest(
+    val id: String,
+    val name: String? = null,
+    val description: String? = null,
+)
+
 
 object Products: UUIDTable() {
     val name = varchar("name", 255)

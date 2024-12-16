@@ -5,11 +5,7 @@ import io.github.lagersystembackend.storage.StorageRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
+import io.ktor.server.routing.*
 
 fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: StorageRepository) {
     route("/spaces") {
@@ -125,6 +121,38 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
             createdSpace?.let {
                 call.respond(HttpStatusCode.Created, it.toNetworkSpace())
+            }
+        }
+
+        route("/update") {
+            patch {
+                val errors = mutableListOf<ApiError>()
+                val updateSpaceNetworkRequest = runCatching { call.receive<UpdateSpaceNetworkRequest>() }.getOrNull()
+
+                if (updateSpaceNetworkRequest == null) {
+                    errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                if (!updateSpaceNetworkRequest.id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                }
+
+                if (updateSpaceNetworkRequest.id.isUUID() && !spaceRepository.spaceExists(updateSpaceNetworkRequest.id)) {
+                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                val updatedSpace = updateSpaceNetworkRequest.let {
+                    spaceRepository.updateSpace(it.id, it.name, it.size, it.description)
+                }
+
+                updatedSpace?.let {
+                    call.respond(it.toNetworkSpace())
+                }
             }
         }
     }

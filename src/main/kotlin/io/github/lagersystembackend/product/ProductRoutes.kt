@@ -88,6 +88,41 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                 )
             }
         }
+        route("/update") {
+            patch {
+                val errors = mutableListOf<ApiError>()
+                val updateProductNetworkRequest = runCatching { call.receive<UpdateProductNetworkRequest>() }.getOrNull()
+
+                if (updateProductNetworkRequest == null) {
+                    errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                if (!updateProductNetworkRequest.id.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                val updatedProduct = updateProductNetworkRequest.let {
+                    productRepository.updateProduct(it.id, it.name, it.description)
+                }
+
+                if (updatedProduct == null) {
+                    errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
+                    return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                }
+
+                updatedProduct.let {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        it.toNetworkProduct()
+                    )
+                }
+            }
+        }
         route("/moveProduct/{id}/{spaceId}") {
             patch {
                 val errors = mutableListOf<ApiError>()

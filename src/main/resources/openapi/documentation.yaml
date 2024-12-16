@@ -181,6 +181,48 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
+  /v1/products/update:
+    patch:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkProduct"
   /v1/spaces:
     get:
       description: ""
@@ -330,6 +372,37 @@ paths:
                   value:
                     errors: []
                 Example#4:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkSpace"
+  /v1/spaces/update:
+    patch:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
                   description: ""
                   value:
                     errors: []
@@ -526,6 +599,37 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStorage"
+  /v1/storages/update:
+    patch:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStorageNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkStorage"
 components:
   schemas:
     NetworkProduct:
@@ -535,26 +639,28 @@ components:
           type: "string"
         name:
           type: "string"
-        price:
-          type: "number"
-          format: "float"
         description:
           type: "string"
+        attributes:
+          type: "string"
         spaceId:
+          type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
           type: "string"
       required:
       - "id"
       - "name"
       - "description"
+      - "attributes"
       - "spaceId"
+      - "createdAt"
     AddProductNetworkRequest:
       type: "object"
       properties:
         name:
           type: "string"
-        price:
-          type: "number"
-          format: "float"
         description:
           type: "string"
         spaceId:
@@ -584,6 +690,17 @@ components:
             $ref: "#/components/schemas/ApiError"
       required:
       - "errors"
+    UpdateProductNetworkRequest:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+      required:
+      - "id"
     NetworkSpace:
       type: "object"
       properties:
@@ -602,11 +719,16 @@ components:
             $ref: "#/components/schemas/NetworkProduct"
         storageId:
           type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "storageId"
+      - "createdAt"
     AddSpaceNetworkRequest:
       type: "object"
       properties:
@@ -630,6 +752,20 @@ components:
           type: "string"
       required:
       - "targetStorageId"
+    UpdateSpaceNetworkRequest:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        size:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
+      required:
+      - "id"
     NetworkStorage:
       type: "object"
       properties:
@@ -647,12 +783,17 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/NetworkStorage"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "spaces"
       - "subStorages"
+      - "createdAt"
     AddStorageNetworkRequest:
       type: "object"
       properties:
@@ -670,3 +811,14 @@ components:
       properties:
         newParentId:
           type: "string"
+    UpdateStorageNetworkRequest:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+      required:
+      - "id"
