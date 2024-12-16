@@ -225,7 +225,7 @@ class ProductRoutesKtTest {
         val badRequest = """
     {
         "name": "Space 1",
-        "prize": 100.0
+        "description": "Description 1",
     }
 """.trimIndent()
 
@@ -251,7 +251,7 @@ class ProductRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val spaceId = UUID.randomUUID().toString()
-        val updateProductNetworkRequest = UpdateProductNetworkRequest(id, "Product 1", "Description 1")
+        val updateProductNetworkRequest = UpdateProductNetworkRequest("Product 1", "Description 1")
         val createTime = LocalDateTime.now()
         updateProductNetworkRequest.run {
             val product = Product(id, name!!, description!!, emptyMap(), spaceId, createTime, createTime)
@@ -259,7 +259,7 @@ class ProductRoutesKtTest {
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
 
-        client.patch("/products/update") {
+        client.patch("/products/${id}/update") {
             setBody(updateProductNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -283,11 +283,11 @@ class ProductRoutesKtTest {
         val badRequest = """
     {
         "name": "Space 1",
-        "prize": 100.0
+        "invalidAttr": "invalid"
     }
 """.trimIndent()
 
-        client.patch("/products/update") {
+        client.patch("/products/${UUID.randomUUID()}/update") {
             setBody(badRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -309,11 +309,11 @@ class ProductRoutesKtTest {
         }
         val invalidId = "invalid-id"
         val spaceId = UUID.randomUUID().toString()
-        val updateProductNetworkRequest = UpdateProductNetworkRequest(invalidId, "Product 1", "Description 1")
+        val updateProductNetworkRequest = UpdateProductNetworkRequest("Product 1", "Description 1")
         updateProductNetworkRequest.run {
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
-        client.patch("/products/update") {
+        client.patch("/products/${invalidId}/update") {
             setBody(updateProductNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -326,9 +326,19 @@ class ProductRoutesKtTest {
     }
 
     @Test
-    fun `patch moveProduct should respond BadRequest when Product Id invalid`() = testApplication {
+    fun `patch move Product should respond BadRequest when Product Id invalid`() = testApplication {
         createEnvironment()
-        client.patch("/products/moveProduct/${"invalid id"}/${UUID.randomUUID()}").apply {
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val invalidId = "invalid-id"
+        val moveProductNetworkRequest = MoveProductNetworkRequest(UUID.randomUUID().toString())
+        client.patch("/products/${invalidId}/move") {
+            setBody(moveProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.INVALID_UUID_PRODUCT)
@@ -338,9 +348,18 @@ class ProductRoutesKtTest {
     }
 
     @Test
-    fun `patch moveProduct should respond BadRequest when Space Id invalid`() = testApplication {
+    fun `patch move Product should respond BadRequest when Space Id invalid`() = testApplication {
         createEnvironment()
-        client.patch("/products/moveProduct/${UUID.randomUUID()}/${"invalid id"}").apply {
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val moveProductNetworkRequest = MoveProductNetworkRequest("invalid-uuid")
+        client.patch("/products/${UUID.randomUUID()}/move") {
+            setBody(moveProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.INVALID_UUID_SPACE)
@@ -350,13 +369,22 @@ class ProductRoutesKtTest {
     }
 
     @Test
-    fun `patch moveProduct should respond NotFound when Space not found`() = testApplication {
+    fun `patch move Product should respond NotFound when Space not found`() = testApplication {
         createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
         val productId = UUID.randomUUID().toString()
         val spaceId = UUID.randomUUID().toString()
+        val moveProductNetworkRequest = MoveProductNetworkRequest(spaceId)
         every { mockSpaceRepository.spaceExists(spaceId) } returns false
-        client.patch("/products/moveProduct/$productId/$spaceId").apply {
-            status shouldBe HttpStatusCode.NotFound
+        client.patch("/products/$productId/move") {
+            setBody(moveProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.SPACE_NOT_FOUND)
             )
@@ -367,11 +395,20 @@ class ProductRoutesKtTest {
     @Test
     fun `patch moveProduct should respond NotFound when Product not found`() = testApplication {
         createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
         val productId = UUID.randomUUID().toString()
         val spaceId = UUID.randomUUID().toString()
+        val moveProductNetworkRequest = MoveProductNetworkRequest(spaceId)
         every { mockSpaceRepository.spaceExists(spaceId) } returns true
         every { mockProductRepository.moveProduct(productId, spaceId) } returns null
-        client.patch("/products/moveProduct/$productId/$spaceId").apply {
+        client.patch("/products/$productId/move") {
+            setBody(moveProductNetworkRequest)
+            contentType(ContentType.Application.Json)
+        }.apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.PRODUCT_NOT_FOUND)

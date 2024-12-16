@@ -130,7 +130,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
-  /v1/products/moveProduct/{id}/{spaceId}:
+  /v1/products/{id}/move:
     patch:
       description: ""
       parameters:
@@ -139,11 +139,12 @@ paths:
         required: true
         schema:
           type: "string"
-      - name: "spaceId"
-        in: "path"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveProductNetworkRequest"
         required: true
-        schema:
-          type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -160,6 +161,14 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#3:
+                  description: ""
+                  value:
+                    errors: []
+                Example#4:
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -171,19 +180,21 @@ paths:
                   description: ""
                   value:
                     errors: []
-                Example#2:
-                  description: ""
-                  value:
-                    errors: []
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
-  /v1/products/update:
+  /v1/products/{id}/update:
     patch:
       description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
       requestBody:
         content:
           application/json:
@@ -337,7 +348,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/NetworkSpace"
   /v1/spaces/{id}/move:
-    post:
+    patch:
       description: ""
       parameters:
       - name: "id"
@@ -349,7 +360,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MoveSpaceRequest"
+              $ref: "#/components/schemas/MoveSpaceNetworkRequest"
         required: true
       responses:
         "400":
@@ -371,7 +382,14 @@ paths:
                   description: ""
                   value:
                     errors: []
-                Example#4:
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
                   description: ""
                   value:
                     errors: []
@@ -381,9 +399,15 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkSpace"
-  /v1/spaces/update:
+  /v1/spaces/{id}/update:
     patch:
       description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
       requestBody:
         content:
           application/json:
@@ -403,6 +427,17 @@ paths:
                   value:
                     errors: []
                 Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
                   description: ""
                   value:
                     errors: []
@@ -548,7 +583,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/NetworkStorage"
   /v1/storages/{id}/move:
-    post:
+    patch:
       description: ""
       parameters:
       - name: "id"
@@ -599,9 +634,15 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStorage"
-  /v1/storages/update:
+  /v1/storages/{id}/update:
     patch:
       description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
       requestBody:
         content:
           application/json:
@@ -621,6 +662,17 @@ paths:
                   value:
                     errors: []
                 Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
                   description: ""
                   value:
                     errors: []
@@ -690,17 +742,20 @@ components:
             $ref: "#/components/schemas/ApiError"
       required:
       - "errors"
+    MoveProductNetworkRequest:
+      type: "object"
+      properties:
+        targetSpaceId:
+          type: "string"
+      required:
+      - "targetSpaceId"
     UpdateProductNetworkRequest:
       type: "object"
       properties:
-        id:
-          type: "string"
         name:
           type: "string"
         description:
           type: "string"
-      required:
-      - "id"
     NetworkSpace:
       type: "object"
       properties:
@@ -745,7 +800,7 @@ components:
       - "name"
       - "description"
       - "storageId"
-    MoveSpaceRequest:
+    MoveSpaceNetworkRequest:
       type: "object"
       properties:
         targetStorageId:
@@ -755,8 +810,6 @@ components:
     UpdateSpaceNetworkRequest:
       type: "object"
       properties:
-        id:
-          type: "string"
         name:
           type: "string"
         size:
@@ -764,8 +817,6 @@ components:
           format: "float"
         description:
           type: "string"
-      required:
-      - "id"
     NetworkStorage:
       type: "object"
       properties:
@@ -814,11 +865,7 @@ components:
     UpdateStorageNetworkRequest:
       type: "object"
       properties:
-        id:
-          type: "string"
         name:
           type: "string"
         description:
           type: "string"
-      required:
-      - "id"

@@ -53,14 +53,13 @@ data class AddSpaceNetworkRequest(
 
 @Serializable
 data class UpdateSpaceNetworkRequest(
-    val id: String,
     val name: String? = null,
     val size: Float? = null,
     val description: String? = null
 )
 
 @Serializable
-data class MoveSpaceRequest(
+data class MoveSpaceNetworkRequest(
     val targetStorageId: String
 )
 

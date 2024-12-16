@@ -49,7 +49,6 @@ data class AddStorageNetworkRequest(
 
 @Serializable
 data class UpdateStorageNetworkRequest(
-    val id: String,
     val name: String? = null,
     val description: String? = null
 )

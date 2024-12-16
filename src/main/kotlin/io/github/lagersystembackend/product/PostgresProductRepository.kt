@@ -13,7 +13,6 @@ class PostgresProductRepository : ProductRepository {
         spaceId: String
     ): Product = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: return@transaction throw IllegalArgumentException("Space not found")
-        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         ProductEntity.new {
             this.name = name
             this.description = description

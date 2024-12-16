@@ -48,9 +48,13 @@ data class AddProductNetworkRequest(
 
 @Serializable
 data class UpdateProductNetworkRequest(
-    val id: String,
     val name: String? = null,
     val description: String? = null,
+)
+
+@Serializable
+data class MoveProductNetworkRequest(
+    val targetSpaceId: String
 )
 
 

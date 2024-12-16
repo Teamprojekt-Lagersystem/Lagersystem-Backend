@@ -260,7 +260,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `patch Storage should respond with NetworkStorage`() = testApplication {
+    fun `patch update Storage should respond with NetworkStorage`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -268,12 +268,12 @@ class StorageRoutesKtTest {
             }
         }
         val id = UUID.randomUUID().toString()
-        val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
+        val updateStorageNetworkRequest = UpdateStorageNetworkRequest("Storage 1", "Description 1")
         val createTime = LocalDateTime.now()
         val storage = Storage(id, "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), createTime, createTime)
         every { mockStorageRepository.updateStorage(id, updateStorageNetworkRequest.name, updateStorageNetworkRequest.description) } returns storage
         every { mockStorageRepository.storageExists(id) } returns true
-        client.patch("/storages/update") {
+        client.patch("/storages/${id}/update") {
             setBody(updateStorageNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -283,7 +283,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `patch Storage should respond with BadRequest when id is invalid`() = testApplication {
+    fun `patch update Storage should respond with BadRequest when id is invalid`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -291,9 +291,9 @@ class StorageRoutesKtTest {
             }
         }
         val id = "invalid id"
-        val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
+        val updateStorageNetworkRequest = UpdateStorageNetworkRequest("Storage 1", "Description 1")
         every { mockStorageRepository.storageExists(id) } returns false
-        client.patch("/storages/update") {
+        client.patch("/storages/${id}/update") {
             setBody(updateStorageNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -307,7 +307,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `patch Storage should respond with NotFound when Storage not found`() = testApplication {
+    fun `patch update Storage should respond with NotFound when Storage not found`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -315,13 +315,13 @@ class StorageRoutesKtTest {
             }
         }
         val id = UUID.randomUUID().toString()
-        val updateStorageNetworkRequest = UpdateStorageNetworkRequest(id, "Storage 1", "Description 1")
+        val updateStorageNetworkRequest = UpdateStorageNetworkRequest("Storage 1", "Description 1")
         every { mockStorageRepository.storageExists(id) } returns false
-        client.patch("/storages/update") {
+        client.patch("/storages/${id}/update") {
             setBody(updateStorageNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
-            status shouldBe HttpStatusCode.BadRequest
+            status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.STORAGE_NOT_FOUND)
             )
@@ -330,15 +330,15 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `patch Storage should respond with BadRequest when request body is missing`() = testApplication {
+    fun `patch update Storage should respond with BadRequest when request body is wrong`() = testApplication {
         createEnviroment()
         val badRequest = """
             {
                 "name": "Storage 1",
-                "description": "Description 1"
+                "invalidAttr": "invalid"
             }
         """.trimIndent()
-        client.patch("/storages/update") {
+        client.patch("/storages/${UUID.randomUUID()}/update") {
             setBody(badRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -351,7 +351,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `move Storage should respond with BadRequest when id is invalid`() = testApplication {
+    fun `patch move Storage should respond with BadRequest when id is invalid`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -362,7 +362,7 @@ class StorageRoutesKtTest {
         val moveRequest = MoveStorageRequest(newParentId = UUID.randomUUID().toString())
         every { mockStorageRepository.getStorage(any()) } returns null
 
-        client.post("/storages/$invalidId/move") {
+        client.patch("/storages/$invalidId/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
@@ -375,10 +375,10 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `move Storage should respond with BadRequest when request body is missing`() = testApplication {
+    fun `patch move Storage should respond with BadRequest when request body is missing`() = testApplication {
         createEnviroment()
         val id = UUID.randomUUID().toString()
-        client.post("/storages/$id/move").apply {
+        client.patch("/storages/$id/move").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
@@ -388,7 +388,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `move Storage should respond with BadRequest when newParentId is invalid`() = testApplication {
+    fun `patch move Storage should respond with BadRequest when newParentId is invalid`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -398,7 +398,7 @@ class StorageRoutesKtTest {
         val id = UUID.randomUUID().toString()
         val invalidParentId = "invalid-id"
         val moveRequest = MoveStorageRequest(newParentId = invalidParentId)
-        client.post("/storages/$id/move") {
+        client.patch("/storages/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
@@ -411,7 +411,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `move Storage should respond with NotFound when target Storage is not found`() = testApplication {
+    fun `patch move Storage should respond with NotFound when target Storage is not found`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -421,21 +421,26 @@ class StorageRoutesKtTest {
         val id = UUID.randomUUID().toString()
         val newParentId = UUID.randomUUID().toString()
         val moveRequest = MoveStorageRequest(newParentId = newParentId)
-        every { mockStorageRepository.getStorage(any()) } returns null
+        every { mockStorageRepository.storageExists(id) } returns false
+        every { mockStorageRepository.getStorage(id) } returns null
+        every { mockStorageRepository.getStorage(newParentId) } returns Storage(
+            id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), LocalDateTime.now(), LocalDateTime.now()
+        )
+        every { mockStorageRepository.storageExists(newParentId) } returns true
 
-        client.post("/storages/$id/move") {
+        client.patch("/storages/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
-            status shouldBe HttpStatusCode.BadRequest
+            status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
-                listOf(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $newParentId"))
+                listOf(ErrorMessages.STORAGE_NOT_FOUND)
             )
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
     @Test
-    fun `move Storage should respond with BadRequest when target parent Storage is not found`() = testApplication {
+    fun `patch move Storage should respond with BadRequest when target parent Storage is not found`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -445,13 +450,14 @@ class StorageRoutesKtTest {
         val id = UUID.randomUUID().toString()
         val newParentId = UUID.randomUUID().toString()
         val moveRequest = MoveStorageRequest(newParentId = newParentId)
-
+        every { mockStorageRepository.storageExists(id) } returns true
         every { mockStorageRepository.getStorage(id) } returns Storage(
             id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), LocalDateTime.now(), LocalDateTime.now()
         )
+        every { mockStorageRepository.storageExists(newParentId) } returns false
         every { mockStorageRepository.getStorage(newParentId) } returns null
 
-        client.post("/storages/$id/move") {
+        client.patch("/storages/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
@@ -464,7 +470,7 @@ class StorageRoutesKtTest {
     }
 
     @Test
-    fun `move Storage should move successfully with valid input`() = testApplication {
+    fun `patch move Storage should move successfully with valid input`() = testApplication {
         createEnviroment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -478,11 +484,13 @@ class StorageRoutesKtTest {
         val storageA = Storage(id, "Storage A", "Description A", spaces = listOf(), parentId = null, subStorages = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         val storageParent = Storage(newParentId, "Storage Parent", "Description Parent", spaces = listOf(), parentId = null, subStorages = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
 
+        every { mockStorageRepository.storageExists(id) } returns true
+        every { mockStorageRepository.storageExists(newParentId) } returns true
         every { mockStorageRepository.getStorage(id) } returns storageA
         every { mockStorageRepository.getStorage(newParentId) } returns storageParent
         every { mockStorageRepository.moveStorage(id, newParentId) } returns storageA.copy(parentId = newParentId)
 
-        client.post("/storages/$id/move") {
+        client.patch("/storages/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
