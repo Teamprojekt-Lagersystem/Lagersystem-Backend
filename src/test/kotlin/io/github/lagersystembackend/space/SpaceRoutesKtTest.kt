@@ -18,7 +18,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.json.Json
-import net.bytebuddy.asm.Advice.Local
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -224,13 +223,13 @@ class SpaceRoutesKtTest {
         }
 
         val id = UUID.randomUUID().toString()
-        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(id, "Space 1", 100f, "Description 1")
+        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest("Space 1", 100f, "Description 1")
         val createTime = LocalDateTime.now()
         updateSpaceNetworkRequest.run {
             val space = Space(id, name!!, size!!, description!!, products = listOf(), storageId = "any id", createTime, createTime)
             every { mockSpaceRepository.spaceExists(id) } returns true
             every { mockSpaceRepository.updateSpace(id, name, size, description) } returns space
-            client.patch("/spaces/update") {
+            client.patch("/spaces/${id}/update") {
                 setBody(updateSpaceNetworkRequest)
                 contentType(ContentType.Application.Json)
             }.apply {
@@ -241,16 +240,16 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `patch update should respond with BadRequest when invalid UpdateSpaceNetworkRequest`() = testApplication {
+    fun `patch update Space should respond with BadRequest when invalid UpdateSpaceNetworkRequest`() = testApplication {
         createEnvironment()
         val badRequest = """
             {
                 "name": "Space 1",
-                "size": 100.0
+                "invalidAttr": "invalid"
             }
         """.trimIndent()
 
-        client.patch("/spaces/update") {
+        client.patch("/spaces/${UUID.randomUUID()}/update") {
             setBody(badRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -263,7 +262,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `patch update should respond with BadRequest when id is invalid`() = testApplication {
+    fun `patch update Space should respond with BadRequest when id is invalid`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -271,9 +270,9 @@ class SpaceRoutesKtTest {
             }
         }
         val invalidId = "not-a-uuid"
-        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(invalidId, "Space 1", 100f, "Description 1")
+        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest("Space 1", 100f, "Description 1")
         every { mockSpaceRepository.spaceExists(invalidId) } returns false
-        client.patch("/spaces/update") {
+        client.patch("/spaces/${invalidId}/update") {
             setBody(updateSpaceNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
@@ -287,7 +286,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `patch update should respond with NotFound when Space not found`() = testApplication {
+    fun `patch update Space should respond with NotFound when Space not found`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -295,13 +294,13 @@ class SpaceRoutesKtTest {
             }
         }
         val id = UUID.randomUUID().toString()
-        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest(id, "Space 1", 100f, "Description 1")
+        val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest("Space 1", 100f, "Description 1")
         every { mockSpaceRepository.spaceExists(id) } returns false
-        client.patch("/spaces/update") {
+        client.patch("/spaces/${id}/update") {
             setBody(updateSpaceNetworkRequest)
             contentType(ContentType.Application.Json)
         }.apply {
-            status shouldBe HttpStatusCode.BadRequest
+            status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.SPACE_NOT_FOUND)
             )
@@ -310,7 +309,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `POST move should respond with BadRequest when id is invalid`() = testApplication {
+    fun `patch move Space should respond with BadRequest when id is invalid`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -318,11 +317,11 @@ class SpaceRoutesKtTest {
             }
         }
         val invalidId = "not-a-uuid"
-        val moveRequest = MoveSpaceRequest(targetStorageId = UUID.randomUUID().toString())
+        val moveRequest = MoveSpaceNetworkRequest(targetStorageId = UUID.randomUUID().toString())
         every { mockSpaceRepository.getSpace(any()) } returns null
         every { mockStorageRepository.storageExists(any()) } returns true
 
-        client.post("/spaces/$invalidId/move") {
+        client.patch("/spaces/$invalidId/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
@@ -335,7 +334,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `POST move should respond with BadRequest when body is not serialized`() = testApplication {
+    fun `patch move Space should respond with BadRequest when body is not serialized`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -347,7 +346,7 @@ class SpaceRoutesKtTest {
         every { mockSpaceRepository.getSpace(id) } returns null
         every { mockStorageRepository.storageExists(any()) } returns true
 
-        client.post("/spaces/$id/move") {
+        client.patch("/spaces/$id/move") {
             contentType(ContentType.Application.Json)
             setBody("invalid body")
         }.apply {
@@ -360,7 +359,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `POST move should respond with BadRequest when targetStorageId is invalid`() = testApplication {
+    fun `patch move Space should respond with BadRequest when targetStorageId is invalid`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -368,12 +367,12 @@ class SpaceRoutesKtTest {
             }
         }
         val id = UUID.randomUUID().toString()
-        val moveRequest = MoveSpaceRequest(targetStorageId = "invalid-uuid")
+        val moveRequest = MoveSpaceNetworkRequest(targetStorageId = "invalid-uuid")
 
         every { mockSpaceRepository.getSpace(id) } returns mockk()
         every { mockStorageRepository.storageExists(any()) } returns true
 
-        client.post("/spaces/$id/move") {
+        client.patch("/spaces/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
@@ -386,7 +385,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `POST move should respond with NotFound when targetStorageId storage is not found`() = testApplication {
+    fun `patch move Space should respond with NotFound when targetStorageId storage is not found`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -395,12 +394,12 @@ class SpaceRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val targetStorageId = UUID.randomUUID().toString()
-        val moveRequest = MoveSpaceRequest(targetStorageId = targetStorageId)
+        val moveRequest = MoveSpaceNetworkRequest(targetStorageId = targetStorageId)
 
         every { mockSpaceRepository.getSpace(id) } returns mockk()
         every { mockStorageRepository.storageExists(targetStorageId) } returns false
 
-        client.post("/spaces/$id/move") {
+        client.patch("/spaces/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
@@ -413,7 +412,7 @@ class SpaceRoutesKtTest {
     }
 
     @Test
-    fun `POST move should respond with NotFound when space is not found`() = testApplication {
+    fun `patch move Space should respond with NotFound when space is not found`() = testApplication {
         createEnvironment()
         val client = createClient {
             install(ContentNegotiation) {
@@ -422,16 +421,16 @@ class SpaceRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val targetStorageId = UUID.randomUUID().toString()
-        val moveRequest = MoveSpaceRequest(targetStorageId = targetStorageId)
+        val moveRequest = MoveSpaceNetworkRequest(targetStorageId = targetStorageId)
 
         every { mockSpaceRepository.getSpace(id) } returns null
         every { mockStorageRepository.storageExists(targetStorageId) } returns true
 
-        client.post("/spaces/$id/move") {
+        client.patch("/spaces/$id/move") {
             contentType(ContentType.Application.Json)
             setBody(moveRequest)
         }.apply {
-            status shouldBe HttpStatusCode.BadRequest
+            status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $id"))
             )

@@ -14,7 +14,6 @@ class PostgresStorageRepository: StorageRepository {
         parentId: String?,
     ): Storage = transaction {
         val parent = parentId?.let { StorageEntity.findById(UUID.fromString(it)) }
-        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         val newStorage = StorageEntity.new {
             this.name = name
             this.description = description

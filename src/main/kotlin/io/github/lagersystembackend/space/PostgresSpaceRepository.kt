@@ -15,7 +15,6 @@ class PostgresSpaceRepository : SpaceRepository {
         storageId: String
     ): Space = transaction {
         val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: throw IllegalArgumentException("Storage not found")
-        val createTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         SpaceEntity.new {
             this.name = name
             this.size = size
