@@ -6,6 +6,7 @@ import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.github.lagersystembackend.space.SpaceRepository
+import io.github.lagersystembackend.space.Space
 import io.kotest.matchers.shouldBe
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
@@ -21,6 +22,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -413,6 +415,159 @@ class ProductRoutesKtTest {
             val expectedResponse = ApiResponse.Error(
                 listOf(ErrorMessages.PRODUCT_NOT_FOUND)
             )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `copyProduct should duplicate product structure and return the copied product as NetworkProduct`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val spaceId = UUID.randomUUID().toString()
+        val productId = UUID.randomUUID().toString()
+        val originalProduct = Product(
+            id = productId,
+            name = "Original Product",
+            description = "A product description",
+            attributes = emptyMap(),
+            spaceId = spaceId,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+        every { mockSpaceRepository.getSpace(spaceId) } returns Space(
+            id = spaceId,
+            name = "Space",
+            size = 50f,
+            description = "Space description",
+            products = listOf(originalProduct),
+            storageId = UUID.randomUUID().toString(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+        every { mockProductRepository.getProduct(productId) } returns originalProduct
+        every { mockProductRepository.copyProduct(productId, spaceId) } answers {
+            originalProduct.copy(
+                id = UUID.randomUUID().toString(),
+                name = "${originalProduct.name} (Copy)"
+            )
+        }
+
+        val copyRequest = CopyProductRequest(targetSpaceId = spaceId)
+        val response = client.post("/products/$productId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody(copyRequest)
+        }
+
+        response.status shouldBe HttpStatusCode.Created
+
+        val expectedCopiedProduct = mockProductRepository.copyProduct(productId, spaceId).toNetworkProduct()
+        val actualNetworkProduct = Json.decodeFromString<NetworkProduct>(response.bodyAsText())
+
+        expectedCopiedProduct.apply {
+            actualNetworkProduct.apply {
+                name shouldBe this@apply.name
+                description shouldBe this@apply.description
+                spaceId shouldBe this@apply.spaceId
+                attributes shouldBe this@apply.attributes
+            }
+        }
+    }
+
+    @Test
+    fun `copyProduct should return BadRequest if id is not a valid UUID`() = testApplication {
+        createEnvironment()
+        client.post("/products/invalid-uuid/copy").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(listOf(ErrorMessages.INVALID_UUID_PRODUCT))
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `copyProduct should return NotFound if product does not exist`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val productId = UUID.randomUUID().toString()
+        val spaceId = UUID.randomUUID().toString()
+
+        every { mockProductRepository.getProduct(productId) } returns null
+        every { mockSpaceRepository.getSpace(spaceId) } returns Space(
+            id = spaceId,
+            name = "Space",
+            size = 50f,
+            description = "Space description",
+            products = emptyList(),
+            storageId = UUID.randomUUID().toString(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+
+        client.post("/products/$productId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody(CopyProductRequest(targetSpaceId = spaceId))
+        }.apply {
+            status shouldBe HttpStatusCode.NotFound
+            val expectedResponse = ApiResponse.Error(listOf(ErrorMessages.PRODUCT_NOT_FOUND))
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `copyProduct should return BadRequest when target space ID is invalid`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val productId = UUID.randomUUID().toString()
+
+        client.post("/products/$productId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody(CopyProductRequest(targetSpaceId = "invalid-uuid"))
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(listOf(ErrorMessages.INVALID_UUID_SPACE))
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `copyProduct should return BadRequest when target space does not exist`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val productId = UUID.randomUUID().toString()
+        val invalidSpaceId = UUID.randomUUID().toString()
+
+        every { mockSpaceRepository.getSpace(invalidSpaceId) } returns null
+        every { mockProductRepository.getProduct(productId) } returns Product(
+            id = productId,
+            name = "Original Product",
+            description = "A product description",
+            attributes = emptyMap(),
+            spaceId = UUID.randomUUID().toString(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+
+        client.post("/products/$productId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody(CopyProductRequest(targetSpaceId = invalidSpaceId))
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(listOf(ErrorMessages.SPACE_NOT_FOUND))
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }

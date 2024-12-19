@@ -59,11 +59,11 @@ paths:
     delete:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -96,11 +96,11 @@ paths:
     get:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -134,11 +134,11 @@ paths:
     patch:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
@@ -190,11 +190,11 @@ paths:
     patch:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
@@ -276,11 +276,11 @@ paths:
     delete:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -313,11 +313,11 @@ paths:
     get:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -351,11 +351,11 @@ paths:
     patch:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
@@ -403,11 +403,11 @@ paths:
     patch:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
@@ -451,11 +451,11 @@ paths:
     get:
       description: ""
       parameters:
-      - name: "depth"
-        in: "query"
-        required: false
-        schema:
-          type: "string"
+        - name: "depth"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -506,11 +506,11 @@ paths:
     delete:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -543,16 +543,16 @@ paths:
     get:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      - name: "depth"
-        in: "query"
-        required: false
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "depth"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -586,11 +586,11 @@ paths:
     patch:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
@@ -638,11 +638,11 @@ paths:
     patch:
       description: ""
       parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
@@ -702,12 +702,12 @@ components:
         updatedAt:
           type: "string"
       required:
-      - "id"
-      - "name"
-      - "description"
-      - "attributes"
-      - "spaceId"
-      - "createdAt"
+        - "id"
+        - "name"
+        - "description"
+        - "attributes"
+        - "spaceId"
+        - "createdAt"
     AddProductNetworkRequest:
       type: "object"
       properties:
@@ -718,9 +718,9 @@ components:
         spaceId:
           type: "string"
       required:
-      - "name"
-      - "description"
-      - "spaceId"
+        - "name"
+        - "description"
+        - "spaceId"
     ApiError:
       type: "object"
       properties:
@@ -731,8 +731,8 @@ components:
         context:
           type: "string"
       required:
-      - "type"
-      - "message"
+        - "type"
+        - "message"
     Error:
       type: "object"
       properties:
@@ -741,14 +741,14 @@ components:
           items:
             $ref: "#/components/schemas/ApiError"
       required:
-      - "errors"
+        - "errors"
     MoveProductNetworkRequest:
       type: "object"
       properties:
         targetSpaceId:
           type: "string"
       required:
-      - "targetSpaceId"
+        - "targetSpaceId"
     UpdateProductNetworkRequest:
       type: "object"
       properties:
@@ -779,11 +779,11 @@ components:
         updatedAt:
           type: "string"
       required:
-      - "id"
-      - "name"
-      - "description"
-      - "storageId"
-      - "createdAt"
+        - "id"
+        - "name"
+        - "description"
+        - "storageId"
+        - "createdAt"
     AddSpaceNetworkRequest:
       type: "object"
       properties:
@@ -797,16 +797,16 @@ components:
         storageId:
           type: "string"
       required:
-      - "name"
-      - "description"
-      - "storageId"
+        - "name"
+        - "description"
+        - "storageId"
     MoveSpaceNetworkRequest:
       type: "object"
       properties:
         targetStorageId:
           type: "string"
       required:
-      - "targetStorageId"
+        - "targetStorageId"
     UpdateSpaceNetworkRequest:
       type: "object"
       properties:
@@ -839,12 +839,12 @@ components:
         updatedAt:
           type: "string"
       required:
-      - "id"
-      - "name"
-      - "description"
-      - "spaces"
-      - "subStorages"
-      - "createdAt"
+        - "id"
+        - "name"
+        - "description"
+        - "spaces"
+        - "subStorages"
+        - "createdAt"
     AddStorageNetworkRequest:
       type: "object"
       properties:
@@ -855,8 +855,8 @@ components:
         parentId:
           type: "string"
       required:
-      - "name"
-      - "description"
+        - "name"
+        - "description"
     MoveStorageRequest:
       type: "object"
       properties:

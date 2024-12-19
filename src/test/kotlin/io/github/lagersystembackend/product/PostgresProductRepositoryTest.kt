@@ -13,14 +13,13 @@ import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
 import io.kotest.matchers.date.shouldBeBefore
-import io.kotest.matchers.equals.shouldBeEqual
+
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -413,4 +412,17 @@ class PostgresProductRepositoryTest {
             this shouldBe  null
         }
     }
+    @Test
+    fun `copyProduct should correctly duplicate product structure`() {
+        val space = exampleSpace
+        val product = sut.createProduct("Original Product", "A product description", space.id)
+
+        val copiedProduct = sut.copyProduct(product.id, space.id)
+
+        copiedProduct.name shouldBe "${product.name} (Copy)"
+        copiedProduct.description shouldBe product.description
+        copiedProduct.spaceId shouldBe space.id
+        copiedProduct.attributes shouldBe product.attributes
+    }
+
 }

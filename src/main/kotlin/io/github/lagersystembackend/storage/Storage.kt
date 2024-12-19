@@ -58,6 +58,11 @@ data class MoveStorageRequest(
     val newParentId: String?
 )
 
+@Serializable
+data class CopyStorageRequest(
+    val newParentId: String? = null
+)
+
 object Storages: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")

@@ -8,4 +8,5 @@ interface SpaceRepository {
     fun deleteSpace(id: String): Space?
     fun spaceExists(id: String): Boolean
     fun moveSpace(spaceId: String, targetStorageId: String): Space
+    fun copySpace(spaceId: String, targetStorageId: String): Space
 }

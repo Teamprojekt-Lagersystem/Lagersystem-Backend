@@ -2,6 +2,9 @@ package io.github.lagersystembackend.storage
 
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
+import io.github.lagersystembackend.product.ProductEntity
+import io.github.lagersystembackend.space.SpaceEntity
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -57,6 +60,10 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun moveStorage(id: String, newParentId: String?): Storage = transaction {
+        if (id == newParentId) {
+            throw IllegalArgumentException("Cannot move storage to itself")
+        }
+
         val storage = StorageEntity.findById(UUID.fromString(id))
             ?: throw IllegalArgumentException("Storage with ID $id not found")
 
@@ -84,5 +91,54 @@ class PostgresStorageRepository: StorageRepository {
         val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: return@transaction false
         val targetParent = StorageEntity.findById(UUID.fromString(targetParentId)) ?: return@transaction false
         generateSequence(targetParent) { it.parent }.any { it.id.value.toString() == storageId }
+    }
+
+    override fun copyStorage(id: String, newParentId: String?): Storage {
+        return transaction {
+
+            val originalStorage = StorageEntity.findById(UUID.fromString(id))
+                ?: throw IllegalArgumentException("Storage with ID $id not found")
+
+            val newParent = newParentId?.let { parentId ->
+                StorageEntity.findById(UUID.fromString(parentId))
+                    ?: throw IllegalArgumentException("Parent storage with ID $parentId not found")
+            }
+
+            val newStorageEntity = StorageEntity.new {
+                name = originalStorage.name + " (Copy)"
+                description = originalStorage.description
+            }
+
+            newStorageEntity.parent = newParent
+
+            originalStorage.spaces.forEach { space ->
+                val newSpaceEntity = SpaceEntity.new {
+                    name = space.name + " (Copy)"
+                    size = space.size
+                    description = space.description
+                    storage = newStorageEntity
+                }
+                space.products.forEach { product ->
+                    val newProductEntity = ProductEntity.new {
+                        name = product.name + " (Copy)"
+                        description = product.description
+                        this.space = newSpaceEntity
+                    }
+                    product.attributes.forEach { attribute ->
+                        ProductAttributeEntity.new {
+                            this.key = attribute.key
+                            this.value = attribute.value
+                            this.product = newProductEntity
+                        }
+                    }
+                    }
+            }
+
+            originalStorage.subStorages.forEach { subStorage ->
+                copyStorage(subStorage.id.value.toString(), newStorageEntity.id.value.toString()) // Recursive copy
+            }
+
+            newStorageEntity.toStorage()
+        }
     }
 }

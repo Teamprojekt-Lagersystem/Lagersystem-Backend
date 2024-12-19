@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -53,4 +54,29 @@ class PostgresProductRepository : ProductRepository {
         ProductEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toProduct()
     }
 
+    override fun copyProduct(productId: String, targetSpaceId: String): Product {
+        return transaction {
+
+            val originalProduct = ProductEntity.findById(UUID.fromString(productId))
+                ?: throw IllegalArgumentException("Product with ID $productId not found")
+
+            val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId))
+                ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
+
+            val newProductEntity = ProductEntity.new {
+                name = originalProduct.name + " (Copy)"
+                description = originalProduct.description
+                space = targetSpace
+            }
+
+            originalProduct.attributes.forEach { attribute ->
+                ProductAttributeEntity.new {
+                    key = attribute.key
+                    value = attribute.value
+                    product = newProductEntity
+                }
+            }
+            newProductEntity.toProduct()
+        }
+    }
 }

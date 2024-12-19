@@ -9,8 +9,9 @@ import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
 import io.kotest.matchers.date.shouldBeBefore
-import io.kotest.matchers.equals.shouldBeEqual
-import io.kotest.matchers.should
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.sql.javatime.datetime
+import java.time.format.DateTimeFormatter
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
@@ -268,5 +269,50 @@ class PostgresSpaceRepositoryTest {
         sut.getSpace(createdSpace.id)!!.products shouldBe createdProducts
         val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
         movedSpace.products shouldBe createdProducts
+    }
+
+    @Test
+    fun `copySpace should correctly duplicate space structure including products`() = testApplication {
+        val storage = exampleStorageEntity
+        val productRepository = PostgresProductRepository()
+        val space = insertSpace()
+        val product = productRepository.createProduct("Product", "Original Product", space.id)
+
+        val copiedSpace = sut.copySpace(space.id, exampleStorageId.toString())
+
+        copiedSpace.name shouldBe "${space.name} (Copy)"
+        copiedSpace.size shouldBe space.size
+        copiedSpace.description shouldBe space.description
+        copiedSpace.storageId shouldBe storage.id.toString()
+
+        copiedSpace.products.size shouldBe 1
+        val copiedProduct = copiedSpace.products.first()
+        copiedProduct.name shouldBe "${product.name} (Copy)"
+        copiedProduct.description shouldBe product.description
+        copiedProduct.spaceId shouldBe copiedSpace.id
+        copiedProduct.attributes shouldBe emptyMap()
+    }
+
+    @Test
+    fun `copySpace should throw IllegalArgumentException when original space not found`() = testApplication {
+        val invalidSpaceId = UUID.randomUUID().toString()
+
+        runCatching { sut.copySpace(invalidSpaceId, exampleStorageId.toString()) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Space with ID $invalidSpaceId not found"
+        }
+    }
+    @Test
+    fun `copySpace should throw IllegalArgumentException when target storage not found`() = testApplication {
+        val spaceRepository = PostgresSpaceRepository()
+        val space = spaceRepository.createSpace("Space", 50f, "Original Space", exampleStorageId.toString())
+        val invalidStorageId = UUID.randomUUID().toString()
+
+        runCatching { sut.copySpace(space.id, invalidStorageId) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Storage with ID $invalidStorageId not found"
+        }
     }
 }
