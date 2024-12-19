@@ -138,7 +138,6 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     call.respond(HttpStatusCode.Created, copiedSpace.toNetworkSpace())
                 }
             }
-
         }
 
         post {

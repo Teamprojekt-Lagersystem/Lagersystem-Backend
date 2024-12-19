@@ -38,6 +38,10 @@ data class AddProductNetworkRequest(
     val spaceId: String
 )
 
+@Serializable
+data class CopyProductRequest(
+    val targetSpaceId: String
+)
 
 object Products: UUIDTable() {
     val name = varchar("name", 255)

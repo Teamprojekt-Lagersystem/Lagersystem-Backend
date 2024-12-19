@@ -396,4 +396,17 @@ class PostgresProductRepositoryTest {
             this shouldBe  null
         }
     }
+    @Test
+    fun `copyProduct should correctly duplicate product structure`() {
+        val space = exampleSpace
+        val product = sut.createProduct("Original Product", "A product description", space.id)
+
+        val copiedProduct = sut.copyProduct(product.id, space.id)
+
+        copiedProduct.name shouldBe "${product.name} (Copy)"
+        copiedProduct.description shouldBe product.description
+        copiedProduct.spaceId shouldBe space.id
+        copiedProduct.attributes shouldBe product.attributes
+    }
+
 }

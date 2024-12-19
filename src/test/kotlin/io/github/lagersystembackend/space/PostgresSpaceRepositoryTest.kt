@@ -253,6 +253,7 @@ class PostgresSpaceRepositoryTest {
         val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
         movedSpace.products shouldBe createdProducts
     }
+
     @Test
     fun `copySpace should correctly duplicate space structure including products`() = testApplication {
         val storage = exampleStorageEntity
@@ -274,6 +275,7 @@ class PostgresSpaceRepositoryTest {
         copiedProduct.spaceId shouldBe copiedSpace.id
         copiedProduct.attributes shouldBe emptyMap()
     }
+
     @Test
     fun `copySpace should throw IllegalArgumentException when original space not found`() = testApplication {
         val invalidSpaceId = UUID.randomUUID().toString()

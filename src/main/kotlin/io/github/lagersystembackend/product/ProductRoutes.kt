@@ -36,7 +36,47 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
 
                 call.respond(product.toNetworkProduct())
             }
+            route("/copy") {
+                post {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
 
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val copyRequest = runCatching { call.receive<CopyProductRequest>() }.getOrNull()
+
+                    if (copyRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val targetSpaceId = copyRequest.targetSpaceId
+                    if (!targetSpaceId.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                    } else {
+                        val targetSpace = spaceRepository.getSpace(targetSpaceId)
+                        if (targetSpace == null) {
+                            errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val product = productRepository.getProduct(id)
+                    if (product == null) {
+                        errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
+                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val copiedProduct = productRepository.copyProduct(id, targetSpaceId)
+                    call.respond(HttpStatusCode.Created, copiedProduct.toNetworkProduct())
+                }
+            }
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
