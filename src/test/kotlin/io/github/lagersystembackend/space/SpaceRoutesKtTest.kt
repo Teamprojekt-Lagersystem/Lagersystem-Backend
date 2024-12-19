@@ -463,9 +463,13 @@ class SpaceRoutesKtTest {
                     name = "Original Product",
                     description = "A product description",
                     attributes = emptyMap(),
-                    spaceId = spaceId
+                    spaceId = spaceId,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now(),
                 )
-            )
+            ),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
         val mockStorage = Storage(
             id = storageId,
@@ -473,7 +477,9 @@ class SpaceRoutesKtTest {
             description = "Target Storage Description",
             spaces = listOf(originalSpace),
             parentId = null,
-            subStorages = listOf()
+            subStorages = listOf(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
         every { mockSpaceRepository.getSpace(spaceId) } returns originalSpace
         every { mockSpaceRepository.copySpace(spaceId, storageId) } answers {
@@ -581,7 +587,7 @@ class SpaceRoutesKtTest {
         val validId = UUID.randomUUID().toString()
         val nonExistentStorageId = UUID.randomUUID().toString()
 
-        val originalSpace = Space(validId, "Original Space", 100f, "Description", storageId = UUID.randomUUID().toString(), products = listOf())
+        val originalSpace = Space(validId, "Original Space", 100f, "Description", storageId = UUID.randomUUID().toString(), products = listOf(),createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),)
         every { mockSpaceRepository.getSpace(validId) } returns originalSpace
         every { mockStorageRepository.getStorage(nonExistentStorageId) } returns null
 

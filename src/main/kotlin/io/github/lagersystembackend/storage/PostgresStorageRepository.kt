@@ -60,6 +60,10 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun moveStorage(id: String, newParentId: String?): Storage = transaction {
+        if (id == newParentId) {
+            throw IllegalArgumentException("Cannot move storage to itself")
+        }
+
         val storage = StorageEntity.findById(UUID.fromString(id))
             ?: throw IllegalArgumentException("Storage with ID $id not found")
 

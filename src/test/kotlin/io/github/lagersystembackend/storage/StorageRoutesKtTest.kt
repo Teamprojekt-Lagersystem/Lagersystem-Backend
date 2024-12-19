@@ -537,15 +537,23 @@ class StorageRoutesKtTest {
                                     "Product",
                                     "A product",
                                     attributes = emptyMap(),
-                                    spaceId = spaceId
+                                    spaceId = spaceId,
+                                    createdAt = LocalDateTime.now(),
+                                    updatedAt = LocalDateTime.now(),
                                 )
-                            )
+                            ),
+                            createdAt = LocalDateTime.now(),
+                            updatedAt = LocalDateTime.now(),
                         )
                     ),
                     parentId = rootStorageId,
-                    subStorages = listOf()
+                    subStorages = listOf(),
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now(),
                 )
-            )
+            ),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
         every { mockStorageRepository.getStorage(rootStorageId) } returns rootStorage
         every { mockStorageRepository.copyStorage(rootStorageId, null) } answers {
@@ -699,7 +707,7 @@ class StorageRoutesKtTest {
         val validId = UUID.randomUUID().toString()
         val nonExistentParentId = UUID.randomUUID().toString()
 
-        val originalStorage = Storage(validId, "Original Storage", "Description", spaces = listOf(), parentId = null, subStorages = listOf())
+        val originalStorage = Storage(validId, "Original Storage", "Description", spaces = listOf(), parentId = null, subStorages = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),)
         every { mockStorageRepository.getStorage(validId) } returns originalStorage
         every { mockStorageRepository.getStorage(nonExistentParentId) } returns null
 

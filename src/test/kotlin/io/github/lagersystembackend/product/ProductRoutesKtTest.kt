@@ -22,6 +22,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -433,7 +434,9 @@ class ProductRoutesKtTest {
             name = "Original Product",
             description = "A product description",
             attributes = emptyMap(),
-            spaceId = spaceId
+            spaceId = spaceId,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
         every { mockSpaceRepository.getSpace(spaceId) } returns Space(
             id = spaceId,
@@ -441,7 +444,9 @@ class ProductRoutesKtTest {
             size = 50f,
             description = "Space description",
             products = listOf(originalProduct),
-            storageId = UUID.randomUUID().toString()
+            storageId = UUID.randomUUID().toString(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
         every { mockProductRepository.getProduct(productId) } returns originalProduct
         every { mockProductRepository.copyProduct(productId, spaceId) } answers {
@@ -500,7 +505,9 @@ class ProductRoutesKtTest {
             size = 50f,
             description = "Space description",
             products = emptyList(),
-            storageId = UUID.randomUUID().toString()
+            storageId = UUID.randomUUID().toString(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
 
         client.post("/products/$productId/copy") {
@@ -550,7 +557,9 @@ class ProductRoutesKtTest {
             name = "Original Product",
             description = "A product description",
             attributes = emptyMap(),
-            spaceId = UUID.randomUUID().toString()
+            spaceId = UUID.randomUUID().toString(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
 
         client.post("/products/$productId/copy") {
