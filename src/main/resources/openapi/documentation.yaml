@@ -130,8 +130,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
-  /v1/products/{id}/copy:
-    post:
+  /v1/products/{id}/move:
+    patch:
       description: ""
       parameters:
       - name: "id"
@@ -143,7 +143,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CopyProductRequest"
+              $ref: "#/components/schemas/MoveProductNetworkRequest"
         required: true
       responses:
         "400":
@@ -165,6 +165,10 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#4:
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -176,13 +180,13 @@ paths:
                   description: ""
                   value:
                     errors: []
-        "201":
-          description: "Created"
+        "200":
+          description: "OK"
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
-  /v1/products/moveProduct/{id}/{spaceId}:
+  /v1/products/{id}/update:
     patch:
       description: ""
       parameters:
@@ -191,11 +195,12 @@ paths:
         required: true
         schema:
           type: "string"
-      - name: "spaceId"
-        in: "path"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductNetworkRequest"
         required: true
-        schema:
-          type: "string"
       responses:
         "400":
           description: "Bad Request"
@@ -220,10 +225,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               examples:
                 Example#1:
-                  description: ""
-                  value:
-                    errors: []
-                Example#2:
                   description: ""
                   value:
                     errors: []
@@ -346,8 +347,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkSpace"
-  /v1/spaces/{id}/copy:
-    post:
+  /v1/spaces/{id}/move:
+    patch:
       description: ""
       parameters:
       - name: "id"
@@ -359,7 +360,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CopySpaceRequest"
+              $ref: "#/components/schemas/MoveSpaceNetworkRequest"
         required: true
       responses:
         "400":
@@ -392,14 +393,14 @@ paths:
                   description: ""
                   value:
                     errors: []
-        "201":
-          description: "Created"
+        "200":
+          description: "OK"
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkSpace"
-  /v1/spaces/{id}/move:
-    post:
+  /v1/spaces/{id}/update:
+    patch:
       description: ""
       parameters:
       - name: "id"
@@ -411,7 +412,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MoveSpaceRequest"
+              $ref: "#/components/schemas/UpdateSpaceNetworkRequest"
         required: true
       responses:
         "400":
@@ -429,11 +430,14 @@ paths:
                   description: ""
                   value:
                     errors: []
-                Example#3:
-                  description: ""
-                  value:
-                    errors: []
-                Example#4:
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
                   description: ""
                   value:
                     errors: []
@@ -578,60 +582,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStorage"
-  /v1/storages/{id}/copy:
-    post:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CopyStorageRequest"
-        required: true
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-                Example#2:
-                  description: ""
-                  value:
-                    errors: []
-                Example#3:
-                  description: ""
-                  value:
-                    errors: []
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "201":
-          description: "Created"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/NetworkStorage"
   /v1/storages/{id}/move:
-    post:
+    patch:
       description: ""
       parameters:
       - name: "id"
@@ -682,6 +634,54 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStorage"
+  /v1/storages/{id}/update:
+    patch:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStorageNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkStorage"
 components:
   schemas:
     NetworkProduct:
@@ -691,18 +691,25 @@ components:
           type: "string"
         name:
           type: "string"
+        price:
+          type: "number"
+          format: "float"
         description:
           type: "string"
         attributes:
           type: "string"
         spaceId:
           type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
-      - "attributes"
       - "spaceId"
+      - "createdAt"
     AddProductNetworkRequest:
       type: "object"
       properties:
@@ -737,13 +744,20 @@ components:
             $ref: "#/components/schemas/ApiError"
       required:
       - "errors"
-    CopyProductRequest:
+    MoveProductNetworkRequest:
       type: "object"
       properties:
         targetSpaceId:
           type: "string"
       required:
       - "targetSpaceId"
+    UpdateProductNetworkRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        description:
+          type: "string"
     NetworkSpace:
       type: "object"
       properties:
@@ -762,11 +776,16 @@ components:
             $ref: "#/components/schemas/NetworkProduct"
         storageId:
           type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "storageId"
+      - "createdAt"
     AddSpaceNetworkRequest:
       type: "object"
       properties:
@@ -783,20 +802,23 @@ components:
       - "name"
       - "description"
       - "storageId"
-    CopySpaceRequest:
+    MoveSpaceNetworkRequest:
       type: "object"
       properties:
         targetStorageId:
           type: "string"
       required:
       - "targetStorageId"
-    MoveSpaceRequest:
+    UpdateSpaceNetworkRequest:
       type: "object"
       properties:
-        targetStorageId:
+        name:
           type: "string"
-      required:
-      - "targetStorageId"
+        size:
+          type: "number"
+          format: "float"
+        description:
+          type: "string"
     NetworkStorage:
       type: "object"
       properties:
@@ -814,12 +836,17 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/NetworkStorage"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
       required:
       - "id"
       - "name"
       - "description"
       - "spaces"
       - "subStorages"
+      - "createdAt"
     AddStorageNetworkRequest:
       type: "object"
       properties:
@@ -832,13 +859,15 @@ components:
       required:
       - "name"
       - "description"
-    CopyStorageRequest:
-      type: "object"
-      properties:
-        newParentId:
-          type: "string"
     MoveStorageRequest:
       type: "object"
       properties:
         newParentId:
+          type: "string"
+    UpdateStorageNetworkRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        description:
           type: "string"

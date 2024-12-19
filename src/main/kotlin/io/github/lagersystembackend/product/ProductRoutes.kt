@@ -96,6 +96,77 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
 
                 call.respond(deletedProduct.toNetworkProduct())
             }
+            route("/update") {
+                patch {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val updateProductNetworkRequest = runCatching { call.receive<UpdateProductNetworkRequest>() }.getOrNull()
+
+                    if (updateProductNetworkRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_PRODUCT)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val updatedProduct = updateProductNetworkRequest.let {
+                        productRepository.updateProduct(id, it.name, it.description)
+                    }
+
+                    if (updatedProduct == null) {
+                        errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    updatedProduct.let {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            it.toNetworkProduct()
+                        )
+                    }
+                }
+            }
+            route("/move") {
+                patch {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val moveProductNetworkRequest = runCatching { call.receive<MoveProductNetworkRequest>() }.getOrNull()
+
+                    if (moveProductNetworkRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val spaceId = moveProductNetworkRequest.targetSpaceId
+
+                    if (!spaceId.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (!spaceRepository.spaceExists(spaceId)) {
+                        errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val movedProduct = productRepository.moveProduct(id, spaceId)
+                    if (movedProduct == null) {
+                        errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+                    call.respond(movedProduct.toNetworkProduct())
+                }
+            }
         }
         post {
             val errors = mutableListOf<ApiError>()
@@ -126,36 +197,6 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                     HttpStatusCode.Created,
                     it.toNetworkProduct()
                 )
-            }
-        }
-        route("/moveProduct/{id}/{spaceId}") {
-            patch {
-                val errors = mutableListOf<ApiError>()
-                val id = call.parameters["id"]!!
-
-                if (!id.isUUID()) {
-                    errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
-                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
-                }
-
-                val spaceId = call.parameters["spaceId"]!!
-
-                if (!spaceId.isUUID()) {
-                    errors.add(ErrorMessages.INVALID_UUID_SPACE)
-                    return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
-                }
-
-                if (!spaceRepository.spaceExists(spaceId)) {
-                    errors.add(ErrorMessages.SPACE_NOT_FOUND)
-                    return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
-                }
-
-                val movedProduct = productRepository.moveProduct(id, spaceId)
-                if (movedProduct == null) {
-                    errors.add(ErrorMessages.PRODUCT_NOT_FOUND)
-                    return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
-                }
-                call.respond(movedProduct.toNetworkProduct())
             }
         }
     }

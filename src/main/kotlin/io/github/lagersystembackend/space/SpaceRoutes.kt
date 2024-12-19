@@ -5,11 +5,7 @@ import io.github.lagersystembackend.storage.StorageRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
+import io.ktor.server.routing.*
 
 fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: StorageRepository) {
     route("/spaces") {
@@ -58,30 +54,61 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                 call.respond(deletedSpace.toNetworkSpace())
             }
+            route("/update") {
+                patch {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val updateSpaceNetworkRequest = runCatching { call.receive<UpdateSpaceNetworkRequest>() }.getOrNull()
+
+                    if (updateSpaceNetworkRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (!spaceRepository.spaceExists(id)) {
+                        errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val updatedSpace = updateSpaceNetworkRequest.let {
+                        spaceRepository.updateSpace(id, it.name, it.size, it.description)
+                    }
+
+                    updatedSpace?.let {
+                        call.respond(it.toNetworkSpace())
+                    }
+                }
+            }
             route("/move") {
-                post {
+                patch {
                     val id = call.parameters["id"]!!
                     val errors = mutableListOf<ApiError>()
 
                     if (!id.isUUID()) {
                         errors.add(ErrorMessages.INVALID_UUID_SPACE.withContext("ID: $id"))
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    val moveRequest = runCatching { call.receive<MoveSpaceRequest>() }.getOrNull()
+                    val moveSpaceNetworkRequest = runCatching { call.receive<MoveSpaceNetworkRequest>() }.getOrNull()
 
-                    if (moveRequest == null) {
+                    if (moveSpaceNetworkRequest == null) {
                         errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
                     val space = spaceRepository.getSpace(id)
                     if (space == null) {
                         errors.add(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $id"))
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                     }
 
-                    val targetStorageId = moveRequest.targetStorageId
+                    val targetStorageId = moveSpaceNetworkRequest.targetStorageId
                     if (!targetStorageId.isUUID()) {
                         errors.add(ErrorMessages.INVALID_UUID_STORAGE.withContext("Target Storage ID: $targetStorageId"))
                     } else if (!storageRepository.storageExists(targetStorageId)) {
@@ -89,10 +116,10 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     }
 
                     if (errors.isNotEmpty()) {
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    val movedSpace = spaceRepository.moveSpace(id, moveRequest.targetStorageId)
+                    val movedSpace = spaceRepository.moveSpace(id, moveSpaceNetworkRequest.targetStorageId)
 
                     call.respond(movedSpace.toNetworkSpace())
                 }
@@ -139,7 +166,6 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                 }
             }
         }
-
         post {
             val errors = mutableListOf<ApiError>()
             val addSpaceNetworkRequest = runCatching { call.receive<AddSpaceNetworkRequest>() }.getOrNull()

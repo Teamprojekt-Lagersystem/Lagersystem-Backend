@@ -13,6 +13,10 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.sql.javatime.datetime
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 
@@ -22,7 +26,9 @@ data class Space(
     val size: Float?,
     val description: String,
     val products: List<Product>,
-    val storageId: String
+    val storageId: String,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime?
 )
 
 @Serializable
@@ -32,7 +38,9 @@ data class NetworkSpace(
     val size: Float?,
     val description: String,
     val products: List<NetworkProduct>?,
-    val storageId: String
+    val storageId: String,
+    val createdAt: String,
+    val updatedAt: String?
 )
 
 @Serializable
@@ -44,7 +52,14 @@ data class AddSpaceNetworkRequest(
 )
 
 @Serializable
-data class MoveSpaceRequest(
+data class UpdateSpaceNetworkRequest(
+    val name: String? = null,
+    val size: Float? = null,
+    val description: String? = null
+)
+
+@Serializable
+data class MoveSpaceNetworkRequest(
     val targetStorageId: String
 )
 
@@ -58,6 +73,8 @@ object Spaces: UUIDTable() {
     val size = float("size").nullable()
     val description = text("description")
     val storageId = reference("storageId", Storages)
+    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").nullable()
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -68,6 +85,8 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Spaces.description
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
+    var createdAt by Spaces.createdAt
+    var updatedAt by Spaces.updatedAt
 
     override fun delete() {
         products.forEach { it.delete() }
@@ -81,7 +100,9 @@ fun SpaceEntity.toSpace() = Space(
     size,
     description,
     products.map { it.toProduct() },
-    storage.id.value.toString()
+    storage.id.value.toString(),
+    createdAt,
+    updatedAt
 )
 
 fun Space.toNetworkSpace() = NetworkSpace(
@@ -90,5 +111,7 @@ fun Space.toNetworkSpace() = NetworkSpace(
     size,
     description,
     products.map { it.toNetworkProduct() },
-    storageId
+    storageId,
+    createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
+    updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
 )

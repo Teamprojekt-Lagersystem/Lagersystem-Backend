@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 import java.util.UUID
 
@@ -41,6 +43,7 @@ class PostgresStorageRepository: StorageRepository {
         StorageEntity.findByIdAndUpdate(UUID.fromString(id)) { storage ->
             name?.let { storage.name = it }
             description?.let { storage.description = it }
+            storage.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toStorage()
     }
 
@@ -76,6 +79,7 @@ class PostgresStorageRepository: StorageRepository {
         }
 
         storage.parent = newParent
+        storage.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         storage.toStorage()
     }
 

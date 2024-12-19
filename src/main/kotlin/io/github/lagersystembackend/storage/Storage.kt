@@ -11,7 +11,11 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 data class Storage(
@@ -20,7 +24,9 @@ data class Storage(
     val description: String,
     val spaces: List<Space>,
     val parentId: String?,
-    val subStorages: List<Storage>
+    val subStorages: List<Storage>,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime?
 )
 
 @Serializable
@@ -29,7 +35,9 @@ data class NetworkStorage(
     val name: String,
     val description: String,
     val spaces: List<NetworkSpace>,
-    val subStorages: List<NetworkStorage>
+    val subStorages: List<NetworkStorage>,
+    val createdAt: String,
+    val updatedAt: String?
 )
 
 @Serializable
@@ -37,6 +45,12 @@ data class AddStorageNetworkRequest(
     val name: String,
     val description: String,
     val parentId: String? = null
+)
+
+@Serializable
+data class UpdateStorageNetworkRequest(
+    val name: String? = null,
+    val description: String? = null
 )
 
 @Serializable
@@ -52,6 +66,8 @@ data class CopyStorageRequest(
 object Storages: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
+    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val updatedAt = datetime("updatedAt").nullable()
 }
 
 object StorageToStorages: Table() {
@@ -80,6 +96,8 @@ class StorageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
                 }
             }
         }
+    var createdAt by Storages.createdAt
+    var updatedAt by Storages.updatedAt
 
     override fun delete() {
         spaces.forEach { it.delete() }
@@ -96,7 +114,9 @@ fun StorageEntity.toStorage(): Storage {
         description = description,
         spaces = spaces.map { it.toSpace() },
         parentId = parent?.id?.value?.toString(),
-        subStorages = subStorages.map { it.toStorage() }
+        subStorages = subStorages.map { it.toStorage() },
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
 }
 
@@ -113,6 +133,8 @@ private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage
         name = name,
         description = description,
         spaces = spaces.map { it.toNetworkSpace() },
-        subStorages = subStorages
+        subStorages = subStorages,
+        createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
+        updatedAt = updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
     )
 }

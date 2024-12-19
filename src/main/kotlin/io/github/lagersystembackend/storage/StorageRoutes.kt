@@ -75,43 +75,74 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
 
                 call.respond(deletedStorage.toNetworkStorage())
             }
-            route("/move") {
-                post {
+            route("/update") {
+                patch {
                     val id = call.parameters["id"]!!
                     val errors = mutableListOf<ApiError>()
 
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val updateStorageNetworkRequest = runCatching { call.receive<UpdateStorageNetworkRequest>() }.getOrNull()
+
+                    if (updateStorageNetworkRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (!storageRepository.storageExists(id)) {
+                        errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val updatedStorage = updateStorageNetworkRequest.let {
+                        storageRepository.updateStorage(id, it.name, it.description)
+                    }
+
+                    updatedStorage?.let {
+                        call.respond(it.toNetworkStorage())
+                    }
+                }
+            }
+            route("/move") {
+                patch {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
 
                     if (!id.isUUID()) {
                         errors.add(ErrorMessages.INVALID_UUID_STORAGE)
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    val moveRequest = runCatching { call.receive<MoveStorageRequest>() }.getOrNull()
-                    if (moveRequest == null) {
+                    val moveStorageNetworkRequest = runCatching { call.receive<MoveStorageRequest>() }.getOrNull()
+
+                    if (moveStorageNetworkRequest == null) {
                         errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    val targetParentId = moveRequest.newParentId
+                    val targetParentId = moveStorageNetworkRequest.newParentId
+
                     if (targetParentId != null) {
                         if (!targetParentId.isUUID()) {
                             errors.add(ErrorMessages.INVALID_UUID_STORAGE)
                         } else {
-                            val targetStorage = storageRepository.getStorage(targetParentId)
-                            if (targetStorage == null) {
+                            if (!storageRepository.storageExists(targetParentId)) {
                                 errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetParentId"))
                             }
                         }
                     }
 
                     if (errors.isNotEmpty()) {
-                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
                     val storage = storageRepository.getStorage(id)
                     if (storage == null) {
                         errors.add(ErrorMessages.STORAGE_NOT_FOUND)
-                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                     }
 
                     val movedStorage = storageRepository.moveStorage(id, targetParentId)
