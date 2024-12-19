@@ -97,6 +97,48 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     call.respond(movedSpace.toNetworkSpace())
                 }
             }
+            route("/copy") {
+                post {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val copyRequest = runCatching { call.receive<CopySpaceRequest>() }.getOrNull()
+
+                    if (copyRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val targetStorageId = copyRequest.targetStorageId
+                    if (!targetStorageId.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                    } else {
+                        val targetStorage = storageRepository.getStorage(targetStorageId)
+                        if (targetStorage == null) {
+                            errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetStorageId"))
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val space = spaceRepository.getSpace(id)
+                    if (space == null) {
+                        errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val copiedSpace = spaceRepository.copySpace(id, targetStorageId)
+                    call.respond(HttpStatusCode.Created, copiedSpace.toNetworkSpace())
+                }
+            }
+
         }
 
         post {

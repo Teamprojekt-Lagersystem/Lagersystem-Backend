@@ -48,6 +48,11 @@ data class MoveSpaceRequest(
     val targetStorageId: String
 )
 
+@Serializable
+data class CopySpaceRequest(
+    val targetStorageId: String
+)
+
 object Spaces: UUIDTable() {
     val name = varchar("name", 255)
     val size = float("size").nullable()

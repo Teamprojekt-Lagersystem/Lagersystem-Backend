@@ -4,6 +4,8 @@ import io.github.lagersystembackend.common.*
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.github.lagersystembackend.storage.StorageRepository
+import io.github.lagersystembackend.product.Product
+import io.github.lagersystembackend.storage.Storage
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
@@ -340,5 +342,163 @@ class SpaceRoutesKtTest {
             Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
         }
     }
+
+    @Test
+    fun `copySpace should duplicate space structure and return the copied space`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val storageId = UUID.randomUUID().toString()
+        val spaceId = UUID.randomUUID().toString()
+        val productId = UUID.randomUUID().toString()
+        val originalSpace = Space(
+            id = spaceId,
+            name = "Original Space",
+            size = 100f,
+            description = "A space description",
+            storageId = storageId,
+            products = listOf(
+                Product(
+                    id = productId,
+                    name = "Original Product",
+                    description = "A product description",
+                    attributes = emptyMap(),
+                    spaceId = spaceId
+                )
+            )
+        )
+        val mockStorage = Storage(
+            id = storageId,
+            name = "Target Storage",
+            description = "Target Storage Description",
+            spaces = listOf(originalSpace),
+            parentId = null,
+            subStorages = listOf()
+        )
+        every { mockSpaceRepository.getSpace(spaceId) } returns originalSpace
+        every { mockSpaceRepository.copySpace(spaceId, storageId) } answers {
+            originalSpace.copy(
+                id = UUID.randomUUID().toString(),
+                name = "${originalSpace.name} (Copy)",
+                products = originalSpace.products.map { product ->
+                    product.copy(
+                        id = UUID.randomUUID().toString(),
+                        name = "${product.name} (Copy)"
+                    )
+                }
+            )
+        }
+        every { mockStorageRepository.getStorage(storageId) } returns mockStorage
+        val copyRequest = CopySpaceRequest(targetStorageId = storageId)
+        val response = client.post("/spaces/$spaceId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody(copyRequest)
+        }
+        response.status shouldBe HttpStatusCode.Created
+        val expectedCopiedSpace = mockSpaceRepository.copySpace(spaceId, storageId).toNetworkSpace()
+        val actualCopiedSpace = Json.decodeFromString<NetworkSpace>(response.bodyAsText())
+
+        expectedCopiedSpace.apply {
+            actualCopiedSpace.apply {
+                name shouldBe this@apply.name
+                size shouldBe this@apply.size
+                description shouldBe this@apply.description
+                products?.size shouldBe this@apply.products?.size
+                products?.zip(this@apply.products ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
+                    expectedProduct.apply {
+                        actualProduct.apply {
+                            name shouldBe this@apply.name
+                            description shouldBe this@apply.description
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `copySpace should return BadRequest if id is not a valid UUID`() = testApplication {
+        createEnvironment()
+        val invalidId = "invalid-uuid"
+        client.post("/spaces/$invalidId/copy").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `copySpace should respond with BadRequest when request body is missing or not serialized properly`() = testApplication {
+        createEnvironment()
+        val client = createClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val validId = UUID.randomUUID().toString()
+
+        client.post("/spaces/$validId/copy").apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+
+        client.post("/spaces/$validId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("{ invalid json }") // Invalid JSON
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.BODY_NOT_SERIALIZED_SPACE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
+    @Test
+    fun `copySpace should respond with BadRequest when targetStorageId is not a valid UUID`() = testApplication {
+        createEnvironment()
+        val validId = UUID.randomUUID().toString()
+
+        client.post("/spaces/$validId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"targetStorageId": "invalid-uuid"}""")
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.INVALID_UUID_STORAGE)
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+    @Test
+    fun `copySpace should respond with BadRequest when target storage does not exist`() = testApplication {
+        createEnvironment()
+        val validId = UUID.randomUUID().toString()
+        val nonExistentStorageId = UUID.randomUUID().toString()
+
+        val originalSpace = Space(validId, "Original Space", 100f, "Description", storageId = UUID.randomUUID().toString(), products = listOf())
+        every { mockSpaceRepository.getSpace(validId) } returns originalSpace
+        every { mockStorageRepository.getStorage(nonExistentStorageId) } returns null
+
+        client.post("/spaces/$validId/copy") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"targetStorageId": "$nonExistentStorageId"}""")
+        }.apply {
+            status shouldBe HttpStatusCode.BadRequest
+            val expectedResponse = ApiResponse.Error(
+                listOf(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $nonExistentStorageId"))
+            )
+            Json.decodeFromString<ApiResponse.Error>(bodyAsText()) shouldBe expectedResponse
+        }
+    }
+
 
 }
