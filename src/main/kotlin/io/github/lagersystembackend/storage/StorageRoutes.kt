@@ -128,7 +128,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     if (targetParentId != null) {
                         if (!targetParentId.isUUID()) {
                             errors.add(ErrorMessages.INVALID_UUID_STORAGE)
-                        } else {
+                        } else if (id == targetParentId) {
+                            errors.add(ErrorMessages.RECURSIVE_MOVE)
+                        }
+                        else {
                             if (!storageRepository.storageExists(targetParentId)) {
                                 errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetParentId"))
                             }
@@ -169,6 +172,8 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     if (newParentId != null) {
                         if (!newParentId.isUUID()) {
                             errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        } else if (id == newParentId) {
+                            errors.add(ErrorMessages.RECURSIVE_COPY)
                         } else {
                             val targetStorage = storageRepository.getStorage(newParentId)
                             if (targetStorage == null) {

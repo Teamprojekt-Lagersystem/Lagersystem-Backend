@@ -64,7 +64,7 @@ class PostgresProductRepository : ProductRepository {
                 ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
 
             val newProductEntity = ProductEntity.new {
-                name = originalProduct.name + " (Copy)"
+                name = originalProduct.name
                 description = originalProduct.description
                 space = targetSpace
             }

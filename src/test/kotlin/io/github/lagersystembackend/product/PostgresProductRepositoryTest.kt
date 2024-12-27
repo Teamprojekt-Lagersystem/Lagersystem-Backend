@@ -419,7 +419,7 @@ class PostgresProductRepositoryTest {
 
         val copiedProduct = sut.copyProduct(product.id, space.id)
 
-        copiedProduct.name shouldBe "${product.name} (Copy)"
+        copiedProduct.name shouldBe product.name
         copiedProduct.description shouldBe product.description
         copiedProduct.spaceId shouldBe space.id
         copiedProduct.attributes shouldBe product.attributes

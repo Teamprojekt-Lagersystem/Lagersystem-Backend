@@ -452,7 +452,7 @@ class ProductRoutesKtTest {
         every { mockProductRepository.copyProduct(productId, spaceId) } answers {
             originalProduct.copy(
                 id = UUID.randomUUID().toString(),
-                name = "${originalProduct.name} (Copy)"
+                name = originalProduct.name
             )
         }
 

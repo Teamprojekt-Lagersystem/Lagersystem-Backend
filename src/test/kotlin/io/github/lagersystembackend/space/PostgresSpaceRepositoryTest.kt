@@ -280,14 +280,14 @@ class PostgresSpaceRepositoryTest {
 
         val copiedSpace = sut.copySpace(space.id, exampleStorageId.toString())
 
-        copiedSpace.name shouldBe "${space.name} (Copy)"
+        copiedSpace.name shouldBe space.name
         copiedSpace.size shouldBe space.size
         copiedSpace.description shouldBe space.description
         copiedSpace.storageId shouldBe storage.id.toString()
 
         copiedSpace.products.size shouldBe 1
         val copiedProduct = copiedSpace.products.first()
-        copiedProduct.name shouldBe "${product.name} (Copy)"
+        copiedProduct.name shouldBe product.name
         copiedProduct.description shouldBe product.description
         copiedProduct.spaceId shouldBe copiedSpace.id
         copiedProduct.attributes shouldBe emptyMap()

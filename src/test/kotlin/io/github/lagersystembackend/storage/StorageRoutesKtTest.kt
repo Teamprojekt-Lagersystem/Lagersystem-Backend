@@ -559,19 +559,19 @@ class StorageRoutesKtTest {
         every { mockStorageRepository.copyStorage(rootStorageId, null) } answers {
             rootStorage.copy(
                 id = UUID.randomUUID().toString(),
-                name = "${rootStorage.name} (Copy)",
+                name = rootStorage.name,
                 subStorages = rootStorage.subStorages.map { subStorage ->
                     subStorage.copy(
                         id = UUID.randomUUID().toString(),
-                        name = "${subStorage.name} (Copy)",
+                        name = subStorage.name,
                         spaces = subStorage.spaces.map { space ->
                             space.copy(
                                 id = UUID.randomUUID().toString(),
-                                name = "${space.name} (Copy)",
+                                name = space.name,
                                 products = space.products.map { product ->
                                     product.copy(
                                         id = UUID.randomUUID().toString(),
-                                        name = "${product.name} (Copy)"
+                                        name = product.name
                                     )
                                 }
                             )

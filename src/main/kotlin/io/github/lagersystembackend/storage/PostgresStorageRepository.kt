@@ -96,6 +96,10 @@ class PostgresStorageRepository: StorageRepository {
     override fun copyStorage(id: String, newParentId: String?): Storage {
         return transaction {
 
+            if (id == newParentId) {
+                throw IllegalArgumentException("Cannot copy storage to itself")
+            }
+
             val originalStorage = StorageEntity.findById(UUID.fromString(id))
                 ?: throw IllegalArgumentException("Storage with ID $id not found")
 
@@ -105,7 +109,7 @@ class PostgresStorageRepository: StorageRepository {
             }
 
             val newStorageEntity = StorageEntity.new {
-                name = originalStorage.name + " (Copy)"
+                name = originalStorage.name
                 description = originalStorage.description
             }
 
@@ -113,14 +117,14 @@ class PostgresStorageRepository: StorageRepository {
 
             originalStorage.spaces.forEach { space ->
                 val newSpaceEntity = SpaceEntity.new {
-                    name = space.name + " (Copy)"
+                    name = space.name 
                     size = space.size
                     description = space.description
                     storage = newStorageEntity
                 }
                 space.products.forEach { product ->
                     val newProductEntity = ProductEntity.new {
-                        name = product.name + " (Copy)"
+                        name = product.name 
                         description = product.description
                         this.space = newSpaceEntity
                     }

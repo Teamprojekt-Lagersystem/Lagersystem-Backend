@@ -485,11 +485,11 @@ class SpaceRoutesKtTest {
         every { mockSpaceRepository.copySpace(spaceId, storageId) } answers {
             originalSpace.copy(
                 id = UUID.randomUUID().toString(),
-                name = "${originalSpace.name} (Copy)",
+                name = originalSpace.name,
                 products = originalSpace.products.map { product ->
                     product.copy(
                         id = UUID.randomUUID().toString(),
-                        name = "${product.name} (Copy)"
+                        name = product.name
                     )
                 }
             )

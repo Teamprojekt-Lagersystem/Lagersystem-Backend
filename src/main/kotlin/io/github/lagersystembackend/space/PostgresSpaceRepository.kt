@@ -80,14 +80,14 @@ class PostgresSpaceRepository : SpaceRepository {
                 ?: throw IllegalArgumentException("Storage with ID $targetStorageId not found")
 
             val newSpaceEntity = SpaceEntity.new {
-                name = originalSpace.name + " (Copy)"
+                name = originalSpace.name
                 size = originalSpace.size
                 description = originalSpace.description
                 storage = targetStorage
             }
             originalSpace.products.forEach { product ->
                 val newProductEntity = ProductEntity.new {
-                    name = product.name + " (Copy)"
+                    name = product.name
                     description = product.description
                     this.space = newSpaceEntity
                 }
