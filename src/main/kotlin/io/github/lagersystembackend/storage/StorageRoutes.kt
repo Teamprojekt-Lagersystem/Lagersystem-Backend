@@ -128,7 +128,10 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                     if (targetParentId != null) {
                         if (!targetParentId.isUUID()) {
                             errors.add(ErrorMessages.INVALID_UUID_STORAGE)
-                        } else {
+                        } else if (id == targetParentId) {
+                            errors.add(ErrorMessages.RECURSIVE_MOVE)
+                        }
+                        else {
                             if (!storageRepository.storageExists(targetParentId)) {
                                 errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $targetParentId"))
                             }
@@ -147,6 +150,50 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
 
                     val movedStorage = storageRepository.moveStorage(id, targetParentId)
                     call.respond(movedStorage.toNetworkStorage())
+                }
+            }
+            route("/copy") {
+                post {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val copyRequest = runCatching { call.receive<CopyStorageRequest>() }.getOrNull()
+                    if (copyRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORAGE)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val newParentId = copyRequest.newParentId
+                    if (newParentId != null) {
+                        if (!newParentId.isUUID()) {
+                            errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                        } else if (id == newParentId) {
+                            errors.add(ErrorMessages.RECURSIVE_COPY)
+                        } else {
+                            val targetStorage = storageRepository.getStorage(newParentId)
+                            if (targetStorage == null) {
+                                errors.add(ErrorMessages.STORAGE_NOT_FOUND.withContext("ID: $newParentId"))
+                            }
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val storage = storageRepository.getStorage(id)
+                    if (storage == null) {
+                        errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val copiedStorage = storageRepository.copyStorage(id, newParentId)
+                    call.respond(HttpStatusCode.Created, copiedStorage.toNetworkStorage())
                 }
             }
         }

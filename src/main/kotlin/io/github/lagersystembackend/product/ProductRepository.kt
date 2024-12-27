@@ -7,4 +7,5 @@ interface ProductRepository {
     fun updateProduct(id: String, name: String?, description: String?): Product?
     fun deleteProduct(id: String): Product?
     fun moveProduct(id: String, spaceId: String): Product?
+    fun copyProduct(productId: String, targetSpaceId: String): Product
 }

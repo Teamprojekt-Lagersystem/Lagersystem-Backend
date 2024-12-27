@@ -25,4 +25,6 @@ object ErrorMessages {
     val BODY_NOT_SERIALIZED_SPACE = ApiError("BODY_NOT_SERIALIZED" , "The request of specified space is not in the expected format.")
     val BODY_NOT_SERIALIZED_PRODUCT = ApiError("BODY_NOT_SERIALIZED" , "The request of specified product is not in the expected format.")
     val INVALID_DEPTH = ApiError("INVALID_DEPTH" , "The provided depth parameter is invalid.")
+    val RECURSIVE_MOVE = ApiError("RECURSIVE_MOVE" , "Cannot move storage to itself.")
+    val RECURSIVE_COPY = ApiError("RECURSIVE_COPY" , "Cannot copy storage to itself.")
 }
