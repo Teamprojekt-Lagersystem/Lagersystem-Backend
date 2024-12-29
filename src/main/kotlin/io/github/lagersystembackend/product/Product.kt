@@ -22,17 +22,30 @@ data class Product(
     val id: String,
     val name: String,
     val description: String,
+    val size: Double?,
+    val unit: String?,
     val attributes: Map<String, Attribute>,
     val spaceId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
-)
+) {
+    init {
+        val allNull = (size == null && unit == null)
+        val allDefined = (size != null && unit != null)
+
+        require(allNull || allDefined) {
+            "Either all of currentSize, totalSize, and unit must be defined, or none of them."
+        }
+    }
+}
 
 @Serializable
 data class NetworkProduct(
     val id: String,
     val name: String,
     val description: String,
+    val size: Double?,
+    val unit: String?,
     val attributes: Map<String, Attribute>,
     val spaceId: String,
     val createdAt: String,
@@ -43,6 +56,8 @@ data class NetworkProduct(
 data class AddProductNetworkRequest(
     val name: String,
     val description: String,
+    val size: Double?,
+    val unit: String?,
     val spaceId: String
 )
 
@@ -50,6 +65,7 @@ data class AddProductNetworkRequest(
 data class UpdateProductNetworkRequest(
     val name: String? = null,
     val description: String? = null,
+    val size: Double?,
 )
 
 @Serializable
@@ -65,6 +81,8 @@ data class CopyProductRequest(
 object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
+    val size = double("size").nullable()
+    val unit = varchar("unit", 255).nullable()
     val spaceId = reference("spaceId", Spaces)
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
@@ -75,6 +93,8 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var name by Products.name
     var description by Products.description
+    var size by Products.size
+    var unit by Products.unit
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
     var space by SpaceEntity referencedOn Products.spaceId
     var createdAt by Products.createdAt
@@ -85,6 +105,8 @@ fun ProductEntity.toProduct() = Product(
     id.value.toString(),
     name,
     description,
+    size,
+    unit,
     attributes.associate { it.key to it.toAttribute() },
     space.id.value.toString(),
     createdAt,
@@ -95,6 +117,8 @@ fun Product.toNetworkProduct() = NetworkProduct(
     id,
     name,
     description,
+    size,
+    unit,
     attributes,
     spaceId,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),

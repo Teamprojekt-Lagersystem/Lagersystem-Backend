@@ -23,19 +23,37 @@ import java.util.UUID
 data class Space(
     val id: String,
     val name: String,
-    val size: Float?,
+    val totalSize: Double?,
+    val currentSize: Double?,
+    val unit: String?,
     val description: String,
     val products: List<Product>,
     val storageId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
-)
+) {
+    init {
+        val allNull = (currentSize == null && totalSize == null && unit == null)
+        val allDefined = (currentSize != null && totalSize != null && unit != null)
+
+        require(allNull || allDefined) {
+            "Either all of currentSize, totalSize, and unit must be defined, or none of them."
+        }
+        if (currentSize != null && totalSize != null) {
+            require(currentSize <= totalSize) {
+                "currentSize cannot exceed totalSize."
+            }
+        }
+    }
+}
 
 @Serializable
 data class NetworkSpace(
     val id: String,
     val name: String,
-    val size: Float?,
+    val totalSize: Double?,
+    val currentSize: Double?,
+    val unit: String?,
     val description: String,
     val products: List<NetworkProduct>?,
     val storageId: String,
@@ -46,7 +64,8 @@ data class NetworkSpace(
 @Serializable
 data class AddSpaceNetworkRequest(
     val name: String,
-    val size: Float?,
+    val totalSize: Double?,
+    val unit: String?,
     val description: String,
     val storageId: String
 )
@@ -54,7 +73,7 @@ data class AddSpaceNetworkRequest(
 @Serializable
 data class UpdateSpaceNetworkRequest(
     val name: String? = null,
-    val size: Float? = null,
+    val totalSize: Double? = null,
     val description: String? = null
 )
 
@@ -70,7 +89,9 @@ data class CopySpaceRequest(
 
 object Spaces: UUIDTable() {
     val name = varchar("name", 255)
-    val size = float("size").nullable()
+    val totalSize = double("totalSize").nullable()
+    val currentSize = double("currentSize").nullable()
+    val unit = varchar("unit", 255).nullable()
     val description = text("description")
     val storageId = reference("storageId", Storages)
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
@@ -81,7 +102,9 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<SpaceEntity>(Spaces)
 
     var name by Spaces.name
-    var size by Spaces.size
+    var totalSize by Spaces.totalSize
+    var currentSize by Spaces.currentSize
+    var unit by Spaces.unit
     var description by Spaces.description
     val products by ProductEntity referrersOn Products.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
@@ -97,7 +120,9 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 fun SpaceEntity.toSpace() = Space(
     id.value.toString(),
     name,
-    size,
+    totalSize,
+    currentSize,
+    unit,
     description,
     products.map { it.toProduct() },
     storage.id.value.toString(),
@@ -108,7 +133,9 @@ fun SpaceEntity.toSpace() = Space(
 fun Space.toNetworkSpace() = NetworkSpace(
     id,
     name,
-    size,
+    totalSize,
+    currentSize,
+    unit,
     description,
     products.map { it.toNetworkProduct() },
     storageId,

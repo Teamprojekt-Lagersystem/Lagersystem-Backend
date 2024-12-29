@@ -9,9 +9,6 @@ import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
 import io.kotest.matchers.date.shouldBeBefore
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
-import org.jetbrains.exposed.sql.javatime.datetime
-import java.time.format.DateTimeFormatter
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
@@ -36,7 +33,6 @@ class PostgresSpaceRepositoryTest {
         SpaceEntity.new {
             name = "Space"
             description = "Test space"
-            size = 100f
             storage = exampleStorageEntity
         }.toSpace()
     }
@@ -67,12 +63,14 @@ class PostgresSpaceRepositoryTest {
     @Test
     fun `create Space should return Space`() = testApplication {
         val expectedSpace =
-            Space("anyId", "Space", 100f,"Space description", emptyList(), exampleStorageId.toString(), LocalDateTime.now(), LocalDateTime.now())
-        val createdStorage = expectedSpace.run { sut.createSpace(name, size, description, storageId) }
+            Space("anyId", "Space", null, null, null,"Space description", emptyList(), exampleStorageId.toString(), LocalDateTime.now(), LocalDateTime.now())
+        val createdStorage = expectedSpace.run { sut.createSpace(name, description, totalSize, unit, storageId) }
 
         createdStorage.apply {
             name shouldBe expectedSpace.name
-            size shouldBe expectedSpace.size
+            totalSize shouldBe expectedSpace.totalSize
+            currentSize shouldBe expectedSpace.currentSize
+            unit shouldBe expectedSpace.unit
             description shouldBe expectedSpace.description
             storageId shouldBe expectedSpace.storageId
             createdAt shouldBeBefore LocalDateTime.now()
@@ -83,7 +81,7 @@ class PostgresSpaceRepositoryTest {
     @Test
     fun `create Space should throw IllegalArgumentException when storageUUID is invalid UUID`() = testApplication {
         val invalidUUID = "invalidUUID"
-        runCatching { sut.createSpace("space", 100f, "description", invalidUUID) }
+        runCatching { sut.createSpace("space","description", null, null, invalidUUID) }
             .exceptionOrNull().run {
                 this shouldNotBe null
                 this!!::class shouldBe IllegalArgumentException::class
@@ -117,11 +115,11 @@ class PostgresSpaceRepositoryTest {
     fun `get Spaces should return List of Spaces`() = testApplication {
         val createTime = LocalDateTime.now()
         val expectedSpaces = listOf(
-            Space("anyId", "Space1", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
-            Space("anyId", "Space2", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
-            Space("anyId", "Space3", 100f,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
+            Space("anyId", "Space1", null, null, null,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
+            Space("anyId", "Space2", null, null, null,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
+            Space("anyId", "Space3", null, null, null,"Space description", products = emptyList(), storageId = exampleStorageId.toString(), createTime, createTime),
         )
-        val createdSpaces = expectedSpaces.map { it.run { sut.createSpace(name, size, description, storageId) } }
+        val createdSpaces = expectedSpaces.map { it.run { sut.createSpace(name, description, totalSize, unit, storageId) } }
         sut.getSpaces() shouldBe createdSpaces
     }
 
@@ -150,7 +148,7 @@ class PostgresSpaceRepositoryTest {
     @Test
     fun `update Space should update description`() = testApplication {
         val createdSpace = insertSpace()
-        sut.updateSpace(createdSpace.id, null, null, description = "newDescription")
+        sut.updateSpace(createdSpace.id, null, description = "newDescription", null)
         sut.getSpace(createdSpace.id)!!.apply {
             name shouldBe createdSpace.name
             description shouldBe "newDescription"
@@ -181,12 +179,12 @@ class PostgresSpaceRepositoryTest {
     fun `delete Space should delete products`() = testApplication {
         val createdSpace = insertSpace()
         val products = listOf(
-            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
-            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
-            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now())
+            Product("anyId", "Product1", "Space description", null, null, emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product2", "Space description", null, null, emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product3", "Space description", null, null, emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now())
         )
         val productRepository = PostgresProductRepository()
-        val createdProducts = products.map { it.run { productRepository.createProduct(name, description, spaceId) } }
+        val createdProducts = products.map { it.run { productRepository.createProduct(name, description, null, null, spaceId) } }
 
         sut.getSpace(createdSpace.id)!!.products shouldBe createdProducts
         sut.deleteSpace(createdSpace.id)
@@ -252,19 +250,21 @@ class PostgresSpaceRepositoryTest {
 
         movedSpace.name shouldBe createdSpace.name
         movedSpace.description shouldBe createdSpace.description
-        movedSpace.size shouldBe createdSpace.size
+        movedSpace.totalSize shouldBe createdSpace.totalSize
+        movedSpace.currentSize shouldBe createdSpace.totalSize
+        movedSpace.unit shouldBe createdSpace.unit
     }
 
     @Test
     fun `moveSpace should keep products after move`() = testApplication {
         val createdSpace = insertSpace()
         val products = listOf(
-            Product("anyId", "Product1", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
-            Product("anyId", "Product2", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
-            Product("anyId", "Product3", "Space description", emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now())
+            Product("anyId", "Product1", "Space description", null, null, emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product2", "Space description", null, null, emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now()),
+            Product("anyId", "Product3", "Space description", null, null, emptyMap(), createdSpace.id, LocalDateTime.now(), LocalDateTime.now())
         )
         val productRepository = PostgresProductRepository()
-        val createdProducts = products.map { it.run { productRepository.createProduct(name, description, createdSpace.id) } }
+        val createdProducts = products.map { it.run { productRepository.createProduct(name, description, null, null, createdSpace.id) } }
 
         sut.getSpace(createdSpace.id)!!.products shouldBe createdProducts
         val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
@@ -276,12 +276,14 @@ class PostgresSpaceRepositoryTest {
         val storage = exampleStorageEntity
         val productRepository = PostgresProductRepository()
         val space = insertSpace()
-        val product = productRepository.createProduct("Product", "Original Product", space.id)
+        val product = productRepository.createProduct("Product", "Original Product", null, null, space.id)
 
         val copiedSpace = sut.copySpace(space.id, exampleStorageId.toString())
 
         copiedSpace.name shouldBe space.name
-        copiedSpace.size shouldBe space.size
+        copiedSpace.totalSize shouldBe space.totalSize
+        copiedSpace.currentSize shouldBe space.currentSize
+        copiedSpace.unit shouldBe space.unit
         copiedSpace.description shouldBe space.description
         copiedSpace.storageId shouldBe storage.id.toString()
 
@@ -306,7 +308,7 @@ class PostgresSpaceRepositoryTest {
     @Test
     fun `copySpace should throw IllegalArgumentException when target storage not found`() = testApplication {
         val spaceRepository = PostgresSpaceRepository()
-        val space = spaceRepository.createSpace("Space", 50f, "Original Space", exampleStorageId.toString())
+        val space = spaceRepository.createSpace("Space", "Original Space", null, null, exampleStorageId.toString())
         val invalidStorageId = UUID.randomUUID().toString()
 
         runCatching { sut.copySpace(space.id, invalidStorageId) }.exceptionOrNull().run {

@@ -88,7 +88,7 @@ class PostgresStorageRepository: StorageRepository {
     }
 
     override fun isCircularReference(storageId: String, targetParentId: String): Boolean = transaction {
-        val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: return@transaction false
+        StorageEntity.findById(UUID.fromString(storageId)) ?: return@transaction false
         val targetParent = StorageEntity.findById(UUID.fromString(targetParentId)) ?: return@transaction false
         generateSequence(targetParent) { it.parent }.any { it.id.value.toString() == storageId }
     }
@@ -118,7 +118,9 @@ class PostgresStorageRepository: StorageRepository {
             originalStorage.spaces.forEach { space ->
                 val newSpaceEntity = SpaceEntity.new {
                     name = space.name 
-                    size = space.size
+                    totalSize = space.totalSize
+                    currentSize = space.currentSize
+                    unit = space.unit
                     description = space.description
                     storage = newStorageEntity
                 }
@@ -126,6 +128,8 @@ class PostgresStorageRepository: StorageRepository {
                     val newProductEntity = ProductEntity.new {
                         name = product.name 
                         description = product.description
+                        size = product.size
+                        unit = product.unit
                         this.space = newSpaceEntity
                     }
                     product.attributes.forEach { attribute ->

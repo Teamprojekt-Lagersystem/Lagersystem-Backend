@@ -269,6 +269,10 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#3:
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -531,6 +535,10 @@ paths:
                   value:
                     errors: []
                 Example#2:
+                  description: ""
+                  value:
+                    errors: []
+                Example#3:
                   description: ""
                   value:
                     errors: []
@@ -849,6 +857,11 @@ components:
           type: "string"
         description:
           type: "string"
+        size:
+          type: "number"
+          format: "double"
+        unit:
+          type: "string"
         attributes:
           type: "string"
         spaceId:
@@ -870,6 +883,11 @@ components:
         name:
           type: "string"
         description:
+          type: "string"
+        size:
+          type: "number"
+          format: "double"
+        unit:
           type: "string"
         spaceId:
           type: "string"
@@ -919,6 +937,9 @@ components:
           type: "string"
         description:
           type: "string"
+        size:
+          type: "number"
+          format: "double"
     NetworkSpace:
       type: "object"
       properties:
@@ -926,9 +947,14 @@ components:
           type: "string"
         name:
           type: "string"
-        size:
+        totalSize:
           type: "number"
-          format: "float"
+          format: "double"
+        currentSize:
+          type: "number"
+          format: "double"
+        unit:
+          type: "string"
         description:
           type: "string"
         products:
@@ -952,9 +978,11 @@ components:
       properties:
         name:
           type: "string"
-        size:
+        totalSize:
           type: "number"
-          format: "float"
+          format: "double"
+        unit:
+          type: "string"
         description:
           type: "string"
         storageId:
@@ -982,9 +1010,9 @@ components:
       properties:
         name:
           type: "string"
-        size:
+        totalSize:
           type: "number"
-          format: "float"
+          format: "double"
         description:
           type: "string"
     NetworkStorage:

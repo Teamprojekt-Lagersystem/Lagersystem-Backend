@@ -528,7 +528,9 @@ class StorageRoutesKtTest {
                         Space(
                             spaceId,
                             "Space",
-                            0.5f,
+                            null,
+                            null,
+                            null,
                             "A space",
                             storageId = subStorageId,
                             products = listOf(
@@ -536,6 +538,8 @@ class StorageRoutesKtTest {
                                     productId,
                                     "Product",
                                     "A product",
+                                    null,
+                                    null,
                                     attributes = emptyMap(),
                                     spaceId = spaceId,
                                     createdAt = LocalDateTime.now(),
@@ -594,25 +598,25 @@ class StorageRoutesKtTest {
 
         expectedCopiedStorage.apply {
             actualCopiedStorage.apply {
-                name shouldBe "${this.name}"
+                name shouldBe this.name
                 description shouldBe this@apply.description
                 subStorages.size shouldBe this@apply.subStorages.size
                 subStorages.zip(this@apply.subStorages).forEach { (expectedSub, actualSub) ->
                     expectedSub.apply {
                         actualSub.apply {
-                            name shouldBe "${this.name}"
+                            name shouldBe this.name
                             description shouldBe this@apply.description
                             spaces.size shouldBe this@apply.spaces.size
                             spaces.zip(this@apply.spaces).forEach { (expectedSpace, actualSpace) ->
                                 expectedSpace.apply {
                                     actualSpace.apply {
-                                        name shouldBe "${this.name}"
+                                        name shouldBe this.name
                                         description shouldBe this@apply.description
                                         products?.size shouldBe this@apply.products?.size
                                         products?.zip(this@apply.products ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
                                             expectedProduct.apply {
                                                 actualProduct.apply {
-                                                    name shouldBe "${this.name}"
+                                                    name shouldBe this.name
                                                     description shouldBe this@apply.description
                                                 }
                                             }
