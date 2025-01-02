@@ -10,4 +10,6 @@ interface StoredProductRepository {
     fun spaceExists(id: String): Boolean
     fun productExists(id: String): Boolean
     fun fitsInSpace(id: String): Boolean
+    fun copyStoredProduct(id: String, targetSpaceId: String): StoredProduct
+    //TODO: check unit
 }

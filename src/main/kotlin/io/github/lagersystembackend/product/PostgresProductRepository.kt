@@ -37,74 +37,17 @@ class PostgresProductRepository : ProductRepository {
         size: Double?,
     ): Product? = transaction {
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
-            val currentSize = product.space.currentSize
-            val totalSize = product.space.totalSize
-            val oldSize = product.size
-            if (currentSize != null && totalSize != null && size != null && oldSize != null) {
-                if (currentSize - oldSize + size <= totalSize) {
-                    size.let { product.size = it }
-                    product.space.currentSize = product.space.currentSize?.minus(oldSize)?.plus(size)
-                } else {
-                    throw IllegalArgumentException("Product does not fit inside the space anymore.")
-                }
-            }
             name?.let { product.name = it }
             description?.let { product.description = it }
             product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
     }
 
-    override fun moveProduct(id: String, spaceId: String): Product? = transaction {
-        val targetSpace = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("target Space not found")
-        ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
-            val size = product.size
-            val totalSize = targetSpace.totalSize
-            val currentSize = targetSpace.currentSize
-            if (size != null && totalSize != null && currentSize != null) {
-                if (currentSize.plus(size) <= totalSize) {
-                    product.space.currentSize = product.space.currentSize?.minus(size)
-                    targetSpace.currentSize = currentSize.plus(size)
-                } else {
-                    throw IllegalArgumentException("Product does not fit inside the new space.")
-                }
-            }
-            product.space = targetSpace
-            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
-        }?.toProduct()
-    }
-
     override fun deleteProduct(id: String): Product? = transaction {
-        val product = ProductEntity.findById(UUID.fromString(id)).also { it?.delete() } //?.toProduct()
-        val size = product?.size
-        if (product != null && size != null) {
-            product.space.currentSize = product.space.currentSize?.minus(size)
-        }
+        val product = ProductEntity.findById(UUID.fromString(id))
+
+        product?.delete()
+
         product?.toProduct()
-    }
-
-    override fun copyProduct(productId: String, targetSpaceId: String): Product {
-        return transaction {
-
-            val originalProduct = ProductEntity.findById(UUID.fromString(productId))
-                ?: throw IllegalArgumentException("Product with ID $productId not found")
-
-            val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId))
-                ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
-
-            val newProductEntity = ProductEntity.new {
-                name = originalProduct.name
-                description = originalProduct.description
-                space = targetSpace
-            }
-
-            originalProduct.attributes.forEach { attribute ->
-                ProductAttributeEntity.new {
-                    key = attribute.key
-                    value = attribute.value
-                    product = newProductEntity
-                }
-            }
-            newProductEntity.toProduct()
-        }
     }
 }

@@ -4,6 +4,8 @@ import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.space.SpaceEntity
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 class PostgresStoredProductRepository : StoredProductRepository {
@@ -63,6 +65,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
                 storedProduct.space = space
             }
             quantity?.let { storedProduct.quantity = it }
+            storedProduct.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toStoredProduct()
     }
 
@@ -97,5 +100,23 @@ class PostgresStoredProductRepository : StoredProductRepository {
             }
         }
         true
+    }
+
+    override fun copyStoredProduct(id: String, targetSpaceId: String): StoredProduct {
+        return transaction {
+            val storedProduct = StoredProductEntity.findById(UUID.fromString(id))
+                ?: throw IllegalArgumentException("Stored product with ID $id not found")
+
+            val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId))
+                ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
+
+            val newStoredProductEntity = StoredProductEntity.new {
+                product = storedProduct.product
+                quantity = storedProduct.quantity
+                space = targetSpace
+            }
+
+            newStoredProductEntity.toStoredProduct()
+        }
     }
 }
