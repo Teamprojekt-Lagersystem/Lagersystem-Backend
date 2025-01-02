@@ -1,13 +1,9 @@
 package io.github.lagersystembackend.space
 
-import io.github.lagersystembackend.product.NetworkProduct
-import io.github.lagersystembackend.product.Product
 import io.github.lagersystembackend.product.ProductEntity
-import io.github.lagersystembackend.product.Products
-import io.github.lagersystembackend.product.toNetworkProduct
-import io.github.lagersystembackend.product.toProduct
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.Storages
+import io.github.lagersystembackend.stored_product.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -27,7 +23,7 @@ data class Space(
     val currentSize: Double?,
     val unit: String?,
     val description: String,
-    val products: List<Product>,
+    val storedProducts: List<StoredProduct>,
     val storageId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
@@ -55,7 +51,7 @@ data class NetworkSpace(
     val currentSize: Double?,
     val unit: String?,
     val description: String,
-    val products: List<NetworkProduct>?,
+    val storedProducts: List<NetworkStoredProduct>?,
     val storageId: String,
     val createdAt: String,
     val updatedAt: String?
@@ -106,15 +102,16 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var currentSize by Spaces.currentSize
     var unit by Spaces.unit
     var description by Spaces.description
-    val products by ProductEntity referrersOn Products.spaceId
+    val storedProducts by StoredProductEntity referrersOn StoredProducts.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
     var createdAt by Spaces.createdAt
     var updatedAt by Spaces.updatedAt
 
     override fun delete() {
-        products.forEach { it.delete() }
+        storedProducts.forEach { it.delete() }
         super.delete()
     }
+
 }
 
 fun SpaceEntity.toSpace() = Space(
@@ -124,7 +121,7 @@ fun SpaceEntity.toSpace() = Space(
     currentSize,
     unit,
     description,
-    products.map { it.toProduct() },
+    storedProducts.map { it.toStoredProduct() },
     storage.id.value.toString(),
     createdAt,
     updatedAt
@@ -137,7 +134,7 @@ fun Space.toNetworkSpace() = NetworkSpace(
     currentSize,
     unit,
     description,
-    products.map { it.toNetworkProduct() },
+    storedProducts.map { it.toNetworkStoredProduct() },
     storageId,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)

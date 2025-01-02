@@ -25,7 +25,6 @@ data class Product(
     val size: Double?,
     val unit: String?,
     val attributes: Map<String, Attribute>,
-    val spaceId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
 ) {
@@ -47,7 +46,6 @@ data class NetworkProduct(
     val size: Double?,
     val unit: String?,
     val attributes: Map<String, Attribute>,
-    val spaceId: String,
     val createdAt: String,
     val updatedAt: String?
 )
@@ -58,7 +56,6 @@ data class AddProductNetworkRequest(
     val description: String,
     val size: Double?,
     val unit: String?,
-    val spaceId: String
 )
 
 @Serializable
@@ -68,6 +65,7 @@ data class UpdateProductNetworkRequest(
     val size: Double?,
 )
 
+/*
 @Serializable
 data class MoveProductNetworkRequest(
     val targetSpaceId: String
@@ -78,12 +76,13 @@ data class CopyProductRequest(
     val targetSpaceId: String
 )
 
+ */
+
 object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
     val size = double("size").nullable()
     val unit = varchar("unit", 255).nullable()
-    val spaceId = reference("spaceId", Spaces)
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
 }
@@ -96,7 +95,6 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var size by Products.size
     var unit by Products.unit
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
-    var space by SpaceEntity referencedOn Products.spaceId
     var createdAt by Products.createdAt
     var updatedAt by Products.updatedAt
 }
@@ -108,7 +106,6 @@ fun ProductEntity.toProduct() = Product(
     size,
     unit,
     attributes.associate { it.key to it.toAttribute() },
-    space.id.value.toString(),
     createdAt,
     updatedAt
 )
@@ -120,7 +117,6 @@ fun Product.toNetworkProduct() = NetworkProduct(
     size,
     unit,
     attributes,
-    spaceId,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
 )

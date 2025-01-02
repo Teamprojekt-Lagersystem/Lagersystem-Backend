@@ -80,10 +80,10 @@ fun StoredProductEntity.toStoredProduct() = StoredProduct(
     updatedAt
 )
 
-fun StoredProductEntity.toNetworkStoredProduct() = NetworkStoredProduct(
-    id.value.toString(),
-    product.id.value.toString(),
-    space.id.value.toString(),
+fun StoredProduct.toNetworkStoredProduct() = NetworkStoredProduct(
+    id,
+    productId,
+    spaceId,
     quantity,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
