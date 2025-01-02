@@ -21,7 +21,7 @@ data class StoredProduct(
     val id: String,
     val productId: String,
     val spaceId: String,
-    val quantity: Int,
+    val quantity: Double,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
 )
@@ -31,7 +31,7 @@ data class NetworkStoredProduct(
     val id: String,
     val productId: String,
     val spaceId: String,
-    val quantity: Int,
+    val quantity: Double,
     val createdAt: String,
     val updatedAt: String?
 )
@@ -56,7 +56,7 @@ data class UpdateStoredProductNetworkRequest(
 object StoredProducts: UUIDTable() {
     val productId = reference("productId", Products)
     val spaceId = reference("spaceId", Spaces)
-    val quantity = integer("quantity")
+    val quantity = double("quantity")
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
 }

@@ -67,6 +67,7 @@ class PostgresSpaceRepository : SpaceRepository {
     override fun spaceExists(id: String): Boolean = transaction {
         SpaceEntity.findById(UUID.fromString(id)) != null
     }
+
     override fun moveSpace(spaceId: String, targetStorageId: String): Space = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId))
             ?: throw IllegalArgumentException("Space with ID $spaceId not found")

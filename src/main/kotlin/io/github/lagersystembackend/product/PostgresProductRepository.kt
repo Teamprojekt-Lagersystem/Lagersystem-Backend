@@ -13,29 +13,12 @@ class PostgresProductRepository : ProductRepository {
         description: String,
         size: Double?,
         unit: String?,
-        spaceId: String
     ): Product = transaction {
-        val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: return@transaction throw IllegalArgumentException("Space not found")
-        if (space.unit != unit) {
-            throw IllegalArgumentException("Unit of product and space must match")
-        }
-        if (size != null) {
-            val currentSize = space.currentSize
-            val totalSize = space.totalSize
-
-            if (currentSize != null && totalSize != null) {
-                if (currentSize + size > totalSize) {
-                    throw IllegalArgumentException("product does not fit inside the space anymore")
-                }
-            }
-            space.currentSize = space.currentSize?.plus(size)
-        }
         ProductEntity.new {
             this.name = name
             this.description = description
             this.size = size
             this.unit = unit
-            this.space = space
         }.toProduct()
     }
 
