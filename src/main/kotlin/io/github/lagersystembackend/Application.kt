@@ -7,6 +7,8 @@ import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.SpaceRepository
 import io.github.lagersystembackend.storage.PostgresStorageRepository
 import io.github.lagersystembackend.storage.StorageRepository
+import io.github.lagersystembackend.stored_product.PostgresStoredProductRepository
+import io.github.lagersystembackend.stored_product.StoredProductRepository
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -17,11 +19,12 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureHTTP()
-    configureRouting(DependencyProvider.productRepository, DependencyProvider.spaceRepository, DependencyProvider.storageRepository)
+    configureRouting(DependencyProvider.productRepository, DependencyProvider.spaceRepository, DependencyProvider.storageRepository, DependencyProvider.storedProductRepository)
 }
 
 private object DependencyProvider {
     val productRepository: ProductRepository = PostgresProductRepository()
     val spaceRepository: SpaceRepository = PostgresSpaceRepository()
     val storageRepository: StorageRepository = PostgresStorageRepository()
+    val storedProductRepository: StoredProductRepository = PostgresStoredProductRepository()
 }

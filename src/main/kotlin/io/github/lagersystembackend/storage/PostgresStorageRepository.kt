@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.stored_product.StoredProductEntity
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -124,6 +125,8 @@ class PostgresStorageRepository: StorageRepository {
                     description = space.description
                     storage = newStorageEntity
                 }
+                //TODO: Add stored products
+                /*
                 space.products.forEach { product ->
                     val newProductEntity = ProductEntity.new {
                         name = product.name 
@@ -140,6 +143,8 @@ class PostgresStorageRepository: StorageRepository {
                         }
                     }
                     }
+
+                 */
             }
 
             originalStorage.subStorages.forEach { subStorage ->

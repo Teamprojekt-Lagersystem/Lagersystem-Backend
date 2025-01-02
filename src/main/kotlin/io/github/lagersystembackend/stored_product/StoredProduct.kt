@@ -4,8 +4,6 @@ import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
-import io.github.lagersystembackend.space.Spaces.defaultExpression
-import io.github.lagersystembackend.space.Spaces.nullable
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -21,7 +19,7 @@ data class StoredProduct(
     val id: String,
     val productId: String,
     val spaceId: String,
-    val quantity: Double,
+    val quantity: Int,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
 )
@@ -31,7 +29,7 @@ data class NetworkStoredProduct(
     val id: String,
     val productId: String,
     val spaceId: String,
-    val quantity: Double,
+    val quantity: Int,
     val createdAt: String,
     val updatedAt: String?
 )
@@ -56,7 +54,7 @@ data class UpdateStoredProductNetworkRequest(
 object StoredProducts: UUIDTable() {
     val productId = reference("productId", Products)
     val spaceId = reference("spaceId", Spaces)
-    val quantity = double("quantity")
+    val quantity = integer("quantity")
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
 }

@@ -13,7 +13,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
     override fun createStoredProduct(
         productId: String,
         spaceId: String,
-        quantity: Double
+        quantity: Int
     ): StoredProduct = transaction {
         val product = ProductEntity.findById(UUID.fromString(productId)) ?: throw IllegalArgumentException("Product not found")
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("Space not found")
@@ -54,23 +54,47 @@ class PostgresStoredProductRepository : StoredProductRepository {
         }
     }
 
+    //TODO: update space size and check if product fits in space
     override fun updateStoredProduct(
         id: String,
         spaceId: String?,
-        quantity: Double?
+        quantity: Int?
     ): StoredProduct? = transaction {
+        val product = ProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Product not found")
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("Space not found")
-        StoredProductEntity.findByIdAndUpdate(UUID.fromString(id)) { storedProduct ->
-            spaceId?.let {
-                storedProduct.space = space
+        val storedProduct = StoredProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Stored product not found")
+
+        if (product.size != null && quantity != null) {
+            val currentSize = space.currentSize
+            val totalSize = space.totalSize
+            val size = product.size!! * quantity
+
+            /*
+            if (currentSize != null && totalSize != null) {
+                if (storedProduct.space.id.toString() != spaceId) {
+                    if (fitsInSpace(spaceId, size)) {
+                        storedProduct.space.currentSize = storedProduct.space.currentSize.minus(size)
+                        space.currentSize = space.currentSize?.plus(size)
+                    } else {
+                        throw IllegalArgumentException("product does not fit inside the space anymore")
+                    }
+                } else {
+                    if (currentSize + size > totalSize) {
+                        throw IllegalArgumentException("product does not fit inside the space anymore")
+                    }
+                }
             }
-            quantity?.let { storedProduct.quantity = it }
-            storedProduct.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
-        }?.toStoredProduct()
+            space.currentSize = space.currentSize?.plus(size)
+
+             */
+        }
+        storedProduct.toStoredProduct()
     }
 
     override fun deleteStoredProduct(id: String): StoredProduct? = transaction {
         val storedProduct = StoredProductEntity.findById(UUID.fromString(id))
+        val size = storedProduct?.product?.size?.times(storedProduct.quantity)
+        storedProduct?.space?.currentSize = storedProduct?.space?.currentSize?.minus(size!!)
 
         storedProduct?.delete()
 
@@ -86,6 +110,8 @@ class PostgresStoredProductRepository : StoredProductRepository {
         ProductEntity.findById(UUID.fromString(id)) != null
     }
 
+
+    /*
     //TODO: test this function
     override fun fitsInSpace(id: String): Boolean = transaction {
         val storedProduct = StoredProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Stored product not found")
@@ -102,6 +128,19 @@ class PostgresStoredProductRepository : StoredProductRepository {
         true
     }
 
+     */
+    override fun fitsInSpace(spaceId: String, size: Double): Boolean = transaction {
+        val space = SpaceEntity.findById(UUID.fromString(spaceId))
+        if (space != null) {
+            val totalSize = space.totalSize
+            val currentSize = space.currentSize
+            totalSize != null && currentSize != null && currentSize + size <= totalSize
+        } else {
+            false
+        }
+    }
+
+    //TODO: update space size and check if product fits in space
     override fun copyStoredProduct(id: String, targetSpaceId: String): StoredProduct {
         return transaction {
             val storedProduct = StoredProductEntity.findById(UUID.fromString(id))
