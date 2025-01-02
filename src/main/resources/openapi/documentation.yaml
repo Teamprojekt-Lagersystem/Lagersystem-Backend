@@ -996,6 +996,8 @@ components:
           type: "string"
         description:
           type: "string"
+        parentId:
+          type: "string"
         spaces:
           type: "array"
           items:
