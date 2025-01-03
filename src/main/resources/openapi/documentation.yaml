@@ -749,7 +749,7 @@ paths:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/components/schemas/NetworkStoredProduct"
+                  $ref: "#/components/schemas/StoredProductDTO"
     post:
       description: ""
       requestBody:
@@ -770,12 +770,12 @@ paths:
                   description: ""
                   value:
                     errors: []
-        "200":
-          description: "OK"
+        "201":
+          description: "Created"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStoredProduct"
+                $ref: "#/components/schemas/StoredProductDTO"
   /v1/storedProducts/{id}:
     delete:
       description: ""
@@ -850,7 +850,36 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStoredProduct"
+                $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{spaceId}:
+    get:
+      description: ""
+      parameters:
+      - name: "spaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StoredProductDTO"
 components:
   schemas:
     NetworkProduct:
@@ -925,27 +954,6 @@ components:
         size:
           type: "number"
           format: "double"
-    NetworkStoredProduct:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-        productId:
-          type: "string"
-        spaceId:
-          type: "string"
-        quantity:
-          type: "integer"
-          format: "int32"
-        createdAt:
-          type: "string"
-        updatedAt:
-          type: "string"
-      required:
-      - "id"
-      - "productId"
-      - "spaceId"
-      - "createdAt"
     NetworkSpace:
       type: "object"
       properties:
@@ -963,10 +971,6 @@ components:
           type: "string"
         description:
           type: "string"
-        storedProducts:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/NetworkStoredProduct"
         storageId:
           type: "string"
         createdAt:
@@ -1078,6 +1082,44 @@ components:
           type: "string"
         description:
           type: "string"
+    StoredProductDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        productName:
+          type: "string"
+        productDescription:
+          type: "string"
+        productSize:
+          type: "number"
+          format: "double"
+        productUnit:
+          type: "string"
+        attribute:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        size:
+          type: "number"
+          format: "double"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "productId"
+      - "spaceId"
+      - "productName"
+      - "productDescription"
+      - "attribute"
+      - "createdAt"
     AddStoredProductNetworkRequest:
       type: "object"
       properties:
@@ -1091,3 +1133,24 @@ components:
       required:
       - "productId"
       - "spaceId"
+    NetworkStoredProduct:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "productId"
+      - "spaceId"
+      - "createdAt"

@@ -23,7 +23,6 @@ data class Space(
     val currentSize: Double?,
     val unit: String?,
     val description: String,
-    val storedProducts: List<StoredProduct>,
     val storageId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
@@ -51,7 +50,6 @@ data class NetworkSpace(
     val currentSize: Double?,
     val unit: String?,
     val description: String,
-    val storedProducts: List<NetworkStoredProduct>?,
     val storageId: String,
     val createdAt: String,
     val updatedAt: String?
@@ -90,7 +88,7 @@ object Spaces: UUIDTable() {
     val unit = varchar("unit", 255).nullable()
     val description = text("description")
     val storageId = reference("storageId", Storages)
-    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val createdAt = datetime("createdAt")
     val updatedAt = datetime("updatedAt").nullable()
 }
 
@@ -102,15 +100,9 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var currentSize by Spaces.currentSize
     var unit by Spaces.unit
     var description by Spaces.description
-    val storedProducts by StoredProductEntity referrersOn StoredProducts.spaceId
     var storage by StorageEntity referencedOn Spaces.storageId
     var createdAt by Spaces.createdAt
     var updatedAt by Spaces.updatedAt
-
-    override fun delete() {
-        storedProducts.forEach { it.delete() }
-        super.delete()
-    }
 
 }
 
@@ -121,7 +113,6 @@ fun SpaceEntity.toSpace() = Space(
     currentSize,
     unit,
     description,
-    storedProducts.map { it.toStoredProduct() },
     storage.id.value.toString(),
     createdAt,
     updatedAt
@@ -134,7 +125,6 @@ fun Space.toNetworkSpace() = NetworkSpace(
     currentSize,
     unit,
     description,
-    storedProducts.map { it.toNetworkStoredProduct() },
     storageId,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)

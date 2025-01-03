@@ -25,6 +25,7 @@ class PostgresSpaceRepository : SpaceRepository {
             this.unit = unit
             this.description = description
             this.storage = storage
+            this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }.toSpace()
     }
 
@@ -97,17 +98,11 @@ class PostgresSpaceRepository : SpaceRepository {
                 description = originalSpace.description
                 storage = targetStorage
             }
-            originalSpace.storedProducts.forEach { storedProduct ->
-                val newStoredProductEntity = StoredProductEntity.new {
-                    product = storedProduct.product
-                    quantity = storedProduct.quantity
-                    this.space = newSpaceEntity
-                }
-            }
             newSpaceEntity.toSpace()
         }
     }
 
+    /*
     override fun checkUnit(spaceId: String, unit: String): Boolean = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId))
         if (space != null) {
@@ -118,6 +113,9 @@ class PostgresSpaceRepository : SpaceRepository {
         }
     }
 
+     */
+
+    /*
     override fun fitsInSpace(spaceId: String, size: Double): Boolean = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId))
         if (space != null) {
@@ -128,5 +126,7 @@ class PostgresSpaceRepository : SpaceRepository {
             false
         }
     }
+
+     */
 
 }

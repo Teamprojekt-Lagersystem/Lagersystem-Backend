@@ -1,15 +1,20 @@
 package io.github.lagersystembackend.stored_product
 
+import io.github.lagersystembackend.product.ProductEntity
+import io.github.lagersystembackend.space.SpaceEntity
+
 interface StoredProductRepository {
-    fun createStoredProduct(productId: String, spaceId: String, quantity: Int): StoredProduct
-    fun getStoredProduct(id: String): StoredProduct?
-    fun getStoredProducts(): List<StoredProduct>
-    fun getStoredProductsBySpaceId(spaceId: String): List<StoredProduct>
-    fun updateStoredProduct(id: String, spaceId: String?, quantity: Int?): StoredProduct?
+    fun createStoredProduct(productId: String, spaceId: String, quantity: Int): StoredProductDTO
+    fun getStoredProduct(id: String): StoredProductDTO?
+    fun getStoredProducts(): List<StoredProductDTO>
+    fun getStoredProductsBySpaceId(spaceId: String): List<StoredProductDTO>
+    //fun updateStoredProduct(id: String, quantity: Int?): StoredProduct?
+    //fun moveStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
     fun deleteStoredProduct(id: String): StoredProduct?
     fun spaceExists(id: String): Boolean
     fun productExists(id: String): Boolean
-    fun fitsInSpace(id: String, size: Double): Boolean
-    fun copyStoredProduct(id: String, targetSpaceId: String): StoredProduct
+    fun fitsInSpace(product: ProductEntity, space: SpaceEntity, quantity: Int): Boolean
+    fun isStored(productId: String, spaceId: String): Boolean
+    fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
     //TODO: check unit
 }

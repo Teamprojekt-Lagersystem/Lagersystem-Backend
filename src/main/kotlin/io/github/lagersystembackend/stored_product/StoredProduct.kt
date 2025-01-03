@@ -1,5 +1,7 @@
 package io.github.lagersystembackend.stored_product
 
+import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.toAttribute
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.SpaceEntity
@@ -22,6 +24,22 @@ data class StoredProduct(
     val quantity: Int,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
+)
+
+@Serializable
+data class StoredProductDTO(
+    val id: String,
+    val productId: String,
+    val spaceId: String,
+    val productName: String,
+    val productDescription: String,
+    val productSize: Double?,
+    val productUnit: String?,
+    val attribute: Map<String, Attribute>,
+    val quantity: Int,
+    val size: Double?,
+    val createdAt: String,
+    val updatedAt: String?
 )
 
 @Serializable
@@ -55,7 +73,7 @@ object StoredProducts: UUIDTable() {
     val productId = reference("productId", Products)
     val spaceId = reference("spaceId", Spaces)
     val quantity = integer("quantity")
-    val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
+    val createdAt = datetime("createdAt")
     val updatedAt = datetime("updatedAt").nullable()
 }
 
@@ -83,6 +101,21 @@ fun StoredProduct.toNetworkStoredProduct() = NetworkStoredProduct(
     productId,
     spaceId,
     quantity,
+    createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
+    updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
+)
+
+fun StoredProductEntity.toStoredProductDTO() = StoredProductDTO(
+    id.value.toString(),
+    product.id.value.toString(),
+    space.id.value.toString(),
+    product.name,
+    product.description,
+    product.size,
+    product.unit,
+    product.attributes.associate { it.key to it.toAttribute() },
+    quantity,
+    product.size?.times(quantity),
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
 )
