@@ -6,6 +6,7 @@ import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.github.lagersystembackend.stored_product.StoredProductEntity
+import io.github.lagersystembackend.stored_product.StoredProducts
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -51,6 +52,17 @@ class PostgresStorageRepository: StorageRepository {
     override fun deleteStorage(id: String): Storage? = transaction {
         val storageEntity = StorageEntity.findById(UUID.fromString(id))
 
+        //delete dependencies stored products
+        storageEntity?.subStorages?.forEach { subStorage ->
+            subStorage.spaces.forEach { space ->
+                deleteStoredProductDependencies(space.id.value.toString())
+            }
+        }
+
+        storageEntity?.spaces?.forEach { space ->
+            deleteStoredProductDependencies(space.id.value.toString())
+        }
+
         storageEntity?.delete()
 
         storageEntity?.toStorage()
@@ -85,6 +97,7 @@ class PostgresStorageRepository: StorageRepository {
 
         storage.parent = newParent
         storage.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
         storage.toStorage()
     }
 
@@ -125,26 +138,15 @@ class PostgresStorageRepository: StorageRepository {
                     description = space.description
                     storage = newStorageEntity
                 }
-                //TODO: Add stored products
-                /*
-                space.products.forEach { product ->
-                    val newProductEntity = ProductEntity.new {
-                        name = product.name 
-                        description = product.description
-                        size = product.size
-                        unit = product.unit
-                        this.space = newSpaceEntity
-                    }
-                    product.attributes.forEach { attribute ->
-                        ProductAttributeEntity.new {
-                            this.key = attribute.key
-                            this.value = attribute.value
-                            this.product = newProductEntity
-                        }
-                    }
-                    }
 
-                 */
+                space.storedProducts.forEach { product ->
+                    StoredProductEntity.new {
+                        this.product = getProduct(product.id)
+                        this.space = newSpaceEntity
+                        this.quantity = product.quantity
+                        this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
+                    }
+                }
             }
 
             originalStorage.subStorages.forEach { subStorage ->
@@ -152,6 +154,18 @@ class PostgresStorageRepository: StorageRepository {
             }
 
             newStorageEntity.toStorage()
+        }
+    }
+
+    private fun getProduct(id: String): ProductEntity = transaction {
+        val storedProduct = StoredProductEntity.findById(UUID.fromString(id))
+            ?: throw IllegalArgumentException("Stored product with ID $id not found")
+        storedProduct.product
+    }
+
+    private fun deleteStoredProductDependencies(spaceId: String) {
+        transaction {
+            StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(spaceId) }.forEach { it.delete() }
         }
     }
 }

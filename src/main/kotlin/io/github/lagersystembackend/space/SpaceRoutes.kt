@@ -34,7 +34,6 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                 call.respond(space.toNetworkSpace())
             }
-
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
