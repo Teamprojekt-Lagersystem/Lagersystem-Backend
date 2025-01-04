@@ -970,23 +970,22 @@ components:
           type: "string"
         description:
           type: "string"
-        size:
+        productSize:
           type: "number"
           format: "double"
-        unit:
+        productUnit:
           type: "string"
         attributes:
           type: "string"
-        createdAt:
-          type: "string"
-        updatedAt:
-          type: "string"
+        size:
+          type: "number"
+          format: "double"
         quantity:
           type: "integer"
           format: "int32"
-        storedAt:
+        createdAt:
           type: "string"
-        modifiedAt:
+        updatedAt:
           type: "string"
       required:
       - "id"
@@ -994,7 +993,6 @@ components:
       - "description"
       - "attributes"
       - "createdAt"
-      - "storedAt"
     NetworkSpace:
       type: "object"
       properties:
@@ -1012,7 +1010,7 @@ components:
           type: "string"
         description:
           type: "string"
-        products:
+        storedProducts:
           type: "array"
           items:
             $ref: "#/components/schemas/NetworkProductInSpace"
@@ -1026,7 +1024,7 @@ components:
       - "id"
       - "name"
       - "description"
-      - "products"
+      - "storedProducts"
       - "storageId"
       - "createdAt"
     AddSpaceNetworkRequest:

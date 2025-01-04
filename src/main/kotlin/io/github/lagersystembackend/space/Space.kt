@@ -22,14 +22,13 @@ data class ProductInSpace(
     val id: String,
     val name: String,
     val description: String,
-    val size: Double?,
-    val unit: String?,
+    val productSize: Double?,
+    val productUnit: String?,
     val attributes: Map<String, Attribute>,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime?,
     val quantity: Int,
-    val storedAt: LocalDateTime,
-    val modifiedAt: LocalDateTime?
+    val size: Double?,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime?
 )
 
 @Serializable
@@ -37,14 +36,13 @@ data class NetworkProductInSpace(
     val id: String,
     val name: String,
     val description: String,
-    val size: Double?,
-    val unit: String?,
+    val productSize: Double?,
+    val productUnit: String?,
     val attributes: Map<String, Attribute>,
+    val size: Double?,
+    val quantity: Int,
     val createdAt: String,
     val updatedAt: String?,
-    val quantity: Int,
-    val storedAt: String,
-    val modifiedAt: String?
 )
 
 data class Space(
@@ -54,7 +52,7 @@ data class Space(
     val currentSize: Double?,
     val unit: String?,
     val description: String,
-    val products: List<ProductInSpace>,
+    val storedProducts: List<ProductInSpace>,
     val storageId: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
@@ -82,7 +80,7 @@ data class NetworkSpace(
     val currentSize: Double?,
     val unit: String?,
     val description: String,
-    val products: List<NetworkProductInSpace>,
+    val storedProducts: List<NetworkProductInSpace>,
     val storageId: String,
     val createdAt: String,
     val updatedAt: String?
@@ -133,7 +131,7 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var currentSize by Spaces.currentSize
     var unit by Spaces.unit
     var description by Spaces.description
-    val productsInSpace: List<ProductInSpace>
+    val storedProducts: List<ProductInSpace>
         get() = StoredProductEntity.find { StoredProducts.spaceId eq this@SpaceEntity.id }
             .map { it.toProductInSpace() }
     var storage by StorageEntity referencedOn Spaces.storageId
@@ -148,7 +146,7 @@ fun SpaceEntity.toSpace() = Space(
     currentSize,
     unit,
     description,
-    productsInSpace,
+    storedProducts,
     storage.id.value.toString(),
     createdAt,
     updatedAt
@@ -161,7 +159,7 @@ fun Space.toNetworkSpace() = NetworkSpace(
     currentSize,
     unit,
     description,
-    products.map { it.toNetworkProductInSpace() },
+    storedProducts.map { it.toNetworkProductInSpace() },
     storageId,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
@@ -171,28 +169,26 @@ fun ProductInSpace.toNetworkProductInSpace() = NetworkProductInSpace(
     id,
     name,
     description,
-    size,
-    unit,
+    productSize,
+    productUnit,
     attributes,
+    size,
+    quantity,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
-    quantity,
-    storedAt.format(DateTimeFormatter.ISO_DATE_TIME),
-    modifiedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
 )
 
 fun StoredProductEntity.toProductInSpace(): ProductInSpace {
     return ProductInSpace(
-        id = product.id.value.toString(),
+        id = this.id.value.toString(),
         name = product.name,
         description = product.description,
-        size = product.size,
-        unit = product.unit,
+        productSize = product.size,
+        productUnit = product.unit,
         attributes = product.attributes.associate { it.key to it.toAttribute() },
-        createdAt = product.createdAt,
-        updatedAt = product.updatedAt,
+        size = product.size?.times(quantity),
         quantity = this.quantity,
-        storedAt = this.createdAt,
-        modifiedAt = this.updatedAt
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt,
     )
 }
