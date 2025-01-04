@@ -13,7 +13,7 @@ interface StoredProductRepository {
     fun deleteStoredProduct(id: String): StoredProduct?
     fun spaceExists(id: String): Boolean
     fun productExists(id: String): Boolean
-    fun fitsInSpace(product: ProductEntity, space: SpaceEntity, quantity: Int): Boolean
+    fun fitsInSpace(productId: String, spaceId: String, quantity: Int): Boolean
     fun isStored(productId: String, spaceId: String): Boolean
     fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
     //TODO: check unit

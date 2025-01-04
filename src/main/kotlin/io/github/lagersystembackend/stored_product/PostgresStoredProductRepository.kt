@@ -20,28 +20,12 @@ class PostgresStoredProductRepository : StoredProductRepository {
     ): StoredProductDTO = transaction {
         val product = ProductEntity.findById(UUID.fromString(productId)) ?: throw IllegalArgumentException("Product not found")
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("Space not found")
+        //TODO: check unit route
         if (space.unit != product.unit) {
             throw IllegalArgumentException("Unit of product and space must match")
         }
+        space.currentSize = space.currentSize?.plus(product.size!! * quantity)
 
-        if (fitsInSpace(product, space, quantity)) {
-            space.currentSize = space.currentSize?.plus(product.size!! * quantity)
-        }
-        /*
-        if (product.size != null && space.totalSize != null) {
-            val currentSize = space.currentSize
-            val totalSize = space.totalSize
-            val size = product.size!! * quantity
-
-            if (currentSize != null && totalSize != null) {
-                if ((currentSize + size) > totalSize) {
-                    throw IllegalArgumentException("product does not fit inside the space anymore")
-                }
-            }
-            space.currentSize = space.currentSize?.plus(size)
-        }
-
-         */
         StoredProductEntity.new {
             this.product = product
             this.space = space
@@ -130,7 +114,9 @@ class PostgresStoredProductRepository : StoredProductRepository {
         ProductEntity.findById(UUID.fromString(id)) != null
     }
 
-    override fun fitsInSpace(product: ProductEntity, space: SpaceEntity, quantity: Int): Boolean = transaction {
+    override fun fitsInSpace(productId: String, spaceId: String, quantity: Int): Boolean = transaction {
+        val product = ProductEntity.findById(UUID.fromString(productId)) ?: throw IllegalArgumentException("Product not found")
+        val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("Space not found")
         if (product.size != null && space.totalSize != null) {
             val currentSize = space.currentSize
             val totalSize = space.totalSize
@@ -142,6 +128,9 @@ class PostgresStoredProductRepository : StoredProductRepository {
                 }
             }
             return@transaction true
+        }
+        else if (product.size == null && space.totalSize != null || product.size != null && space.totalSize == null) {
+            return@transaction false
         }
         return@transaction true
     }
@@ -155,13 +144,17 @@ class PostgresStoredProductRepository : StoredProductRepository {
         val storedProduct = StoredProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Stored product with ID $id not found")
         val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId)) ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
 
+        //TODO: check unit route
         if (storedProduct.space.unit != storedProduct.product.unit) {
             throw IllegalArgumentException("Unit of product and space must match")
         }
-
+        //TODO check space route
+        /*
         if (fitsInSpace(storedProduct.product, targetSpace, storedProduct.quantity)) {
             targetSpace.currentSize = targetSpace.currentSize?.plus(storedProduct.product.size!! * storedProduct.quantity)
         }
+
+         */
 
         StoredProductEntity.new {
             this.product = storedProduct.product

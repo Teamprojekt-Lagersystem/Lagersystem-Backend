@@ -105,6 +105,10 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository) 
                 if (storedProductRepository.isStored(storedProduct.productId, storedProduct.spaceId)) {
                     errors.add(ErrorMessages.ALREADY_STORED)
                 }
+
+                if (!storedProductRepository.fitsInSpace(storedProduct.productId, storedProduct.spaceId, storedProduct.quantity)) {
+                    errors.add(ErrorMessages.SIZE_NOT_FITTING)
+                }
             }
             if (errors.isNotEmpty()) {
                 return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))

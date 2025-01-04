@@ -98,35 +98,8 @@ class PostgresSpaceRepository : SpaceRepository {
                 storage = targetStorage
             }
             //Todo: transfer storedProducts to new space
+            //foreach post storedproducts new spaceid
             newSpaceEntity.toSpace()
         }
     }
-
-    /*
-    override fun checkUnit(spaceId: String, unit: String): Boolean = transaction {
-        val space = SpaceEntity.findById(UUID.fromString(spaceId))
-        if (space != null) {
-            val spaceUnit = space.unit
-            spaceUnit == unit
-        } else {
-            false
-        }
-    }
-
-     */
-
-    /*
-    override fun fitsInSpace(spaceId: String, size: Double): Boolean = transaction {
-        val space = SpaceEntity.findById(UUID.fromString(spaceId))
-        if (space != null) {
-            val totalSize = space.totalSize
-            val currentSize = space.currentSize
-            totalSize != null && currentSize != null && currentSize + size <= totalSize
-        } else {
-            false
-        }
-    }
-
-     */
-
 }
