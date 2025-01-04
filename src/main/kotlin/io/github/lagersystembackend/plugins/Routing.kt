@@ -33,7 +33,7 @@ fun Application.configureRouting(productRepository: ProductRepository, spaceRepo
             productRoutes(productRepository, spaceRepository)
             spaceRoutes(spaceRepository, storageRepository)
             storageRoutes(storageRepository)
-            storedProductRoutes(storedProductRepository)
+            storedProductRoutes(storedProductRepository, spaceRepository)
         }
     }
 

@@ -36,6 +36,7 @@ class PostgresProductRepository : ProductRepository {
         description: String?,
         size: Double?,
     ): Product? = transaction {
+        // Todo: Update size and check if the new size does not conflict with any space the product is stored in
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             name?.let { product.name = it }
             description?.let { product.description = it }

@@ -8,12 +8,13 @@ interface StoredProductRepository {
     fun getStoredProduct(id: String): StoredProductDTO?
     fun getStoredProducts(): List<StoredProductDTO>
     fun getStoredProductsBySpaceId(spaceId: String): List<StoredProductDTO>
-    //fun updateStoredProduct(id: String, quantity: Int?): StoredProduct?
-    //fun moveStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
+    fun updateStoredProduct(id: String, quantity: Int): StoredProduct
+    fun moveStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
     fun deleteStoredProduct(id: String): StoredProduct?
     fun spaceExists(id: String): Boolean
     fun productExists(id: String): Boolean
     fun fitsInSpace(productId: String, spaceId: String, quantity: Int): Boolean
+    fun checkUnit(productId: String, spaceId: String): Boolean
     fun isStored(productId: String, spaceId: String): Boolean
     fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
     //TODO: check unit

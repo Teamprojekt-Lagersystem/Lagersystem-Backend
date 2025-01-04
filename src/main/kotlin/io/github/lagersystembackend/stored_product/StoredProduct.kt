@@ -60,13 +60,18 @@ data class AddStoredProductNetworkRequest(
 )
 
 @Serializable
-data class UpdateStoredProductNetworkRequest(
-    /*
-    TODO: ersetzt move product
-    val productId: String? = null,
-     */
-    val spaceId: String? = null,
-    val quantity: Int? = null
+data class CopyStoredProductRequest(
+    val targetSpaceId: String
+)
+
+@Serializable
+data class MoveStoredProductRequest(
+    val targetSpaceId: String
+)
+
+@Serializable
+data class UpdateStoredProductRequest(
+    val quantity: Int
 )
 
 object StoredProducts: UUIDTable() {

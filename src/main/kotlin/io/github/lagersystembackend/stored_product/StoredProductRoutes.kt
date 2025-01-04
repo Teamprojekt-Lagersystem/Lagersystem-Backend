@@ -1,15 +1,13 @@
 package io.github.lagersystembackend.stored_product
 
-import io.github.lagersystembackend.common.ApiError
-import io.github.lagersystembackend.common.ApiResponse
-import io.github.lagersystembackend.common.ErrorMessages
-import io.github.lagersystembackend.common.isUUID
+import io.github.lagersystembackend.common.*
+import io.github.lagersystembackend.space.*
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 
-fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository) {
+fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, spaceRepository: SpaceRepository) {
     route("/storedProducts") {
         get {
             call.respond(storedProductRepository.getStoredProducts().map { it })
@@ -54,6 +52,150 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository) 
                 }
 
                 call.respond(deletedStoredProduct.toNetworkStoredProduct())
+            }
+            route("/update") {
+                patch {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORED_PRODUCT)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val updateStoredProductRequest = runCatching { call.receive<UpdateStoredProductRequest>() }.getOrNull()
+
+                    if (updateStoredProductRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORED_PRODUCT)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val storedProduct = storedProductRepository.getStoredProduct(id)
+                    if (storedProduct == null) {
+                        errors.add(ErrorMessages.STORED_PRODUCT_NOT_FOUND.withContext("ID: $id"))
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    if (updateStoredProductRequest.quantity <= 0) {
+                        errors.add(ErrorMessages.NEGATIVE_SIZE)
+                    }
+
+                    if (!storedProductRepository.fitsInSpace(storedProduct.productId, storedProduct.spaceId,
+                            updateStoredProductRequest.quantity - storedProduct.quantity))
+                    {
+                        errors.add(ErrorMessages.SIZE_NOT_FITTING)
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val updatedStoredProduct = updateStoredProductRequest.let {
+                        storedProductRepository.updateStoredProduct(id, it.quantity)
+                    }
+
+                    call.respond(updatedStoredProduct.toNetworkStoredProduct())
+                }
+            }
+            route("/move") {
+                patch {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORED_PRODUCT.withContext("ID: $id"))
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val moveStoredProductRequest = runCatching { call.receive<MoveStoredProductRequest>() }.getOrNull()
+
+                    if (moveStoredProductRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORED_PRODUCT)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val storedProduct = storedProductRepository.getStoredProduct(id)
+                    if (storedProduct == null) {
+                        errors.add(ErrorMessages.STORED_PRODUCT_NOT_FOUND.withContext("ID: $id"))
+                        return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val targetSpaceId = moveStoredProductRequest.targetSpaceId
+                    if (!targetSpaceId.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE.withContext("Target Storage ID: $targetSpaceId"))
+                    } else if (!spaceRepository.spaceExists(targetSpaceId)) {
+                        errors.add(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $targetSpaceId"))
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (!storedProductRepository.fitsInSpace(storedProduct.productId, targetSpaceId, storedProduct.quantity)) {
+                        errors.add(ErrorMessages.SIZE_NOT_FITTING)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (!storedProductRepository.checkUnit(storedProduct.productId, targetSpaceId)) {
+                        errors.add(ErrorMessages.UNIT_NOT_FITTING)
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val movedStoredProduct = storedProductRepository.moveStoredProduct(id, moveStoredProductRequest.targetSpaceId)
+
+                    call.respond(movedStoredProduct)
+                }
+            }
+            route("/copy") {
+                post {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_STORED_PRODUCT)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val copyRequest = runCatching { call.receive<CopyStoredProductRequest>() }.getOrNull()
+
+                    if (copyRequest == null) {
+                        errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORED_PRODUCT)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val targetSpaceId = copyRequest.targetSpaceId
+                    if (!targetSpaceId.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                    } else {
+                        val targetSpace = spaceRepository.getSpace(targetSpaceId)
+                        if (targetSpace == null) {
+                            errors.add(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $targetSpaceId"))
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val storedProduct = storedProductRepository.getStoredProduct(id)
+                    if (storedProduct == null) {
+                        errors.add(ErrorMessages.STORED_PRODUCT_NOT_FOUND)
+                        return@post call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    if (!storedProductRepository.fitsInSpace(storedProduct.productId, targetSpaceId, storedProduct.quantity)) {
+                        errors.add(ErrorMessages.SIZE_NOT_FITTING)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (!storedProductRepository.checkUnit(storedProduct.productId, targetSpaceId)) {
+                        errors.add(ErrorMessages.UNIT_NOT_FITTING)
+                        return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val copiedStoredProduct = storedProductRepository.copyStoredProduct(id, targetSpaceId)
+                    call.respond(HttpStatusCode.Created, copiedStoredProduct)
+                }
             }
         }
         route("/{spaceId}") {
@@ -109,6 +251,10 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository) 
                 if (!storedProductRepository.fitsInSpace(storedProduct.productId, storedProduct.spaceId, storedProduct.quantity)) {
                     errors.add(ErrorMessages.SIZE_NOT_FITTING)
                 }
+
+                if (!storedProductRepository.checkUnit(storedProduct.productId, storedProduct.spaceId)) {
+                    errors.add(ErrorMessages.UNIT_NOT_FITTING)
+                }
             }
             if (errors.isNotEmpty()) {
                 return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
@@ -122,6 +268,5 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository) 
                 call.respond(HttpStatusCode.Created, it)
             }
         }
-        //TODO: copy stored product
     }
 }

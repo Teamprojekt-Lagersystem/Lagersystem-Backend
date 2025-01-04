@@ -2,8 +2,7 @@ package io.github.lagersystembackend.space
 
 import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.toAttribute
-import io.github.lagersystembackend.product.ProductEntity
-import org. jetbrains. exposed. sql. ISqlExpressionBuilder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.Storages
 import io.github.lagersystembackend.stored_product.*
@@ -12,6 +11,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.time.LocalDateTime
@@ -137,6 +137,11 @@ class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var storage by StorageEntity referencedOn Spaces.storageId
     var createdAt by Spaces.createdAt
     var updatedAt by Spaces.updatedAt
+
+    override fun delete() {
+        StoredProducts.deleteWhere { spaceId eq this@SpaceEntity.id }
+        super.delete()
+    }
 }
 
 fun SpaceEntity.toSpace() = Space(
