@@ -3,7 +3,10 @@ package io.github.lagersystembackend.space
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.product.Product
+import io.github.lagersystembackend.product.toProduct
 import io.github.lagersystembackend.stored_product.StoredProductEntity
+import io.github.lagersystembackend.stored_product.StoredProducts
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -60,6 +63,8 @@ class PostgresSpaceRepository : SpaceRepository {
     override fun deleteSpace(id: String): Space? = transaction {
         val spaceEntity = SpaceEntity.findById(UUID.fromString(id))
 
+        deleteStoredProductDependencies(id)
+
         spaceEntity?.delete()
 
         spaceEntity?.toSpace()
@@ -94,12 +99,31 @@ class PostgresSpaceRepository : SpaceRepository {
                 name = originalSpace.name
                 totalSize = originalSpace.totalSize
                 currentSize = originalSpace.currentSize
+                unit = originalSpace.unit
                 description = originalSpace.description
                 storage = targetStorage
             }
-            //Todo: transfer storedProducts to new space
-            //foreach post storedproducts new spaceid
+
+            originalSpace.storedProducts.forEach { product ->
+                StoredProductEntity.new {
+                    this.product = getProduct(product.id)
+                    this.space = newSpaceEntity
+                    this.quantity = product.quantity
+                    this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
+                }
+            }
             newSpaceEntity.toSpace()
         }
     }
+
+    private fun getProduct(id: String): ProductEntity = transaction {
+        val storedProduct = StoredProductEntity.findById(UUID.fromString(id))
+            ?: throw IllegalArgumentException("Stored product with ID $id not found")
+        storedProduct.product
+    }
+
+    private fun deleteStoredProductDependencies(id: String) = transaction {
+        StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(id) }.forEach { it.delete() }
+    }
+
 }

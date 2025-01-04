@@ -34,32 +34,6 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                 call.respond(space.toNetworkSpace())
             }
-            /**
-            route("/products") {
-                get {
-                    val id = call.parameters["id"]!!
-                    val errors = mutableListOf<ApiError>()
-
-                    if (!id.isUUID()) {
-                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
-                    }
-
-                    if (errors.isNotEmpty()) {
-                        return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
-                    }
-
-                    val space = spaceRepository.getSpace(id)
-                    if (space == null) {
-                        errors.add(ErrorMessages.SPACE_NOT_FOUND)
-                        return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
-                    }
-
-                    val products = spaceRepository.getProducts(id)
-                    call.respond(products.map { it.toNetworkProduct() })
-                }
-            }
-            */
-
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
