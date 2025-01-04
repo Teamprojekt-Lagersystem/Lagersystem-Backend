@@ -222,14 +222,7 @@ paths:
                 $ref: "#/components/schemas/NetworkSpace"
   /v1/spaces/{id}:
     delete:
-      description: "route(\"/products\") { <br> get { <br> val id = call.parameters[\"\
-        id\"]!! <br> val errors = mutableListOf<ApiError>() <br> if (!id.isUUID())\
-        \ { <br> errors.add(ErrorMessages.INVALID_UUID_SPACE) <br> } <br> if (errors.isNotEmpty())\
-        \ { <br> return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))\
-        \ <br> } <br> val space = spaceRepository.getSpace(id) <br> if (space == null)\
-        \ { <br> errors.add(ErrorMessages.SPACE_NOT_FOUND) <br> return@get call.respond(HttpStatusCode.NotFound,\
-        \ ApiResponse.Error(errors)) <br> } <br> val products = spaceRepository.getProducts(id)\
-        \ <br> call.respond(products.map { it.toNetworkProduct() }) <br> } <br> }"
+      description: ""
       parameters:
       - name: "id"
         in: "path"
@@ -777,12 +770,12 @@ paths:
                   description: ""
                   value:
                     errors: []
-        "200":
-          description: "OK"
+        "201":
+          description: "Created"
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStoredProduct"
+                $ref: "#/components/schemas/StoredProductDTO"
   /v1/storedProducts/{id}:
     delete:
       description: ""
@@ -857,7 +850,36 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStoredProduct"
+                $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{spaceId}:
+    get:
+      description: ""
+      parameters:
+      - name: "spaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StoredProductDTO"
 components:
   schemas:
     NetworkProduct:
@@ -1099,6 +1121,57 @@ components:
           type: "string"
         description:
           type: "string"
+    StoredProductDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        productName:
+          type: "string"
+        productDescription:
+          type: "string"
+        productSize:
+          type: "number"
+          format: "double"
+        productUnit:
+          type: "string"
+        attribute:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        size:
+          type: "number"
+          format: "double"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "productId"
+      - "spaceId"
+      - "productName"
+      - "productDescription"
+      - "attribute"
+      - "createdAt"
+    AddStoredProductNetworkRequest:
+      type: "object"
+      properties:
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+      required:
+      - "productId"
+      - "spaceId"
     NetworkStoredProduct:
       type: "object"
       properties:
@@ -1120,16 +1193,3 @@ components:
       - "productId"
       - "spaceId"
       - "createdAt"
-    AddStoredProductNetworkRequest:
-      type: "object"
-      properties:
-        productId:
-          type: "string"
-        spaceId:
-          type: "string"
-        quantity:
-          type: "integer"
-          format: "int32"
-      required:
-      - "productId"
-      - "spaceId"

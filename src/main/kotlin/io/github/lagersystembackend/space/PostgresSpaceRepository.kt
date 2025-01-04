@@ -102,6 +102,7 @@ class PostgresSpaceRepository : SpaceRepository {
         }
     }
 
+    /*
     override fun checkUnit(spaceId: String, unit: String): Boolean = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId))
         if (space != null) {
@@ -112,6 +113,9 @@ class PostgresSpaceRepository : SpaceRepository {
         }
     }
 
+     */
+
+    /*
     override fun fitsInSpace(spaceId: String, size: Double): Boolean = transaction {
         val space = SpaceEntity.findById(UUID.fromString(spaceId))
         if (space != null) {
@@ -122,5 +126,7 @@ class PostgresSpaceRepository : SpaceRepository {
             false
         }
     }
+
+     */
 
 }

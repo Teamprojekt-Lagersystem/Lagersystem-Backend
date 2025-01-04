@@ -52,8 +52,8 @@ data class NetworkProduct(
 data class AddProductNetworkRequest(
     val name: String,
     val description: String,
-    val size: Double?,
-    val unit: String?,
+    val size: Double? = null,
+    val unit: String? = null,
 )
 
 @Serializable
