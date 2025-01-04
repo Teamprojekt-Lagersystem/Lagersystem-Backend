@@ -222,7 +222,14 @@ paths:
                 $ref: "#/components/schemas/NetworkSpace"
   /v1/spaces/{id}:
     delete:
-      description: ""
+      description: "route(\"/products\") { <br> get { <br> val id = call.parameters[\"\
+        id\"]!! <br> val errors = mutableListOf<ApiError>() <br> if (!id.isUUID())\
+        \ { <br> errors.add(ErrorMessages.INVALID_UUID_SPACE) <br> } <br> if (errors.isNotEmpty())\
+        \ { <br> return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))\
+        \ <br> } <br> val space = spaceRepository.getSpace(id) <br> if (space == null)\
+        \ { <br> errors.add(ErrorMessages.SPACE_NOT_FOUND) <br> return@get call.respond(HttpStatusCode.NotFound,\
+        \ ApiResponse.Error(errors)) <br> } <br> val products = spaceRepository.getProducts(id)\
+        \ <br> call.respond(products.map { it.toNetworkProduct() }) <br> } <br> }"
       parameters:
       - name: "id"
         in: "path"
@@ -925,27 +932,40 @@ components:
         size:
           type: "number"
           format: "double"
-    NetworkStoredProduct:
+    NetworkProductInSpace:
       type: "object"
       properties:
         id:
           type: "string"
-        productId:
+        name:
           type: "string"
-        spaceId:
+        description:
           type: "string"
-        quantity:
-          type: "integer"
-          format: "int32"
+        size:
+          type: "number"
+          format: "double"
+        unit:
+          type: "string"
+        attributes:
+          type: "string"
         createdAt:
           type: "string"
         updatedAt:
           type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        storedAt:
+          type: "string"
+        modifiedAt:
+          type: "string"
       required:
       - "id"
-      - "productId"
-      - "spaceId"
+      - "name"
+      - "description"
+      - "attributes"
       - "createdAt"
+      - "storedAt"
     NetworkSpace:
       type: "object"
       properties:
@@ -963,10 +983,10 @@ components:
           type: "string"
         description:
           type: "string"
-        storedProducts:
+        products:
           type: "array"
           items:
-            $ref: "#/components/schemas/NetworkStoredProduct"
+            $ref: "#/components/schemas/NetworkProductInSpace"
         storageId:
           type: "string"
         createdAt:
@@ -977,6 +997,7 @@ components:
       - "id"
       - "name"
       - "description"
+      - "products"
       - "storageId"
       - "createdAt"
     AddSpaceNetworkRequest:
@@ -1078,6 +1099,27 @@ components:
           type: "string"
         description:
           type: "string"
+    NetworkStoredProduct:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "productId"
+      - "spaceId"
+      - "createdAt"
     AddStoredProductNetworkRequest:
       type: "object"
       properties:

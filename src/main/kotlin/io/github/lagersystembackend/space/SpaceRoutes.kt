@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.space
 
 import io.github.lagersystembackend.common.*
+import io.github.lagersystembackend.product.toNetworkProduct
 import io.github.lagersystembackend.storage.StorageRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -33,6 +34,31 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                 call.respond(space.toNetworkSpace())
             }
+            /**
+            route("/products") {
+                get {
+                    val id = call.parameters["id"]!!
+                    val errors = mutableListOf<ApiError>()
+
+                    if (!id.isUUID()) {
+                        errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    val space = spaceRepository.getSpace(id)
+                    if (space == null) {
+                        errors.add(ErrorMessages.SPACE_NOT_FOUND)
+                        return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
+                    }
+
+                    val products = spaceRepository.getProducts(id)
+                    call.respond(products.map { it.toNetworkProduct() })
+                }
+            }
+            */
 
             delete {
                 val id = call.parameters["id"]!!

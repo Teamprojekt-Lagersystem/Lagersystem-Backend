@@ -97,13 +97,7 @@ class PostgresSpaceRepository : SpaceRepository {
                 description = originalSpace.description
                 storage = targetStorage
             }
-            originalSpace.storedProducts.forEach { storedProduct ->
-                val newStoredProductEntity = StoredProductEntity.new {
-                    product = storedProduct.product
-                    quantity = storedProduct.quantity
-                    this.space = newSpaceEntity
-                }
-            }
+            //Todo: transfer storedProducts to new space
             newSpaceEntity.toSpace()
         }
     }

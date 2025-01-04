@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Local
 
 class PostgresStoredProductRepository : StoredProductRepository {
 
@@ -36,6 +37,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
             this.product = product
             this.space = space
             this.quantity = quantity
+            this.createdAt = LocalDateTime.now()
         }.toStoredProduct()
 
     }

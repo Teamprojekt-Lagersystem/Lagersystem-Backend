@@ -4,8 +4,6 @@ import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.attribute.toAttribute
-import io.github.lagersystembackend.space.SpaceEntity
-import io.github.lagersystembackend.space.Spaces
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
