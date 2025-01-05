@@ -1,6 +1,10 @@
 package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.stored_product.StoredProductEntity
+import io.github.lagersystembackend.stored_product.StoredProducts
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -50,5 +54,9 @@ class PostgresProductRepository : ProductRepository {
         product?.delete()
 
         product?.toProduct()
+    }
+
+    override fun isProductInUse(productId: String): Boolean = transaction {
+        StoredProductEntity.find { StoredProducts.productId eq UUID.fromString(productId) }.count() > 0
     }
 }

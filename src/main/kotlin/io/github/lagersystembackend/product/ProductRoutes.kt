@@ -43,6 +43,11 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                 if (!id.isUUID()) {
                     errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
                 }
+
+                if (productRepository.isProductInUse(id)) {
+                    errors.add(ErrorMessages.PRODUCT_IN_USE)
+                }
+
                 if (errors.isNotEmpty()) {
                     return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                 }
@@ -109,15 +114,6 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                     addProductNetworkRequest.unit == null && addProductNetworkRequest.size != null) {
                     errors.add(ErrorMessages.WRONG_SPECIFICATION)
                 }
-                /*
-                if (addProductNetworkRequest.unit != null) {
-                    if (!spaceRepository.checkcUnit(addProductNetworkRequest.spaceId, addProductNetworkRequest.unit)) {
-                        errors.add(ErrorMessages.UNIT_NOT_FITTING)
-                    }
-                }
-
-                 */
-
                 if (addProductNetworkRequest.size != null) {
                     if (addProductNetworkRequest.size <= 0) {
                         errors.add(ErrorMessages.NEGATIVE_SIZE)
