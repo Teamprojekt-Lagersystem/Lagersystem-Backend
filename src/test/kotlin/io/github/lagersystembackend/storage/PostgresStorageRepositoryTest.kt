@@ -2,16 +2,21 @@ package io.github.lagersystembackend.storage
 
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
+import io.github.lagersystembackend.product.PostgresProductRepository
+import io.github.lagersystembackend.product.ProductRepository
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.Space
 import io.github.lagersystembackend.space.Spaces
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.date.shouldBeBefore
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.testApplication
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -47,13 +52,15 @@ class PostgresStorageRepositoryTest {
     fun `create Storage should return Storage`() = testApplication {
         val rootStorage = insertRootStorage()
         val expectedStorage =
-            Storage("anyId", "Storage", "Storage description", emptyList(), rootStorage.id, emptyList())
+            Storage("anyId", "Storage", "Storage description", emptyList(), rootStorage.id, emptyList(), LocalDateTime.now(), LocalDateTime.now())
         val createdStorage = expectedStorage.run { sut.createStorage(name, description, parentId) }
 
         createdStorage.apply {
             name shouldBe expectedStorage.name
             description shouldBe expectedStorage.description
             parentId shouldBe expectedStorage.parentId
+            createdAt shouldBeBefore LocalDateTime.now()
+            updatedAt shouldBe null
         }
         sut.getStorage(rootStorage.id)!!.subStorages shouldContain createdStorage
     }
@@ -94,9 +101,9 @@ class PostgresStorageRepositoryTest {
     @Test
     fun `get Storages should return List of Storages`() = testApplication {
         val expectedStorages = listOf(
-            Storage("anyId", "root1", "Storage description", spaces = emptyList(), parentId = null, subStorages =  emptyList()),
-            Storage("anyId", "root2", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList()),
-            Storage("anyId", "root3", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList())
+            Storage("anyId", "root1", "Storage description", spaces = emptyList(), parentId = null, subStorages =  emptyList(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Storage("anyId", "root2", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Storage("anyId", "root3", "Storage description", spaces = emptyList(), parentId = null, subStorages = emptyList(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         )
         val createdStorages = expectedStorages.map { it.run { sut.createStorage(name, description, parentId) } }
         sut.getStorages() shouldBe createdStorages
@@ -110,6 +117,7 @@ class PostgresStorageRepositoryTest {
             this shouldBe updatedStorage
             name shouldBe "newName"
             description shouldBe rootStorage.description
+            rootStorage.createdAt shouldBeBefore updatedStorage?.updatedAt!!
         }
     }
 
@@ -169,9 +177,9 @@ class PostgresStorageRepositoryTest {
     fun `delete Storage should delete spaces`() = testApplication {
         val rootStorage = insertRootStorage()
         val spaces = listOf(
-            Space("anyId", "Space1", 100f, "Space description", emptyList(), rootStorage.id),
-            Space("anyId", "Space2", 200f, "Space description", emptyList(), rootStorage.id),
-            Space("anyId", "Space3", 300f, "Space description", emptyList(), rootStorage.id)
+            Space("anyId", "Space1", 100f, "Space description", emptyList(), rootStorage.id, LocalDateTime.now(), LocalDateTime.now()),
+            Space("anyId", "Space2", 200f, "Space description", emptyList(), rootStorage.id, LocalDateTime.now(), LocalDateTime.now()),
+            Space("anyId", "Space3", 300f, "Space description", emptyList(), rootStorage.id, LocalDateTime.now(), LocalDateTime.now())
         )
         val spaceRepository = PostgresSpaceRepository()
         val createdSpaces = spaces.map { it.run { spaceRepository.createSpace(name, size, description, storageId) } }
@@ -210,7 +218,18 @@ class PostgresStorageRepositoryTest {
 
             val newParent = sut.getStorage(newParentStorage.id)!!
             newParent.subStorages.any { it.id == movedStorage.id } shouldBe true
-        }
+    }
+
+    @Test
+    fun `move Storage should update updatedAt timestamp`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+        val newParentStorage = sut.createStorage("NewParentStorage", "Another storage", parentId = null)
+
+        val movedStorage = sut.moveStorage(subStorage.id, newParentStorage.id)
+
+        rootStorage.createdAt shouldBeBefore movedStorage.updatedAt!!
+    }
 
     @Test
     fun `move Storage should handle null parent correctly`() = testApplication {
@@ -298,5 +317,61 @@ class PostgresStorageRepositoryTest {
         finalStorageA.parentId shouldBe storageC.id
         val finalStorageE = sut.getStorage(storageE.id)!!
         finalStorageE.parentId shouldBe storageD.id
+    }
+    @Test
+    fun `copyStorage should correctly duplicate storage structure including spaces and products`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+        val spaceRepository = PostgresSpaceRepository()
+        val productRepository = PostgresProductRepository()
+        val space = spaceRepository.createSpace("Space", 0.5f, "A space", subStorage.id)
+        val product = productRepository.createProduct("Product", "A product", space.id)
+
+        val copiedStorage = sut.copyStorage(rootStorage.id, null)
+
+        copiedStorage.name shouldBe rootStorage.name
+        copiedStorage.description shouldBe rootStorage.description
+        copiedStorage.parentId shouldBe null
+        copiedStorage.subStorages.size shouldBe 1
+
+        val copiedSubStorage = copiedStorage.subStorages.first()
+        copiedSubStorage.name shouldBe subStorage.name
+        copiedSubStorage.description shouldBe subStorage.description
+        copiedSubStorage.parentId shouldBe copiedStorage.id
+
+        copiedSubStorage.spaces.size shouldBe 1
+        val copiedSpace = copiedSubStorage.spaces.first()
+        copiedSpace.name shouldBe space.name
+        copiedSpace.size shouldBe space.size
+        copiedSpace.description shouldBe space.description
+        copiedSpace.storageId shouldBe copiedSubStorage.id
+
+        copiedSpace.products.size shouldBe 1
+        val copiedProduct = copiedSpace.products.first()
+        copiedProduct.name shouldBe product.name
+        copiedProduct.description shouldBe product.description
+        copiedProduct.spaceId shouldBe copiedSpace.id
+        copiedProduct.attributes shouldBe emptyMap()
+    }
+    @Test
+    fun `copyStorage should throw IllegalArgumentException when original storage not found`() = testApplication {
+        val invalidId = UUID.randomUUID().toString()
+
+        runCatching { sut.copyStorage(invalidId, null) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Storage with ID $invalidId not found"
+        }
+    }
+    @Test
+    fun `copyStorage should throw IllegalArgumentException when parent storage not found`() = testApplication {
+        val rootStorage = insertRootStorage()
+        val invalidParentId = UUID.randomUUID().toString()
+
+        runCatching { sut.copyStorage(rootStorage.id, invalidParentId) }.exceptionOrNull().run {
+            this shouldNotBe null
+            this!!::class shouldBe IllegalArgumentException::class
+            this.message shouldBe "Parent storage with ID $invalidParentId not found"
+        }
     }
 }

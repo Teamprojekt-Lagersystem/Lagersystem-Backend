@@ -1,7 +1,12 @@
 package io.github.lagersystembackend.space
 
+import io.github.lagersystembackend.common.isUUID
 import io.github.lagersystembackend.storage.StorageEntity
+import io.github.lagersystembackend.product.ProductEntity
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresSpaceRepository : SpaceRepository {
@@ -38,6 +43,7 @@ class PostgresSpaceRepository : SpaceRepository {
             name?.let { space.name = it }
             size?.let { space.size = it }
             description?.let { space.description = it }
+            space.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toSpace()
     }
 
@@ -60,7 +66,41 @@ class PostgresSpaceRepository : SpaceRepository {
             ?: throw IllegalArgumentException("Storage with ID $targetStorageId not found")
 
         space.storage = targetStorage
-
+        space.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         space.toSpace()
     }
+
+    override fun copySpace(spaceId: String, targetStorageId: String): Space {
+        return transaction {
+
+            val originalSpace = SpaceEntity.findById(UUID.fromString(spaceId))
+                ?: throw IllegalArgumentException("Space with ID $spaceId not found")
+
+            val targetStorage = StorageEntity.findById(UUID.fromString(targetStorageId))
+                ?: throw IllegalArgumentException("Storage with ID $targetStorageId not found")
+
+            val newSpaceEntity = SpaceEntity.new {
+                name = originalSpace.name
+                size = originalSpace.size
+                description = originalSpace.description
+                storage = targetStorage
+            }
+            originalSpace.products.forEach { product ->
+                val newProductEntity = ProductEntity.new {
+                    name = product.name
+                    description = product.description
+                    this.space = newSpaceEntity
+                }
+                product.attributes.forEach { attribute ->
+                    ProductAttributeEntity.new {
+                        this.key = attribute.key
+                        this.value = attribute.value
+                        this.product = newProductEntity
+                    }
+                }
+            }
+            newSpaceEntity.toSpace()
+        }
+    }
+
 }

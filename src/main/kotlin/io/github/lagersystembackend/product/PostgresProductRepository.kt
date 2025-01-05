@@ -1,6 +1,9 @@
 package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresProductRepository : ProductRepository {
@@ -29,13 +32,12 @@ class PostgresProductRepository : ProductRepository {
     override fun updateProduct(
         id: String,
         name: String?,
-        description: String?,
-        spaceId: String?
+        description: String?
     ): Product? = transaction {
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             name?.let { product.name = it }
             description?.let { product.description = it }
-            spaceId?.let { product.space = SpaceEntity.findById(UUID.fromString(it)) ?: throw IllegalArgumentException("Space not found") }
+            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
     }
 
@@ -43,6 +45,7 @@ class PostgresProductRepository : ProductRepository {
         val targetSpace = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("target Space not found")
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             product.space = targetSpace
+            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }?.toProduct()
 
     }
@@ -51,4 +54,29 @@ class PostgresProductRepository : ProductRepository {
         ProductEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toProduct()
     }
 
+    override fun copyProduct(productId: String, targetSpaceId: String): Product {
+        return transaction {
+
+            val originalProduct = ProductEntity.findById(UUID.fromString(productId))
+                ?: throw IllegalArgumentException("Product with ID $productId not found")
+
+            val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId))
+                ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
+
+            val newProductEntity = ProductEntity.new {
+                name = originalProduct.name
+                description = originalProduct.description
+                space = targetSpace
+            }
+
+            originalProduct.attributes.forEach { attribute ->
+                ProductAttributeEntity.new {
+                    key = attribute.key
+                    value = attribute.value
+                    product = newProductEntity
+                }
+            }
+            newProductEntity.toProduct()
+        }
+    }
 }
