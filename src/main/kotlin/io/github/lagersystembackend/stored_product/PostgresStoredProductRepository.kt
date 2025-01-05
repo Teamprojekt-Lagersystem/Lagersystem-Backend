@@ -21,9 +21,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
     ): StoredProductDTO = transaction {
         val product = ProductEntity.findById(UUID.fromString(productId)) ?: throw IllegalArgumentException("Product not found")
         val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("Space not found")
-        if (space.unit != product.unit) {
-            throw IllegalArgumentException("Unit of product and space must match")
-        }
+
         space.currentSize = space.currentSize?.plus(product.size!! * quantity)
 
         StoredProductEntity.new {
@@ -136,10 +134,6 @@ class PostgresStoredProductRepository : StoredProductRepository {
     override fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO = transaction {
         val storedProduct = StoredProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Stored product with ID $id not found")
         val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId)) ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
-
-        if (storedProduct.space.unit != storedProduct.product.unit) {
-            throw IllegalArgumentException("Unit of product and space must match")
-        }
 
         targetSpace.currentSize = targetSpace.currentSize?.plus(storedProduct.product.size!! * storedProduct.quantity)
 

@@ -17,5 +17,4 @@ interface StoredProductRepository {
     fun checkUnit(productId: String, spaceId: String): Boolean
     fun isStored(productId: String, spaceId: String): Boolean
     fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
-    //TODO: check unit
 }
