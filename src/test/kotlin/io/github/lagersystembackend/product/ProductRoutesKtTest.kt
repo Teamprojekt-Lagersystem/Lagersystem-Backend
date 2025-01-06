@@ -22,7 +22,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -47,8 +46,8 @@ class ProductRoutesKtTest {
     fun `get Products should respond with List of NetworkProducts`() = testApplication {
         createEnvironment()
         val products = listOf(
-            Product(UUID.randomUUID().toString(), "Space 1",  "Description 1",  emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now()),
-            Product(UUID.randomUUID().toString(), "Space 2", "Description 2", mapOf("someKey" to Attribute.NumberAttribute(123f)), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
+            Product(UUID.randomUUID().toString(), "Space 1",  "Description 1",  null, null, emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now()),
+            Product(UUID.randomUUID().toString(), "Space 2", "Description 2", null, null, mapOf("someKey" to Attribute.NumberAttribute(123f)), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
         )
         every { mockProductRepository.getProducts() } returns products
         client.get("/products").apply {
@@ -72,7 +71,7 @@ class ProductRoutesKtTest {
     fun `get Product by ID should respond with NetworkProduct`() = testApplication {
         createEnvironment()
         val product1 =
-            Product(UUID.randomUUID().toString(), "Space 1", "Description 1", emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
+            Product(UUID.randomUUID().toString(), "Space 1", "Description 1", null, null, emptyMap(), UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
         every { mockProductRepository.getProduct(product1.id) } returns product1
         client.get("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -109,7 +108,7 @@ class ProductRoutesKtTest {
     @Test
     fun `delete Product should delete Product`() = testApplication {
         createEnvironment()
-        val product1 = Product(UUID.randomUUID().toString(), "Product 1", "Description 1", emptyMap(), "any id", LocalDateTime.now(), LocalDateTime.now())
+        val product1 = Product(UUID.randomUUID().toString(), "Product 1", "Description 1", null, null, emptyMap(), "any id", LocalDateTime.now(), LocalDateTime.now())
         every { mockProductRepository.deleteProduct(product1.id) } returns product1
         client.delete("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -156,10 +155,10 @@ class ProductRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val addProductNetworkRequest =
-            AddProductNetworkRequest("Product 1", "Description 1", UUID.randomUUID().toString())
+            AddProductNetworkRequest("Product 1", "Description 1", null, null, UUID.randomUUID().toString())
         addProductNetworkRequest.run {
-            val product = Product(id, name, description, emptyMap(), spaceId, createTime, createTime)
-            every { mockProductRepository.createProduct(name, description, spaceId) } returns product
+            val product = Product(id, name, description, null, null, emptyMap(), spaceId, createTime, createTime)
+            every { mockProductRepository.createProduct(name, description, null, null, spaceId) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
 
@@ -173,6 +172,8 @@ class ProductRoutesKtTest {
                     id,
                     addProductNetworkRequest.name,
                     addProductNetworkRequest.description,
+                    null,
+                    null,
                     emptyMap(),
                     addProductNetworkRequest.spaceId,
                     createTime,
@@ -194,10 +195,10 @@ class ProductRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val addProductNetworkRequest =
-            AddProductNetworkRequest("Space 1", "Description 1", UUID.randomUUID().toString())
+            AddProductNetworkRequest("Space 1", "Description 1", null, null, UUID.randomUUID().toString())
         addProductNetworkRequest.run {
-            val product = Product(id, name, description, emptyMap(), spaceId, createTime, createTime)
-            every { mockProductRepository.createProduct(name, description, spaceId) } returns product
+            val product = Product(id, name, description, null, null, emptyMap(), spaceId, createTime, createTime)
+            every { mockProductRepository.createProduct(name, description, null, null, spaceId) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
 
@@ -211,6 +212,8 @@ class ProductRoutesKtTest {
                     id,
                     addProductNetworkRequest.name,
                     addProductNetworkRequest.description,
+                    null,
+                    null,
                     emptyMap(),
                     addProductNetworkRequest.spaceId,
                     createTime,
@@ -253,11 +256,12 @@ class ProductRoutesKtTest {
         }
         val id = UUID.randomUUID().toString()
         val spaceId = UUID.randomUUID().toString()
-        val updateProductNetworkRequest = UpdateProductNetworkRequest("Product 1", "Description 1")
+        val updateProductNetworkRequest = UpdateProductNetworkRequest("Product 1", "Description 1", null)
         val createTime = LocalDateTime.now()
         updateProductNetworkRequest.run {
-            val product = Product(id, name!!, description!!, emptyMap(), spaceId, createTime, createTime)
-            every { mockProductRepository.updateProduct(id, name, description) } returns product
+            val product = Product(id, name!!, description!!, null, null, emptyMap(), spaceId, createTime, createTime)
+            every { mockProductRepository.updateProduct(id, name, description, null) } returns product
+            every { mockProductRepository.getProduct(id) } returns product
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
 
@@ -270,6 +274,8 @@ class ProductRoutesKtTest {
                 id,
                 updateProductNetworkRequest.name!!,
                 updateProductNetworkRequest.description!!,
+                null,
+                null,
                 emptyMap(),
                 spaceId,
                 createTime,
@@ -311,7 +317,7 @@ class ProductRoutesKtTest {
         }
         val invalidId = "invalid-id"
         val spaceId = UUID.randomUUID().toString()
-        val updateProductNetworkRequest = UpdateProductNetworkRequest("Product 1", "Description 1")
+        val updateProductNetworkRequest = UpdateProductNetworkRequest("Product 1", "Description 1", null)
         updateProductNetworkRequest.run {
             every { mockSpaceRepository.spaceExists(spaceId) } returns true
         }
@@ -406,6 +412,7 @@ class ProductRoutesKtTest {
         val spaceId = UUID.randomUUID().toString()
         val moveProductNetworkRequest = MoveProductNetworkRequest(spaceId)
         every { mockSpaceRepository.spaceExists(spaceId) } returns true
+        every { mockProductRepository.getProduct(productId) } returns null
         every { mockProductRepository.moveProduct(productId, spaceId) } returns null
         client.patch("/products/$productId/move") {
             setBody(moveProductNetworkRequest)
@@ -433,6 +440,8 @@ class ProductRoutesKtTest {
             id = productId,
             name = "Original Product",
             description = "A product description",
+            null,
+            null,
             attributes = emptyMap(),
             spaceId = spaceId,
             createdAt = LocalDateTime.now(),
@@ -441,7 +450,9 @@ class ProductRoutesKtTest {
         every { mockSpaceRepository.getSpace(spaceId) } returns Space(
             id = spaceId,
             name = "Space",
-            size = 50f,
+            null,
+            null,
+            null,
             description = "Space description",
             products = listOf(originalProduct),
             storageId = UUID.randomUUID().toString(),
@@ -502,7 +513,9 @@ class ProductRoutesKtTest {
         every { mockSpaceRepository.getSpace(spaceId) } returns Space(
             id = spaceId,
             name = "Space",
-            size = 50f,
+            null,
+            null,
+            null,
             description = "Space description",
             products = emptyList(),
             storageId = UUID.randomUUID().toString(),
@@ -556,6 +569,8 @@ class ProductRoutesKtTest {
             id = productId,
             name = "Original Product",
             description = "A product description",
+            null,
+            null,
             attributes = emptyMap(),
             spaceId = UUID.randomUUID().toString(),
             createdAt = LocalDateTime.now(),

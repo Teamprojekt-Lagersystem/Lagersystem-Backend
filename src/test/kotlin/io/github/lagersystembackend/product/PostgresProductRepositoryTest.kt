@@ -63,6 +63,8 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
@@ -70,7 +72,7 @@ class PostgresProductRepositoryTest {
         )
 
 
-        expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }.apply {
+        expectedProduct.run { sut.createProduct(name, description, null, null, spaceId.toString()) }.apply {
             name shouldBe expectedProduct.name
             description shouldBe expectedProduct.description
             spaceId shouldBe expectedProduct.spaceId
@@ -86,13 +88,15 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             UUID.randomUUID().toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
         runCatching {
-            expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
+            expectedProduct.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -106,13 +110,15 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             "Invalid UUID",
             LocalDateTime.now(),
             LocalDateTime.now()
         )
         runCatching {
-            expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
+            expectedProduct.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -126,12 +132,14 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = expectedProduct.run { sut.createProduct(name, description, spaceId.toString()) }
+        val createdProduct = expectedProduct.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         sut.getProduct(createdProduct.id) shouldBe createdProduct
     }
 
@@ -159,6 +167,8 @@ class PostgresProductRepositoryTest {
                 "any id",
                 "name1",
                 "description",
+                null,
+                null,
                 emptyMap(),
                 spaceId.toString(),
                 LocalDateTime.now(),
@@ -168,6 +178,8 @@ class PostgresProductRepositoryTest {
                 "any id",
                 "name2",
                 "description",
+                null,
+                null,
                 mapOf(
                     "someKey" to Attribute.NumberAttribute(1.2f),
                     "someOtherKey" to Attribute.StringAttribute("some text"),
@@ -181,13 +193,15 @@ class PostgresProductRepositoryTest {
                 "any id",
                 "name3",
                 "description",
+                null,
+                null,
                 emptyMap(),
                 spaceId.toString(),
                 LocalDateTime.now(),
                 LocalDateTime.now()
             )
         )
-        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, spaceId) } }
+        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, null, null, spaceId) } }
         sut.getProducts() shouldBe expectedProducts
     }
 
@@ -202,18 +216,22 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
-        val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description")
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
+        val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description", null)
 
         updatedProduct shouldBe Product(
             createdProduct.id,
             "new name",
             "new description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             createdProduct.createdAt,
@@ -229,13 +247,15 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
-        val updatedProduct = sut.updateProduct(createdProduct.id, null, null)
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
+        val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
 
         createdProduct.createdAt shouldBeBefore updatedProduct?.updatedAt!!
     }
@@ -243,7 +263,7 @@ class PostgresProductRepositoryTest {
     @Test
     fun `update Product should return null when Product not found`() = testApplication {
 
-        val updatedProduct = sut.updateProduct(UUID.randomUUID().toString(), "any new name", null)
+        val updatedProduct = sut.updateProduct(UUID.randomUUID().toString(), "any new name", null, null)
 
         updatedProduct shouldBe null
     }
@@ -252,7 +272,7 @@ class PostgresProductRepositoryTest {
     fun `update Product should throw IllegalArgumentException when id is invalid UUID`() = testApplication {
         val invalidUUID = "Invalid UUID"
         runCatching {
-            sut.updateProduct(invalidUUID, null, null)
+            sut.updateProduct(invalidUUID, null, null, null)
         }.exceptionOrNull().run {
             this shouldNotBe null
             this!!::class shouldBe IllegalArgumentException::class
@@ -265,12 +285,14 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         sut.deleteProduct(createdProduct.id) shouldBe createdProduct
         sut.getProduct(createdProduct.id) shouldBe null
 
@@ -295,7 +317,7 @@ class PostgresProductRepositoryTest {
 
     @Test
     fun `delete Product should delete all of its attributes`() = testApplication {
-        val product = sut.createProduct("name", "description", spaceId.toString())
+        val product = sut.createProduct("name", "description", null, null, spaceId.toString())
         val productAttributeRepository = PostgresProductAttributeRepository()
         product.run {
             productAttributeRepository.createOrUpdateAttribute("someKey", Attribute.NumberAttribute(1.2f), id)
@@ -314,6 +336,8 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
@@ -329,13 +353,15 @@ class PostgresProductRepositoryTest {
             }.toSpace()
         }
 
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         val movedProduct = sut.moveProduct(createdProduct.id, secondSpaceId.toString())
 
         movedProduct shouldBe Product(
             createdProduct.id,
             createdProduct.name,
             createdProduct.description,
+            null,
+            null,
             emptyMap(),
             secondSpaceId.toString(),
             createdProduct.createdAt,
@@ -349,6 +375,8 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
@@ -364,7 +392,7 @@ class PostgresProductRepositoryTest {
             }.toSpace()
         }
 
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         val movedProduct = sut.moveProduct(createdProduct.id, secondSpaceId.toString())
 
         createdProduct.createdAt shouldBeBefore movedProduct?.updatedAt!!
@@ -389,12 +417,14 @@ class PostgresProductRepositoryTest {
             "any id",
             "name",
             "description",
+            null,
+            null,
             emptyMap(),
             spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
         runCatching {
             sut.moveProduct(createdProduct.id, UUID.randomUUID().toString())
         }.exceptionOrNull().run {
@@ -415,7 +445,7 @@ class PostgresProductRepositoryTest {
     @Test
     fun `copyProduct should correctly duplicate product structure`() {
         val space = exampleSpace
-        val product = sut.createProduct("Original Product", "A product description", space.id)
+        val product = sut.createProduct("Original Product", "A product description", null, null, space.id)
 
         val copiedProduct = sut.copyProduct(product.id, space.id)
 

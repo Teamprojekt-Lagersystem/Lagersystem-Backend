@@ -130,114 +130,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
-  /v1/products/{id}/copy:
-    post:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CopyProductRequest"
-        required: true
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-                Example#2:
-                  description: ""
-                  value:
-                    errors: []
-                Example#3:
-                  description: ""
-                  value:
-                    errors: []
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "201":
-          description: "Created"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/NetworkProduct"
-  /v1/products/{id}/move:
-    patch:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MoveProductNetworkRequest"
-        required: true
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-                Example#2:
-                  description: ""
-                  value:
-                    errors: []
-                Example#3:
-                  description: ""
-                  value:
-                    errors: []
-                Example#4:
-                  description: ""
-                  value:
-                    errors: []
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/NetworkProduct"
   /v1/products/{id}/update:
     patch:
       description: ""
@@ -266,6 +158,10 @@ paths:
                   value:
                     errors: []
                 Example#2:
+                  description: ""
+                  value:
+                    errors: []
+                Example#3:
                   description: ""
                   value:
                     errors: []
@@ -531,6 +427,10 @@ paths:
                   value:
                     errors: []
                 Example#2:
+                  description: ""
+                  value:
+                    errors: []
+                Example#3:
                   description: ""
                   value:
                     errors: []
@@ -838,6 +738,320 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStorage"
+  /v1/storedProducts:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StoredProductDTO"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddStoredProductNetworkRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{id}:
+    delete:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkStoredProduct"
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{spaceId}:
+    get:
+      description: ""
+      parameters:
+      - name: "spaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{id}/copy:
+    post:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CopyStoredProductRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+                Example#3:
+                  description: ""
+                  value:
+                    errors: []
+                Example#4:
+                  description: ""
+                  value:
+                    errors: []
+                Example#5:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{id}/move:
+    patch:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveStoredProductRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+                Example#3:
+                  description: ""
+                  value:
+                    errors: []
+                Example#4:
+                  description: ""
+                  value:
+                    errors: []
+                Example#5:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
+  /v1/storedProducts/{id}/update:
+    patch:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStoredProductRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+                Example#3:
+                  description: ""
+                  value:
+                    errors: []
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NetworkStoredProduct"
 components:
   schemas:
     NetworkProduct:
@@ -849,9 +1063,12 @@ components:
           type: "string"
         description:
           type: "string"
-        attributes:
+        size:
+          type: "number"
+          format: "double"
+        unit:
           type: "string"
-        spaceId:
+        attributes:
           type: "string"
         createdAt:
           type: "string"
@@ -862,7 +1079,6 @@ components:
       - "name"
       - "description"
       - "attributes"
-      - "spaceId"
       - "createdAt"
     AddProductNetworkRequest:
       type: "object"
@@ -871,12 +1087,14 @@ components:
           type: "string"
         description:
           type: "string"
-        spaceId:
+        size:
+          type: "number"
+          format: "double"
+        unit:
           type: "string"
       required:
       - "name"
       - "description"
-      - "spaceId"
     ApiError:
       type: "object"
       properties:
@@ -898,20 +1116,6 @@ components:
             $ref: "#/components/schemas/ApiError"
       required:
       - "errors"
-    CopyProductRequest:
-      type: "object"
-      properties:
-        targetSpaceId:
-          type: "string"
-      required:
-      - "targetSpaceId"
-    MoveProductNetworkRequest:
-      type: "object"
-      properties:
-        targetSpaceId:
-          type: "string"
-      required:
-      - "targetSpaceId"
     UpdateProductNetworkRequest:
       type: "object"
       properties:
@@ -919,6 +1123,41 @@ components:
           type: "string"
         description:
           type: "string"
+        size:
+          type: "number"
+          format: "double"
+    NetworkProductInSpace:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+        productSize:
+          type: "number"
+          format: "double"
+        productUnit:
+          type: "string"
+        attributes:
+          type: "string"
+        size:
+          type: "number"
+          format: "double"
+        quantity:
+          type: "integer"
+          format: "int32"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "name"
+      - "description"
+      - "attributes"
+      - "createdAt"
     NetworkSpace:
       type: "object"
       properties:
@@ -926,15 +1165,20 @@ components:
           type: "string"
         name:
           type: "string"
-        size:
+        totalSize:
           type: "number"
-          format: "float"
+          format: "double"
+        currentSize:
+          type: "number"
+          format: "double"
+        unit:
+          type: "string"
         description:
           type: "string"
-        products:
+        storedProducts:
           type: "array"
           items:
-            $ref: "#/components/schemas/NetworkProduct"
+            $ref: "#/components/schemas/NetworkProductInSpace"
         storageId:
           type: "string"
         createdAt:
@@ -945,6 +1189,7 @@ components:
       - "id"
       - "name"
       - "description"
+      - "storedProducts"
       - "storageId"
       - "createdAt"
     AddSpaceNetworkRequest:
@@ -952,9 +1197,11 @@ components:
       properties:
         name:
           type: "string"
-        size:
+        totalSize:
           type: "number"
-          format: "float"
+          format: "double"
+        unit:
+          type: "string"
         description:
           type: "string"
         storageId:
@@ -982,9 +1229,9 @@ components:
       properties:
         name:
           type: "string"
-        size:
+        totalSize:
           type: "number"
-          format: "float"
+          format: "double"
         description:
           type: "string"
     NetworkStorage:
@@ -1046,3 +1293,95 @@ components:
           type: "string"
         description:
           type: "string"
+    StoredProductDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        productName:
+          type: "string"
+        productDescription:
+          type: "string"
+        productSize:
+          type: "number"
+          format: "double"
+        productUnit:
+          type: "string"
+        attribute:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        size:
+          type: "number"
+          format: "double"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "productId"
+      - "spaceId"
+      - "productName"
+      - "productDescription"
+      - "attribute"
+      - "createdAt"
+    AddStoredProductNetworkRequest:
+      type: "object"
+      properties:
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+      required:
+      - "productId"
+      - "spaceId"
+    NetworkStoredProduct:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        productId:
+          type: "string"
+        spaceId:
+          type: "string"
+        quantity:
+          type: "integer"
+          format: "int32"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "id"
+      - "productId"
+      - "spaceId"
+      - "createdAt"
+    CopyStoredProductRequest:
+      type: "object"
+      properties:
+        targetSpaceId:
+          type: "string"
+      required:
+      - "targetSpaceId"
+    MoveStoredProductRequest:
+      type: "object"
+      properties:
+        targetSpaceId:
+          type: "string"
+      required:
+      - "targetSpaceId"
+    UpdateStoredProductRequest:
+      type: "object"
+      properties:
+        quantity:
+          type: "integer"
+          format: "int32"
