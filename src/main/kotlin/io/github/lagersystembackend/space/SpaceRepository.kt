@@ -9,6 +9,5 @@ interface SpaceRepository {
     fun spaceExists(id: String): Boolean
     fun moveSpace(spaceId: String, targetStorageId: String): Space
     fun copySpace(spaceId: String, targetStorageId: String): Space
-    //fun checkUnit(spaceId: String, unit: String): Boolean
-    //fun fitsInSpace(spaceId: String, size: Double): Boolean
+    fun isProductStored(spaceId: String): Boolean
 }

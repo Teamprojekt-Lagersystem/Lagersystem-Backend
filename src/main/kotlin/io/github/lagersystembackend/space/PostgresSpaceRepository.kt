@@ -63,8 +63,6 @@ class PostgresSpaceRepository : SpaceRepository {
     override fun deleteSpace(id: String): Space? = transaction {
         val spaceEntity = SpaceEntity.findById(UUID.fromString(id))
 
-        deleteStoredProductDependencies(id)
-
         spaceEntity?.delete()
 
         spaceEntity?.toSpace()
@@ -122,8 +120,8 @@ class PostgresSpaceRepository : SpaceRepository {
         storedProduct.product
     }
 
-    private fun deleteStoredProductDependencies(id: String) = transaction {
-        StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(id) }.forEach { it.delete() }
+    override fun isProductStored(spaceId: String): Boolean = transaction {
+        StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(spaceId) }.count() > 0
     }
 
 }

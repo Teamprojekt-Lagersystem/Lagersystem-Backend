@@ -42,6 +42,10 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                     errors.add(ErrorMessages.INVALID_UUID_SPACE)
                 }
 
+                if (spaceRepository.isProductStored(id)) {
+                    errors.add(ErrorMessages.SPACE_IN_USE)
+                }
+
                 if (errors.isNotEmpty()) {
                     return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                 }

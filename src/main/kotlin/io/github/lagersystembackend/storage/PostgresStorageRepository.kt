@@ -52,17 +52,6 @@ class PostgresStorageRepository: StorageRepository {
     override fun deleteStorage(id: String): Storage? = transaction {
         val storageEntity = StorageEntity.findById(UUID.fromString(id))
 
-        //delete dependencies stored products
-        storageEntity?.subStorages?.forEach { subStorage ->
-            subStorage.spaces.forEach { space ->
-                deleteStoredProductDependencies(space.id.value.toString())
-            }
-        }
-
-        storageEntity?.spaces?.forEach { space ->
-            deleteStoredProductDependencies(space.id.value.toString())
-        }
-
         storageEntity?.delete()
 
         storageEntity?.toStorage()
@@ -163,9 +152,28 @@ class PostgresStorageRepository: StorageRepository {
         storedProduct.product
     }
 
-    private fun deleteStoredProductDependencies(spaceId: String) {
-        transaction {
-            StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(spaceId) }.forEach { it.delete() }
-        }
+    private fun isProductinSpace(spaceId: String): Boolean = transaction {
+        StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(spaceId) }.count() > 0
     }
+
+    override fun isProductStored(storageId: String): Boolean = transaction {
+        val storageEntity = StorageEntity.findById(UUID.fromString(storageId))
+
+        storageEntity?.subStorages?.forEach { subStorage ->
+            subStorage.spaces.forEach { space ->
+                if (isProductinSpace(space.id.value.toString())) {
+                    return@transaction true
+                }
+            }
+        }
+
+        storageEntity?.spaces?.forEach { space ->
+            if (isProductinSpace(space.id.value.toString())) {
+                return@transaction true
+            }
+        }
+        return@transaction false
+    }
+
+
 }

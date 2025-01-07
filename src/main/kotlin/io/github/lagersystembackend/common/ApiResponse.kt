@@ -32,6 +32,8 @@ object ErrorMessages {
     val RECURSIVE_COPY = ApiError("RECURSIVE_COPY" , "Cannot copy storage to itself.")
     val ALREADY_STORED = ApiError("ALREADY_STORED" , "The product is already stored in the space.")
     val PRODUCT_IN_USE = ApiError("PRODUCT_IN_USE" , "The product is still stored in a space.")
+    val SPACE_IN_USE = ApiError("SPACE_IN_USE" , "The space still contains stored products.")
+    val STORAGE_IN_USE = ApiError("STORAGE_IN_USE" , "The storage still contains stored products in space.")
     val SIZE_NOT_FITTING = ApiError("PRODUCT_NOT_FITTING" , "The size of the product exceeds the size of the space.")
     val UNIT_NOT_FITTING = ApiError("UNIT_NOT_FITTING", "The unit of the product differs from the unit of the space.")
     val SIZE_TOO_SMALL = ApiError("SIZE_TOO_SMALL", "The new size of the space must be larger than the size of the stored products.")
