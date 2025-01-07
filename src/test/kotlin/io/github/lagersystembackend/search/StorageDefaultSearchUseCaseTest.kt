@@ -50,7 +50,7 @@ class StorageDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `search storage createdAt`() = testApplication {
-        val storage = createStorage(createdAt = exampleLocalDateTime)
+        val storage = createStorage(createdAt = exampleLocalDateTime.plusDays(1))
         sut.fullTextSearch(storage.createdAt.toString()).apply {
             this.size shouldBe 1
             this.first().apply {
@@ -62,7 +62,7 @@ class StorageDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `search storage updatedAt`() = testApplication {
-        val storage = createStorage(updatedAt = exampleLocalDateTime)
+        val storage = createStorage(updatedAt = exampleLocalDateTime.plusDays(1))
         sut.fullTextSearch(storage.updatedAt.toString()).apply {
             this.size shouldBe 1
             this.first().apply {

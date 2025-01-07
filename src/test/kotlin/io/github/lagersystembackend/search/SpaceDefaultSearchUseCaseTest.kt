@@ -53,7 +53,7 @@ class SpaceDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `search space createdAt`() = testApplication {
-        val space = createSpace(createdAt = exampleLocalDateTime)
+        val space = createSpace(createdAt = exampleLocalDateTime.plusDays(1))
         sut.fullTextSearch(space.createdAt.toString()).apply {
             this.size shouldBe 1
             this.first().apply {
@@ -65,7 +65,7 @@ class SpaceDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `search space updatedAt`() = testApplication {
-        val space = createSpace(updatedAt = exampleLocalDateTime)
+        val space = createSpace(updatedAt = exampleLocalDateTime.plusDays(1))
         sut.fullTextSearch(space.updatedAt.toString()).apply {
             this.size shouldBe 1
             this.first().apply {

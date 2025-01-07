@@ -22,8 +22,8 @@ open class CommonDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `fullTextSearch should be able to search dates in ISO_DATE_TIME format`() = testApplication {
-        val product = createProduct(createdAt = LocalDateTime.parse(exampleLocalDateTime.toString()))
-        sut.fullTextSearch(exampleLocalDateTime.toString()).apply {
+        val product = createProduct(createdAt = LocalDateTime.parse("2024-12-24T00:00:00"))
+        sut.fullTextSearch("2024-12-24T00:00:00").apply {
             this.size shouldBe 1
             this.first().apply {
                 id shouldBe product.id.toString()

@@ -32,7 +32,7 @@ class ProductDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `search product createdAt`() = testApplication {
-        val product = createProduct(createdAt = exampleLocalDateTime)
+        val product = createProduct(createdAt = exampleLocalDateTime.plusDays(1))
         sut.fullTextSearch(product.createdAt.toString()).apply {
             this.size shouldBe 1
             this.first().apply {
@@ -44,7 +44,7 @@ class ProductDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
 
     @Test
     fun `search product updatedAt`() = testApplication {
-        val product = createProduct(updatedAt = exampleLocalDateTime)
+        val product = createProduct(updatedAt = exampleLocalDateTime.plusDays(1))
         sut.fullTextSearch(product.updatedAt.toString()).apply {
             this.size shouldBe 1
             this.first().apply {
