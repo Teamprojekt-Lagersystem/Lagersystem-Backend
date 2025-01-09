@@ -39,4 +39,5 @@ object ErrorMessages {
     val SIZE_TOO_SMALL = ApiError("SIZE_TOO_SMALL", "The new size of the space must be larger than the size of the stored products.")
     val NEGATIVE_SIZE = ApiError("NEGATIVE_SIZE" , "The size must be positive.")
     val WRONG_SPECIFICATION = ApiError("WRONG_SPECIFICATION", "Size and unit have to be either both null or both not null.")
+    val NOT_ROOT_STORAGE = ApiError("NOT_ROOT_STORAGE", "The Product must be linked to a root storage.")
 }

@@ -102,6 +102,30 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                 }
             }
         }
+        route("/depot/{rootStorageId}") {
+            get {
+                val rootStorageId = call.parameters["rootStorageId"]!!
+                val errors = mutableListOf<ApiError>()
+
+                if (!rootStorageId.isUUID()) {
+                    errors.add(ErrorMessages.INVALID_UUID_STORAGE)
+                }
+
+                if (!productRepository.depotExists(rootStorageId)) {
+                    errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                }
+
+                if (!productRepository.isRootStorage(rootStorageId)) {
+                    errors.add(ErrorMessages.NOT_ROOT_STORAGE)
+                }
+
+                if (errors.isNotEmpty()) {
+                    return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                call.respond(productRepository.getProductsInDepot(rootStorageId).map { it.toNetworkProduct() })
+            }
+        }
         post {
             val errors = mutableListOf<ApiError>()
             val addProductNetworkRequest = runCatching { call.receive<AddProductNetworkRequest>() }.getOrNull()
@@ -119,6 +143,14 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
                         errors.add(ErrorMessages.NEGATIVE_SIZE)
                     }
                 }
+
+                if (!productRepository.depotExists(addProductNetworkRequest.depotId)) {
+                    errors.add(ErrorMessages.STORAGE_NOT_FOUND)
+                }
+
+                if (!productRepository.isRootStorage(addProductNetworkRequest.depotId)) {
+                    errors.add(ErrorMessages.NOT_ROOT_STORAGE)
+                }
             }
 
             if (errors.isNotEmpty()) {
@@ -126,7 +158,7 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
             }
 
             val createdProduct = addProductNetworkRequest?.let {
-                productRepository.createProduct(it.name, it.description, it.size, it.unit)
+                productRepository.createProduct(it.name, it.description, it.size, it.unit, it.depotId)
             }
 
             createdProduct?.let {

@@ -4,6 +4,8 @@ import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.attribute.toAttribute
+import io.github.lagersystembackend.storage.StorageEntity
+import io.github.lagersystembackend.storage.Storages
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -24,7 +26,8 @@ data class Product(
     val unit: String?,
     val attributes: Map<String, Attribute>,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime?
+    val updatedAt: LocalDateTime?,
+    val depotId: String
 ) {
     init {
         val allNull = (size == null && unit == null)
@@ -45,7 +48,8 @@ data class NetworkProduct(
     val unit: String?,
     val attributes: Map<String, Attribute>,
     val createdAt: String,
-    val updatedAt: String?
+    val updatedAt: String?,
+    val depotId: String
 )
 
 @Serializable
@@ -54,6 +58,7 @@ data class AddProductNetworkRequest(
     val description: String,
     val size: Double? = null,
     val unit: String? = null,
+    val depotId: String
 )
 
 @Serializable
@@ -63,19 +68,6 @@ data class UpdateProductNetworkRequest(
     val size: Double?,
 )
 
-/*
-@Serializable
-data class MoveProductNetworkRequest(
-    val targetSpaceId: String
-)
-
-@Serializable
-data class CopyProductRequest(
-    val targetSpaceId: String
-)
-
- */
-
 object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
@@ -83,6 +75,7 @@ object Products: UUIDTable() {
     val unit = varchar("unit", 255).nullable()
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
+    val depotId = reference("depotId", Storages)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -95,6 +88,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
     var createdAt by Products.createdAt
     var updatedAt by Products.updatedAt
+    var depot by StorageEntity referencedOn Products.depotId
 }
 
 fun ProductEntity.toProduct() = Product(
@@ -105,7 +99,8 @@ fun ProductEntity.toProduct() = Product(
     unit,
     attributes.associate { it.key to it.toAttribute() },
     createdAt,
-    updatedAt
+    updatedAt,
+    depot.id.value.toString()
 )
 
 fun Product.toNetworkProduct() = NetworkProduct(
@@ -117,4 +112,5 @@ fun Product.toNetworkProduct() = NetworkProduct(
     attributes,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
+    depotId
 )
