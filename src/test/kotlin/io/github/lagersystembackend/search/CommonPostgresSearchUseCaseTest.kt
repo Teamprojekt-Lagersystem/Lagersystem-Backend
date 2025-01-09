@@ -6,7 +6,7 @@ import org.junit.Test
 import java.time.LocalDateTime
 
 
-open class CommonDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
+open class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
 
     @Test
     fun `fullTextSearch should be able to search text`() = testApplication {

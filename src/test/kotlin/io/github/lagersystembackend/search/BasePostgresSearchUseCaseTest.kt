@@ -18,8 +18,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
 
-open class BaseDefaultSearchUseCaseTest {
-    val sut = DefaultSearchUseCase()
+open class BasePostgresSearchUseCaseTest {
+    val sut = PostgresSearchUseCase()
     val spaceId = UUID.randomUUID()
     val storageId = UUID.randomUUID()
     val exampleLocalDateTime = LocalDateTime.parse("2025-01-01T00:00:00")
@@ -47,6 +47,7 @@ open class BaseDefaultSearchUseCaseTest {
         configureDatabases(isTest = true)
         transaction {
             SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            createPostgresFullTextSearchTriggers()
             exampleStorageEntity = StorageEntity.new(id = storageId) {
                 name = ""
                 description = ""

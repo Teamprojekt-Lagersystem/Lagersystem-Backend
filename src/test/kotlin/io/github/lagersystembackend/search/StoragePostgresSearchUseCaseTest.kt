@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.time.LocalDateTime
 
-class StorageDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
+class StoragePostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
 
     fun createStorage(
         name: String = "name",

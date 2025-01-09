@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.product
 
+import TsVectorColumnType
 import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.github.lagersystembackend.attribute.ProductAttributes
@@ -68,6 +69,7 @@ object Products: UUIDTable() {
     val spaceId = reference("spaceId", Spaces)
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
+    val tsVector = registerColumn<String>("tsVector", TsVectorColumnType()).databaseGenerated()
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {

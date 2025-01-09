@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.time.LocalDateTime
 
-class SpaceDefaultSearchUseCaseTest : BaseDefaultSearchUseCaseTest() {
+class SpacePostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
 
     fun createSpace(
         name: String = "name",
