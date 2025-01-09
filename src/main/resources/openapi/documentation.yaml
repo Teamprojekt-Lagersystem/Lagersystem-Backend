@@ -770,6 +770,16 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
         "201":
           description: "Created"
           content:
@@ -934,6 +944,12 @@ paths:
                   description: ""
                   value:
                     errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
         "201":
           description: "Created"
           content:
@@ -1051,7 +1067,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStoredProduct"
+                $ref: "#/components/schemas/StoredProductDTO"
 components:
   schemas:
     NetworkProduct:

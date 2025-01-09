@@ -94,7 +94,7 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                         storedProductRepository.updateStoredProduct(id, it.quantity)
                     }
 
-                    call.respond(updatedStoredProduct.toNetworkStoredProduct())
+                    call.respond(updatedStoredProduct)
                 }
             }
             route("/move") {
@@ -139,6 +139,16 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                     if (!storedProductRepository.checkUnit(storedProduct.productId, targetSpaceId)) {
                         errors.add(ErrorMessages.UNIT_NOT_FITTING)
                         return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
+                    if (storedProductRepository.isStored(storedProduct.productId, targetSpaceId)) {
+                        val alreadyStoredProductId = storedProductRepository.getId(storedProduct.productId, targetSpaceId)
+                        val alreadyStoredProduct = storedProductRepository.getStoredProduct(alreadyStoredProductId)
+                        val updatedStoredProduct = alreadyStoredProduct?.let {
+                            storedProductRepository.updateStoredProduct(alreadyStoredProductId, alreadyStoredProduct.quantity + storedProduct.quantity)
+                        }
+                        storedProductRepository.deleteStoredProduct(id)
+                        updatedStoredProduct?.let {  return@patch call.respond(it)}
                     }
 
                     val movedStoredProduct = storedProductRepository.moveStoredProduct(id, moveStoredProductRequest.targetSpaceId)
@@ -193,6 +203,15 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                         return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
+                    if (storedProductRepository.isStored(storedProduct.productId, targetSpaceId)) {
+                        val alreadyStoredProductId = storedProductRepository.getId(storedProduct.productId, targetSpaceId)
+                        val alreadyStoredProduct = storedProductRepository.getStoredProduct(alreadyStoredProductId)
+                        val updatedStoredProduct = alreadyStoredProduct?.let {
+                            storedProductRepository.updateStoredProduct(alreadyStoredProductId, alreadyStoredProduct.quantity + storedProduct.quantity)
+                        }
+                        updatedStoredProduct?.let {  return@post call.respond(it)}
+                    }
+
                     val copiedStoredProduct = storedProductRepository.copyStoredProduct(id, targetSpaceId)
                     call.respond(HttpStatusCode.Created, copiedStoredProduct)
                 }
@@ -224,6 +243,7 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
 
             if (storedProduct == null) {
                 errors.add(ErrorMessages.BODY_NOT_SERIALIZED_STORED_PRODUCT)
+                return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
             } else {
                 if (!storedProduct.productId.isUUID()) {
                     errors.add(ErrorMessages.INVALID_UUID_PRODUCT)
@@ -244,10 +264,6 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                     errors.add(ErrorMessages.NEGATIVE_SIZE)
                 }
 
-                if (storedProductRepository.isStored(storedProduct.productId, storedProduct.spaceId)) {
-                    errors.add(ErrorMessages.ALREADY_STORED)
-                }
-
                 if (!storedProductRepository.fitsInSpace(storedProduct.productId, storedProduct.spaceId, storedProduct.quantity)) {
                     errors.add(ErrorMessages.SIZE_NOT_FITTING)
                 }
@@ -255,16 +271,26 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                 if (!storedProductRepository.checkUnit(storedProduct.productId, storedProduct.spaceId)) {
                     errors.add(ErrorMessages.UNIT_NOT_FITTING)
                 }
-            }
-            if (errors.isNotEmpty()) {
-                return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+
+                if (errors.isNotEmpty()) {
+                    return@post call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                }
+
+                if (storedProductRepository.isStored(storedProduct.productId, storedProduct.spaceId)) {
+                    val alreadyStoredProductId = storedProductRepository.getId(storedProduct.productId, storedProduct.spaceId)
+                    val alreadyStoredProduct = storedProductRepository.getStoredProduct(alreadyStoredProductId)
+                    val updatedStoredProduct = alreadyStoredProduct?.let {
+                        storedProductRepository.updateStoredProduct(alreadyStoredProduct.id, alreadyStoredProduct.quantity + storedProduct.quantity)
+                    }
+                    updatedStoredProduct?.let {  return@post call.respond(it)}
+                }
             }
 
-            val createdStoredProduct = storedProduct?.let {
+            val createdStoredProduct = storedProduct.let {
                 storedProductRepository.createStoredProduct(it.productId, it.spaceId, it.quantity)
             }
 
-            createdStoredProduct?.let {
+            createdStoredProduct.let {
                 call.respond(HttpStatusCode.Created, it)
             }
         }

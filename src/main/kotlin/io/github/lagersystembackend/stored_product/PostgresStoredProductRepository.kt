@@ -50,7 +50,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
     override fun updateStoredProduct(
         id: String,
         quantity: Int
-    ): StoredProduct = transaction {
+    ): StoredProductDTO = transaction {
         val storedProduct = StoredProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Stored product not found")
 
         if (fitsInSpace(storedProduct.product.id.toString(), storedProduct.space.id.toString(), quantity - storedProduct.quantity)) {
@@ -58,7 +58,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
             storedProduct.quantity = quantity
             storedProduct.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }
-        storedProduct.toStoredProduct()
+        storedProduct.toStoredProductDTO()
     }
 
     override fun moveStoredProduct(id: String, targetSpaceId: String): StoredProductDTO = transaction {
@@ -129,6 +129,12 @@ class PostgresStoredProductRepository : StoredProductRepository {
     override fun isStored(productId: String, spaceId: String): Boolean = transaction {
         StoredProductEntity.find {
             (StoredProducts.productId eq UUID.fromString(productId)) and (StoredProducts.spaceId eq UUID.fromString(spaceId)) }.count() > 0
+    }
+
+    override fun getId(productId: String, spaceId: String): String = transaction {
+        StoredProductEntity.find {
+            (StoredProducts.productId eq UUID.fromString(productId)) and (StoredProducts.spaceId eq UUID.fromString(spaceId))
+        }.firstOrNull()?.id?.value.toString()
     }
 
     override fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO = transaction {
