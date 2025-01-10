@@ -27,4 +27,5 @@ object ErrorMessages {
     val INVALID_DEPTH = ApiError("INVALID_DEPTH" , "The provided depth parameter is invalid.")
     val RECURSIVE_MOVE = ApiError("RECURSIVE_MOVE" , "Cannot move storage to itself.")
     val RECURSIVE_COPY = ApiError("RECURSIVE_COPY" , "Cannot copy storage to itself.")
+    val INVALID_SEARCH_QUERY = ApiError("INVALID_SEARCH_QUERY" , "The provided search query is invalid.")
 }

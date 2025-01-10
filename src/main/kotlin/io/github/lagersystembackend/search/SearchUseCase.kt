@@ -1,19 +1,39 @@
 package io.github.lagersystembackend.search
 
+import kotlinx.serialization.Serializable
 
-data class SearchResult(
-    val id: String,
-    val name: String,
-    val description: String,
-    val type: String,
-    val createdAt: String,
-    val updatedAt: String?,
-    val rank: Double
-)
 
 interface SearchUseCase {
     fun fullTextSearch(query: String): List<SearchResult>
 }
 
+data class SearchResult(
+    val type: String,
+    val rank: Double,
+    val id: String,
+    val name: String,
+    val description: String,
+    val createdAt: String,
+    val updatedAt: String?
+)
 
+@Serializable
+data class NetworkSearchResult(
+    val type: String,
+    val rank: Double,
+    val id: String,
+    val name: String,
+    val description: String,
+    val createdAt: String,
+    val updatedAt: String?
+)
 
+fun SearchResult.toNetworkSearchResult(): NetworkSearchResult = NetworkSearchResult(
+    type = this.type,
+    rank = this.rank,
+    id = this.id,
+    name = this.name,
+    description = this.description,
+    createdAt = this.createdAt,
+    updatedAt = this.updatedAt
+)

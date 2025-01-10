@@ -1,12 +1,13 @@
 package io.github.lagersystembackend.search
 
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.testApplication
 import org.junit.Test
 import java.time.LocalDateTime
 
 
-open class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
+class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
 
     @Test
     fun `fullTextSearch should be able to search text`() = testApplication {
@@ -65,6 +66,42 @@ open class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
                 id shouldBe product.id.toString()
                 createdAt shouldBe product.createdAt.toString()
             }
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should rank one name match higher than two description matches`() = testApplication {
+        val product1 = createProduct(name = "product")
+        val product2 = createProduct(description = "product description product")
+        sut.fullTextSearch("product").apply {
+            this.size shouldBe 2
+            this.first().id shouldBe product1.id.toString()
+            this.last().id shouldBe product2.id.toString()
+            this.first().rank shouldBeGreaterThan this.last().rank
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should discarded dot but rank it lower `() = testApplication {
+        val product1 = createProduct(name = "Product.name")
+        val product2 = createProduct(name = "Product name")
+        sut.fullTextSearch("Product.name").apply {
+            this.size shouldBe 2
+            this.first().id shouldBe product1.id.toString()
+            this.last().id shouldBe product2.id.toString()
+            this.first().rank shouldBeGreaterThan this.last().rank
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should discarded - but rank it lower `() = testApplication {
+        val product1 = createProduct(name = "Product-name")
+        val product2 = createProduct(name = "Product name")
+        sut.fullTextSearch("Product-name").apply {
+            this.size shouldBe 2
+            this.first().id shouldBe product1.id.toString()
+            this.last().id shouldBe product2.id.toString()
+            this.first().rank shouldBeGreaterThan this.last().rank
         }
     }
 }

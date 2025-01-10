@@ -286,6 +286,35 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
+  /v1/search:
+    get:
+      description: ""
+      parameters:
+      - name: "q"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkSearchResult"
   /v1/spaces:
     get:
       description: ""
@@ -919,6 +948,30 @@ components:
           type: "string"
         description:
           type: "string"
+    NetworkSearchResult:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+        rank:
+          type: "number"
+          format: "double"
+        id:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+      required:
+      - "type"
+      - "id"
+      - "name"
+      - "description"
+      - "createdAt"
     NetworkSpace:
       type: "object"
       properties:

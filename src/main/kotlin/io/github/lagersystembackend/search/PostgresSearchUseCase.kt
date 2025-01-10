@@ -8,11 +8,11 @@ import org.jetbrains.exposed.sql.ComparisonOp
 import org.jetbrains.exposed.sql.CustomFunction
 import org.jetbrains.exposed.sql.DoubleColumnType
 import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.LiteralOp
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.TextColumnType
 import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.arrayLiteral
 import org.jetbrains.exposed.sql.intParam
 import org.jetbrains.exposed.sql.stringParam
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,57 +21,74 @@ import kotlin.collections.plus
 class PostgresSearchUseCase : SearchUseCase {
 
     override fun fullTextSearch(query: String): List<SearchResult> {
-    if (query.isBlank()) return emptyList()
-    val tsQuery = toTSQuery(query)
-    val productResults = searchTable(
-        Products, Products.tsVector, tsQuery
-    ).map { (row, rank) ->
-        SearchResult(
-            id = row[Products.id].value.toString(),
-            name = row[Products.name],
-            description = row[Products.description],
-            type = "product",
-            createdAt = row[Products.createdAt].toString(),
-            updatedAt = row[Products.updatedAt]?.toString(),
-            rank = rank
-        )
-    }
-    val spaceResults = searchTable(
-        Spaces, Spaces.tsVector, tsQuery
-    ).map { (row, rank) ->
-        SearchResult(
-            id = row[Spaces.id].value.toString(),
-            name = row[Spaces.name],
-            description = row[Spaces.description],
-            type = "space",
-            createdAt = row[Spaces.createdAt].toString(),
-            updatedAt = row[Spaces.updatedAt]?.toString(),
-            rank = rank
-        )
+        if (query.isBlank()) return emptyList()
+        val normalizedQuery = normalizeQuery(query.trim())
+        val weights = listOf(0.1f, 0.2f, 0.4f, 1.0f) //default Postgres Weights for A, B, C and D
+
+        val searchResults = fullTextSearchWeighted(query.trim(), weights).let {
+            if (query != normalizedQuery) it + fullTextSearchWeighted(
+                normalizedQuery,
+                weights.map { it * 0.2f }) else it
+        }
+
+        return searchResults.groupBy { it.id }.map { (_, searchResults) ->
+            searchResults.reduce { acc, searchResult ->
+                acc.copy(rank = acc.rank + searchResult.rank)
+            }
+        }.sortedByDescending { it.rank }
     }
 
-    val storageResults = searchTable(
-        Storages, Storages.tsVector, tsQuery
-    ).map { (row, rank) ->
-        SearchResult(
-            id = row[Storages.id].value.toString(),
-            name = row[Storages.name],
-            description = row[Storages.description],
-            type = "storages",
-            createdAt = row[Storages.createdAt].toString(),
-            updatedAt = row[Storages.updatedAt]?.toString(),
-            rank = rank
-        )
-    }
+    private fun fullTextSearchWeighted(query: String, weights: List<Float>? = null): List<SearchResult> {
+        val tsQuery = toTSQuery(query)
+        val productResults = searchTable(
+            Products, Products.tsVector, tsQuery, weights
+        ).map { (row, rank) ->
+            SearchResult(
+                id = row[Products.id].value.toString(),
+                name = row[Products.name],
+                description = row[Products.description],
+                type = "product",
+                createdAt = row[Products.createdAt].toString(),
+                updatedAt = row[Products.updatedAt]?.toString(),
+                rank = rank
+            )
+        }
+        val spaceResults = searchTable(
+            Spaces, Spaces.tsVector, tsQuery, weights
+        ).map { (row, rank) ->
+            SearchResult(
+                id = row[Spaces.id].value.toString(),
+                name = row[Spaces.name],
+                description = row[Spaces.description],
+                type = "space",
+                createdAt = row[Spaces.createdAt].toString(),
+                updatedAt = row[Spaces.updatedAt]?.toString(),
+                rank = rank
+            )
+        }
 
-    return (productResults + spaceResults + storageResults).sortedBy { it.rank }.reversed()
-}
+        val storageResults = searchTable(
+            Storages, Storages.tsVector, tsQuery, weights
+        ).map { (row, rank) ->
+            SearchResult(
+                id = row[Storages.id].value.toString(),
+                name = row[Storages.name],
+                description = row[Storages.description],
+                type = "storages",
+                createdAt = row[Storages.createdAt].toString(),
+                updatedAt = row[Storages.updatedAt]?.toString(),
+                rank = rank
+            )
+        }
+        return productResults + spaceResults + storageResults
+    }
 
     private fun searchTable(
-        table: Table, tsVector: Column<String>, tsQuery: ToTSQuery<String>
+        table: Table, tsVector: Column<String>, tsQuery: ToTSQuery<String>, weights: List<Float>? = null
     ): List<Pair<ResultRow, Double>> {
         return transaction {
-            val tsRank = TSRank(tsVector, tsQuery, normalization = 32)
+            val tsRank = TSRank(tsVector, tsQuery, normalization = 32, weights = weights)
+
             table.select(table.columns + tsRank.alias("rank")).where { tsVector tsMatches tsQuery }
                 .map { row -> Pair(row, row[tsRank.alias("rank")]) }
         }
@@ -81,7 +98,7 @@ class PostgresSearchUseCase : SearchUseCase {
         expr1: Expression<*>, expr2: Expression<*>
     ) : ComparisonOp(expr1, expr2, "@@")
 
-    private infix fun  Expression<*>.tsMatches(other: Expression<*>) = TSMatchOp(this, other)
+    private infix fun Expression<*>.tsMatches(other: Expression<*>) = TSMatchOp(this, other)
 
     private class ToTSQuery<T : String?>(
         config: Expression<T>?, query: Expression<out String?>
@@ -90,19 +107,23 @@ class PostgresSearchUseCase : SearchUseCase {
         *config?.let { arrayOf(config, query) } ?: arrayOf(query))
 
     private fun toTSQuery(query: String, config: Expression<String>? = null) = ToTSQuery(
-        config, stringParam(
-            "$query or " + query.replace(
-                Regex("[.\\-_@:T]"), " "
-            )
-        )
+        config, stringParam(query)
     )
 
+    // Filters out all non-alphanumeric characters and replaces 'T' in -ddTdd: format with a space
+    private fun normalizeQuery(query: String): String {
+        return query.replace(Regex("-(\\d{2})T(\\d{2}:)"), "-$1 $2").replace(Regex("[^a-zA-Z0-9 ]"), " ")
+    }
+
     private class TSRank(
-        vector: Expression<*>, query: Expression<*>, weights: LiteralOp<List<Float>>? = null, normalization: Int? = null
+        vector: Expression<*>, query: Expression<*>, weights: List<Float>? = null, normalization: Int? = null
     ) : CustomFunction<Double>(
         "ts_rank", DoubleColumnType(), *when {
-            weights != null && normalization != null -> arrayOf(weights, vector, query, intParam(normalization))
-            weights != null -> arrayOf(weights, vector, query)
+            weights != null && normalization != null -> arrayOf(
+                arrayLiteral(weights), vector, query, intParam(normalization)
+            )
+
+            weights != null -> arrayOf(arrayLiteral(weights), vector, query)
             normalization != null -> arrayOf(vector, query, intParam(normalization))
             else -> arrayOf(vector, query)
         }
@@ -117,15 +138,15 @@ fun createPostgresFullTextSearchTriggers() = transaction {
 }
 
 private fun createTrigger(
-    tableName: String,
-    tsVectorLogic: String
+    tableName: String, tsVectorLogic: String
 ) = transaction {
     val functionName = "update_${tableName}_tsvector"
     val triggerName = "trigger_update_${tableName}_tsvector"
 
     if (checkIfTriggerExists(triggerName)) return@transaction
 
-    exec("""
+    exec(
+        """
         CREATE OR REPLACE FUNCTION $functionName() RETURNS TRIGGER AS ${'$'}${'$'}
         BEGIN
         NEW."tsVector" := $tsVectorLogic;
@@ -137,44 +158,53 @@ private fun createTrigger(
         BEFORE INSERT OR UPDATE ON "$tableName"
         FOR EACH ROW
         EXECUTE FUNCTION $functionName();
-    """.trimIndent())
+    """.trimIndent()
+    )
 }
 
 private fun createProductsPostgresFullTextSearchTriggers() = transaction {
-    createTrigger(Products.nameInDatabaseCase(), """
+    createTrigger(
+        Products.nameInDatabaseCase(), """
                     setweight(to_tsvector('english', COALESCE(NEW."name", '')), 'A') ||
                     setweight(to_tsvector('english', COALESCE(NEW."description", '')), 'B') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."createdAt"::text, ''), '[-]', ' ', 'g')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."updatedAt"::text, ''), '[-]', ' ', 'g')), 'C')
-    """.trimIndent() )
+    """.trimIndent()
+    )
 }
 
 private fun createSpacesPostgresFullTextSearchTriggers() = transaction {
-    createTrigger(Spaces.nameInDatabaseCase(), """
+    createTrigger(
+        Spaces.nameInDatabaseCase(), """
                     setweight(to_tsvector('english', COALESCE(NEW."name", '')), 'A') ||
                     setweight(to_tsvector('english', COALESCE(NEW."description", '')), 'B') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."createdAt"::text, ''), '[-]', ' ', 'g')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."updatedAt"::text, ''), '[-]', ' ', 'g')), 'C')
-    """.trimIndent())
+    """.trimIndent()
+    )
 }
 
 private fun createStoragesPostgresFullTextSearchTriggers() = transaction {
-    createTrigger(Storages.nameInDatabaseCase(), """
+    createTrigger(
+        Storages.nameInDatabaseCase(), """
                     setweight(to_tsvector('english', COALESCE(NEW."name", '')), 'A') ||
                     setweight(to_tsvector('english', COALESCE(NEW."description", '')), 'B') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."createdAt"::text, ''), '[-]', ' ', 'g')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."updatedAt"::text, ''), '[-]', ' ', 'g')), 'C')
-    """.trimIndent())
+    """.trimIndent()
+    )
 }
 
 private fun checkIfTriggerExists(triggerName: String): Boolean = transaction {
-     exec("""
+    exec(
+        """
         SELECT EXISTS (
             SELECT 1
             FROM information_schema.triggers 
             WHERE trigger_name = '$triggerName'
         );
-    """.trimIndent()) { rs ->
+    """.trimIndent()
+    ) { rs ->
         rs.next()
         rs.getBoolean(1)
     } == true
