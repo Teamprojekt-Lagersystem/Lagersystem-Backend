@@ -53,6 +53,8 @@ class PostgresSearchUseCase : SearchUseCase {
                 name = row[Products.name],
                 description = row[Products.description],
                 type = "product",
+                unit = row[Products.unit],
+                size = row[Products.size],
                 createdAt = row[Products.createdAt].toString(),
                 updatedAt = row[Products.updatedAt]?.toString(),
                 rank = rank,
@@ -66,6 +68,9 @@ class PostgresSearchUseCase : SearchUseCase {
                 id = row[Spaces.id].value.toString(),
                 name = row[Spaces.name],
                 description = row[Spaces.description],
+                totalSize = row[Spaces.totalSize],
+                unit = row[Spaces.unit],
+                currentSize = row[Spaces.currentSize],
                 type = "space",
                 createdAt = row[Spaces.createdAt].toString(),
                 updatedAt = row[Spaces.updatedAt]?.toString(),
@@ -147,10 +152,11 @@ class PostgresSearchUseCase : SearchUseCase {
         config, stringParam(query)
     )
 
-    // Filters out all non-alphanumeric characters and replaces 'T' in -ddTdd: format with a space
-    private fun normalizeQuery(query: String): String {
-        return query.replace(Regex("-(\\d{2})T(\\d{2}:)"), "-$1 $2").replace(Regex("[^a-zA-Z0-9 ]"), " ")
-    }
+    private fun normalizeQuery(query: String): String = query
+        .replace(Regex("-(\\d{2})T(\\d{2}:)"), "-$1 $2") // replaces 'T' in -ddTdd:
+        .replace(Regex("\\b(\\d+)\\.0\\b"), "$1") // removes .0 from numbers
+        .replace(Regex("[^a-zA-Z0-9 ]"), " ")  //Filters out all non-alphanumeric characters
+
 
     private class TSRank(
         vector: Expression<*>, query: Expression<*>, weights: List<Float>? = null, normalization: Int? = null
@@ -205,6 +211,8 @@ private fun createProductsPostgresFullTextSearchTriggers() = transaction {
         Products.nameInDatabaseCase(), """
                     setweight(to_tsvector('english', COALESCE(NEW."name", '')), 'A') ||
                     setweight(to_tsvector('english', COALESCE(NEW."description", '')), 'B') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."unit", '')), 'C') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."size"::text, '')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."createdAt"::text, ''), '[-]', ' ', 'g')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."updatedAt"::text, ''), '[-]', ' ', 'g')), 'C')
     """.trimIndent()
@@ -226,6 +234,9 @@ private fun createSpacesPostgresFullTextSearchTriggers() = transaction {
         Spaces.nameInDatabaseCase(), """
                     setweight(to_tsvector('english', COALESCE(NEW."name", '')), 'A') ||
                     setweight(to_tsvector('english', COALESCE(NEW."description", '')), 'B') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."unit", '')), 'C') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."totalSize"::text, '')), 'D') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."currentSize"::text, '')), 'D') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."createdAt"::text, ''), '[-]', ' ', 'g')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."updatedAt"::text, ''), '[-]', ' ', 'g')), 'C')
     """.trimIndent()

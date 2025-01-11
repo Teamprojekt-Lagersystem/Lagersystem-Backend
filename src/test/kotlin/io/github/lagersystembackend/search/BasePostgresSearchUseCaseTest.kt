@@ -10,6 +10,7 @@ import io.github.lagersystembackend.space.Spaces
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
+import io.github.lagersystembackend.stored_product.StoredProducts
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
@@ -29,14 +30,16 @@ open class BasePostgresSearchUseCaseTest {
     fun createProductEntity(
         name: String = "name",
         description: String = "description",
-        space: SpaceEntity = exampleSpaceEntity,
+        unit: String? = null,
+        size: Double? = null,
         createdAt: LocalDateTime = exampleLocalDateTime,
         updatedAt: LocalDateTime = exampleLocalDateTime
     ) = transaction {
         ProductEntity.new {
             this.name = name
             this.description = description
-            this.space = space
+            this.unit = unit
+            this.size = size
             this.createdAt = createdAt
             this.updatedAt = updatedAt
         }
@@ -45,16 +48,17 @@ open class BasePostgresSearchUseCaseTest {
     fun createProduct(
         name: String = "name",
         description: String = "description",
-        space: SpaceEntity = exampleSpaceEntity,
+        unit: String? = null,
+        size: Double? =  null,
         createdAt: LocalDateTime = exampleLocalDateTime,
         updatedAt: LocalDateTime = exampleLocalDateTime
-    ) = createProductEntity(name,  description, space, createdAt, updatedAt).toProduct()
+    ) = createProductEntity(name,  description, unit, size, createdAt, updatedAt).toProduct()
 
     @BeforeTest
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
             createPostgresFullTextSearchTriggers()
             exampleStorageEntity = StorageEntity.new(id = storageId) {
                 name = ""
@@ -72,7 +76,7 @@ open class BasePostgresSearchUseCaseTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
         }
     }
 }

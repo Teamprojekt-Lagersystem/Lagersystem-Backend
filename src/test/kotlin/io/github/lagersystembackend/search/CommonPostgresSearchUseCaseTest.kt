@@ -192,4 +192,16 @@ class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
             this.first().id shouldBe productEntity.id.toString()
         }
     }
+
+    @Test
+    fun `fullTextSearch should treat 1dot0 as 1 because postgres removes dot0`() = testApplication {
+        val product = createProduct(size = 1.0, unit = "cm^2")
+        sut.fullTextSearch(1.0.toString()).apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe product.id.toString()
+                size shouldBe product.size
+            }
+        }
+    }
 }

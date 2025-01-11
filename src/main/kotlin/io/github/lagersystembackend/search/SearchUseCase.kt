@@ -16,7 +16,11 @@ data class SearchResult(
     val description: String,
     val createdAt: String,
     val updatedAt: String?,
-    val attributes: Map<String, Attribute>? = null
+    val attributes: Map<String, Attribute>? = null,
+    val unit: String? = null,
+    val totalSize: Double? = null,
+    val currentSize: Double? = null,
+    val size: Double? = null
 )
 
 @Serializable
@@ -28,7 +32,11 @@ data class NetworkSearchResult(
     val description: String,
     val createdAt: String,
     val updatedAt: String?,
-    val attributes: Map<String, Attribute>? = null
+    val attributes: Map<String, Attribute>? = null,
+    val unit: String? = null,
+    val totalSize: Double? = null,
+    val currentSize: Double? = null,
+    val size: Double? = null
 )
 
 fun SearchResult.toNetworkSearchResult(): NetworkSearchResult = NetworkSearchResult(
@@ -39,5 +47,9 @@ fun SearchResult.toNetworkSearchResult(): NetworkSearchResult = NetworkSearchRes
     description = this.description,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt,
-    attributes = this.attributes
+    attributes = this.attributes,
+    unit = this.unit,
+    totalSize = this.totalSize,
+    currentSize = this.currentSize,
+    size = this.size
 )

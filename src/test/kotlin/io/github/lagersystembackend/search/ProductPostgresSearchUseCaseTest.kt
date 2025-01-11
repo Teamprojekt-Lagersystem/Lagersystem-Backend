@@ -59,6 +59,30 @@ class ProductPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
         }
     }
 
+    @Test
+    fun `fullTextSearch should search product unit`() = testApplication {
+        val product = createProduct(unit = "cm^2", size = 0.0)
+        sut.fullTextSearch("cm^2").apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe product.id.toString()
+                unit shouldBe product.unit
+            }
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should search product size`() = testApplication {
+        val product = createProduct(size = 1.0, unit = "cm^2")
+        sut.fullTextSearch(1.0.toString()).apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe product.id.toString()
+                size shouldBe product.size
+            }
+        }
+    }
+
 
     @Test
     fun `fullTextSearch should rank products name - description - dates`() = testApplication {

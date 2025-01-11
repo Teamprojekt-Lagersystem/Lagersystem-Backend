@@ -14,6 +14,9 @@ class SpacePostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
     fun createSpace(
         name: String = "name",
         description: String = "description",
+        unit: String? = null,
+        totalSize: Double? = null,
+        currentSize: Double? = null,
         storage: StorageEntity = exampleStorageEntity,
         createdAt: LocalDateTime = exampleLocalDateTime,
         updatedAt: LocalDateTime = exampleLocalDateTime
@@ -21,6 +24,9 @@ class SpacePostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
         SpaceEntity.new {
             this.name = name
             this.description = description
+            this.unit = unit
+            this.totalSize = totalSize
+            this.currentSize = currentSize
             this.storage = storage
             this.createdAt = createdAt
             this.updatedAt = updatedAt
@@ -47,6 +53,42 @@ class SpacePostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
             this.first().apply {
                 id shouldBe space.id.toString()
                 description shouldBe space.description
+            }
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should search unit`() = testApplication {
+        val space = createSpace(unit = "cm^2", totalSize = 100.0, currentSize = 50.0)
+        sut.fullTextSearch("cm^2").apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe space.id.toString()
+                unit shouldBe space.unit
+            }
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should search totalSize`() = testApplication {
+        val space = createSpace(unit = "cm^2", totalSize = 100.0, currentSize = 50.0)
+        sut.fullTextSearch(100.0.toString()).apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe space.id.toString()
+                totalSize shouldBe space.totalSize
+            }
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should search currentSize`() = testApplication {
+        val space = createSpace(unit = "cm^2", totalSize = 100.0, currentSize = 50.0)
+        sut.fullTextSearch(50.0.toString()).apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe space.id.toString()
+                currentSize shouldBe space.currentSize
             }
         }
     }
