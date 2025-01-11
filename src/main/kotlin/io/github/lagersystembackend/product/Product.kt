@@ -14,6 +14,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -63,7 +64,7 @@ data class CopyProductRequest(
     val targetSpaceId: String
 )
 
-object Products: UUIDTable() {
+object Products : UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
     val spaceId = reference("spaceId", Spaces)
@@ -83,15 +84,17 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by Products.updatedAt
 }
 
-fun ProductEntity.toProduct() = Product(
-    id.value.toString(),
-    name,
-    description,
-    attributes.associate { it.key to it.toAttribute() },
-    space.id.value.toString(),
-    createdAt,
-    updatedAt
-)
+fun ProductEntity.toProduct() = transaction {
+    Product(
+        this@toProduct.id.value.toString(),
+        name,
+        description,
+        attributes.associate { it.key to it.toAttribute() },
+        space.id.value.toString(),
+        createdAt,
+        updatedAt
+    )
+}
 
 fun Product.toNetworkProduct() = NetworkProduct(
     id,

@@ -54,7 +54,7 @@ class PostgresProductAttributeRepositoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(ProductAttributes, Products, Spaces)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
         }
     }
 

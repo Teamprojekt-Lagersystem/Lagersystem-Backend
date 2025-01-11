@@ -1,5 +1,8 @@
 package io.github.lagersystembackend.search
 
+import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.ProductAttributes
+import io.github.lagersystembackend.attribute.buildAttribute
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.Spaces
 import io.github.lagersystembackend.storage.Storages
@@ -16,6 +19,7 @@ import org.jetbrains.exposed.sql.arrayLiteral
 import org.jetbrains.exposed.sql.intParam
 import org.jetbrains.exposed.sql.stringParam
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.UUID
 import kotlin.collections.plus
 
 class PostgresSearchUseCase : SearchUseCase {
@@ -40,6 +44,7 @@ class PostgresSearchUseCase : SearchUseCase {
 
     private fun fullTextSearchWeighted(query: String, weights: List<Float>? = null): List<SearchResult> {
         val tsQuery = toTSQuery(query)
+
         val productResults = searchTable(
             Products, Products.tsVector, tsQuery, weights
         ).map { (row, rank) ->
@@ -50,7 +55,8 @@ class PostgresSearchUseCase : SearchUseCase {
                 type = "product",
                 createdAt = row[Products.createdAt].toString(),
                 updatedAt = row[Products.updatedAt]?.toString(),
-                rank = rank
+                rank = rank,
+                attributes = getProductAttributes(row[Products.id].value)
             )
         }
         val spaceResults = searchTable(
@@ -80,7 +86,31 @@ class PostgresSearchUseCase : SearchUseCase {
                 rank = rank
             )
         }
-        return productResults + spaceResults + storageResults
+
+        val productAttributeResults = searchTable(
+            ProductAttributes, ProductAttributes.tsVector, tsQuery, weights
+        ).map { (row, rank) ->
+            SearchResult(
+                id = row[ProductAttributes.productId].value.toString(),
+                name = "",
+                description = "",
+                type = "product_attribute",
+                createdAt = "",
+                updatedAt = "",
+                rank = rank,
+                attributes = mapOf(row[ProductAttributes.key] to buildAttribute(row[ProductAttributes.value], row[ProductAttributes.type]))
+            )
+        }
+
+        val productResultsWithAttributes = (productResults + productAttributeResults).groupBy { it.id }.map { (_, searchResults) ->
+            searchResults.reduce { acc, searchResult ->
+                acc.copy(rank = acc.rank + searchResult.rank, attributes = acc.attributes?.plus(searchResult.attributes ?: emptyMap()))
+            }
+        }
+
+
+
+        return productResultsWithAttributes + spaceResults + storageResults
     }
 
     private fun searchTable(
@@ -91,6 +121,13 @@ class PostgresSearchUseCase : SearchUseCase {
 
             table.select(table.columns + tsRank.alias("rank")).where { tsVector tsMatches tsQuery }
                 .map { row -> Pair(row, row[tsRank.alias("rank")]) }
+        }
+    }
+
+    private fun getProductAttributes(of: UUID): Map<String, Attribute> = transaction {
+            ProductAttributes.select(ProductAttributes.key, ProductAttributes.value, ProductAttributes.type). where { ProductAttributes.productId eq of }
+                .associate { row ->
+                    row[ProductAttributes.key] to buildAttribute(row[ProductAttributes.value], row[ProductAttributes.type])
         }
     }
 
@@ -133,6 +170,7 @@ class PostgresSearchUseCase : SearchUseCase {
 
 fun createPostgresFullTextSearchTriggers() = transaction {
     createProductsPostgresFullTextSearchTriggers()
+    createProductAttributesPostgresFullTextSearchTriggers()
     createSpacesPostgresFullTextSearchTriggers()
     createStoragesPostgresFullTextSearchTriggers()
 }
@@ -169,6 +207,16 @@ private fun createProductsPostgresFullTextSearchTriggers() = transaction {
                     setweight(to_tsvector('english', COALESCE(NEW."description", '')), 'B') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."createdAt"::text, ''), '[-]', ' ', 'g')), 'C') ||
                     setweight(to_tsvector('english', regexp_replace(COALESCE(NEW."updatedAt"::text, ''), '[-]', ' ', 'g')), 'C')
+    """.trimIndent()
+    )
+}
+
+private fun createProductAttributesPostgresFullTextSearchTriggers() = transaction {
+    createTrigger(
+        ProductAttributes.nameInDatabaseCase(), """
+                    setweight(to_tsvector('english', COALESCE(NEW."key", '')), 'B') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."value", '')), 'C') ||
+                    setweight(to_tsvector('english', COALESCE(NEW."type", '')), 'C')
     """.trimIndent()
     )
 }

@@ -26,7 +26,7 @@ open class BasePostgresSearchUseCaseTest {
     lateinit var exampleSpaceEntity: SpaceEntity
     lateinit var exampleStorageEntity: StorageEntity
 
-    fun createProduct(
+    fun createProductEntity(
         name: String = "name",
         description: String = "description",
         space: SpaceEntity = exampleSpaceEntity,
@@ -39,8 +39,16 @@ open class BasePostgresSearchUseCaseTest {
             this.space = space
             this.createdAt = createdAt
             this.updatedAt = updatedAt
-        }.toProduct()
+        }
     }
+
+    fun createProduct(
+        name: String = "name",
+        description: String = "description",
+        space: SpaceEntity = exampleSpaceEntity,
+        createdAt: LocalDateTime = exampleLocalDateTime,
+        updatedAt: LocalDateTime = exampleLocalDateTime
+    ) = createProductEntity(name,  description, space, createdAt, updatedAt).toProduct()
 
     @BeforeTest
     fun setUp() {

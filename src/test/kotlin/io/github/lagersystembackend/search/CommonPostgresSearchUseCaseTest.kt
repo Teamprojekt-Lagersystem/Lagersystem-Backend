@@ -1,8 +1,11 @@
 package io.github.lagersystembackend.search
 
+import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.testApplication
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.time.LocalDateTime
 
@@ -82,7 +85,7 @@ class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
     }
 
     @Test
-    fun `fullTextSearch should discarded dot but rank it lower `() = testApplication {
+    fun `fullTextSearch should discard dot but rank it lower `() = testApplication {
         val product1 = createProduct(name = "Product.name")
         val product2 = createProduct(name = "Product name")
         sut.fullTextSearch("Product.name").apply {
@@ -94,7 +97,7 @@ class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
     }
 
     @Test
-    fun `fullTextSearch should discarded - but rank it lower `() = testApplication {
+    fun `fullTextSearch should discard - but rank it lower `() = testApplication {
         val product1 = createProduct(name = "Product-name")
         val product2 = createProduct(name = "Product name")
         sut.fullTextSearch("Product-name").apply {
@@ -102,6 +105,91 @@ class CommonPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
             this.first().id shouldBe product1.id.toString()
             this.last().id shouldBe product2.id.toString()
             this.first().rank shouldBeGreaterThan this.last().rank
+        }
+    }
+    @Test
+    fun `fullTextSearch should be able to search attributes by key`() = testApplication {
+        val productEntity = createProductEntity(name = "Product-name")
+            transaction {
+            ProductAttributeEntity.new {
+                key = "someKey"
+                type = Attribute.NumberAttribute.TYPE
+                value = 213.2.toString()
+                product = productEntity
+            }
+        }
+        sut.fullTextSearch("someKey").apply {
+            this.size shouldBe 1
+            this.first().id shouldBe productEntity.id.toString()
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should be able to search attributes by type`() = testApplication {
+        val productEntity = createProductEntity(name = "Product-name")
+        transaction {
+            ProductAttributeEntity.new {
+                key = "someKey"
+                type = Attribute.NumberAttribute.TYPE
+                value = 213.2.toString()
+                product = productEntity
+            }
+        }
+        sut.fullTextSearch(Attribute.NumberAttribute.TYPE).apply {
+            this.size shouldBe 1
+            this.first().id shouldBe productEntity.id.toString()
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should be able to search attributes by number`() = testApplication {
+        val productEntity = createProductEntity(name = "Product-name")
+        transaction {
+            ProductAttributeEntity.new {
+                key = "someKey"
+                type = Attribute.NumberAttribute.TYPE
+                value = 213.2.toString()
+                product = productEntity
+            }
+        }
+        sut.fullTextSearch(213.2.toString()).apply {
+            this.size shouldBe 1
+            this.first().id shouldBe productEntity.id.toString()
+        }
+    }
+
+    @Test
+    fun `fullTextSearch should be able to search attributes by boolean`() = testApplication {
+        val productEntity = createProductEntity(name = "Product-name")
+        transaction {
+            ProductAttributeEntity.new {
+                key = "someKey"
+                type = Attribute.BooleanAttribute.TYPE
+                value = false.toString()
+                product = productEntity
+            }
+        }
+        sut.fullTextSearch(false.toString()).apply {
+            this.size shouldBe 1
+            this.first().id shouldBe productEntity.id.toString()
+        }
+    }
+
+
+    @Test
+    fun `fullTextSearch should be able to search attributes by String`() = testApplication {
+        val productEntity = createProductEntity(name = "Product-name")
+       transaction {
+            ProductAttributeEntity.new {
+                key = "someKey"
+                type = Attribute.StringAttribute.TYPE
+                value = "someString"
+                product = productEntity
+            }
+        }
+        sut.fullTextSearch("someString").apply {
+            this.size shouldBe 1
+            this.first().id shouldBe productEntity.id.toString()
         }
     }
 }

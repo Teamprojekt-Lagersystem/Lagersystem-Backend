@@ -1,8 +1,11 @@
 package io.github.lagersystembackend.search
 
+import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.testApplication
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.time.LocalDateTime
 
@@ -70,5 +73,25 @@ class ProductPostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
             this[0].rank shouldBeGreaterThan this[1].rank
             this[1].rank shouldBeGreaterThan this[2].rank
         }
+    }
+
+    @Test
+    fun `fullTextSearch should add rank of attribute to product`() = testApplication {
+        val product = createProductEntity(name = "test 123")
+        transaction {
+            ProductAttributeEntity.new {
+                key = "key 123"
+                type = Attribute.NumberAttribute.TYPE
+                value = "0"
+                this.product = product
+            }
+        }
+        val productOnly = sut.fullTextSearch("test").apply { this.size shouldBe 1 }.first()
+        val attributeOnly = sut.fullTextSearch("key").apply { this.size shouldBe 1 }.first()
+        val both = sut.fullTextSearch("123").apply { this.size shouldBe 1 }.first()
+        attributeOnly.rank shouldBeGreaterThan 0.0
+        productOnly.rank shouldBeGreaterThan attributeOnly.rank
+        both.rank  shouldBe productOnly.rank + attributeOnly.rank
+
     }
 }

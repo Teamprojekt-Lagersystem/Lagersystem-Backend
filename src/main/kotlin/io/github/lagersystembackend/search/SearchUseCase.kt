@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.search
 
+import io.github.lagersystembackend.attribute.Attribute
 import kotlinx.serialization.Serializable
 
 
@@ -14,7 +15,8 @@ data class SearchResult(
     val name: String,
     val description: String,
     val createdAt: String,
-    val updatedAt: String?
+    val updatedAt: String?,
+    val attributes: Map<String, Attribute>? = null
 )
 
 @Serializable
@@ -25,7 +27,8 @@ data class NetworkSearchResult(
     val name: String,
     val description: String,
     val createdAt: String,
-    val updatedAt: String?
+    val updatedAt: String?,
+    val attributes: Map<String, Attribute>? = null
 )
 
 fun SearchResult.toNetworkSearchResult(): NetworkSearchResult = NetworkSearchResult(
@@ -35,5 +38,6 @@ fun SearchResult.toNetworkSearchResult(): NetworkSearchResult = NetworkSearchRes
     name = this.name,
     description = this.description,
     createdAt = this.createdAt,
-    updatedAt = this.updatedAt
+    updatedAt = this.updatedAt,
+    attributes = this.attributes
 )
