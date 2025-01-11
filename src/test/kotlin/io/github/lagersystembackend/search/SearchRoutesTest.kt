@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.search
 
+import io.github.lagersystembackend.breadcrumb.Breadcrumb
 import io.github.lagersystembackend.common.ApiResponse
 import io.github.lagersystembackend.common.ErrorMessages
 import io.github.lagersystembackend.plugins.configureHTTP
@@ -34,6 +35,7 @@ class SearchRoutesTest {
         val searchResults = listOf(
             SearchResult(
                 type = "product",
+                breadcrumb = null,
                 rank = 0.5,
                 id = UUID.randomUUID().toString(),
                 name = "Product 1",
@@ -43,6 +45,7 @@ class SearchRoutesTest {
             ),
             SearchResult(
                 type = "product",
+                breadcrumb = Breadcrumb(listOf(Breadcrumb.BreadcrumbEntry(id = "id", name = "Product 2", type = "product"))),
                 rank = 0.5213,
                 id = UUID.randomUUID().toString(),
                 name = "Product 2",

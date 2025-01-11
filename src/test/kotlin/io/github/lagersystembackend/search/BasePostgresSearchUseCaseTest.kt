@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.search
 
 import io.github.lagersystembackend.attribute.ProductAttributes
+import io.github.lagersystembackend.breadcrumb.BreadcrumbUseCase
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
@@ -11,6 +12,7 @@ import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
 import io.github.lagersystembackend.stored_product.StoredProducts
+import io.mockk.mockk
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
@@ -20,7 +22,8 @@ import kotlin.test.BeforeTest
 
 
 open class BasePostgresSearchUseCaseTest {
-    val sut = PostgresSearchUseCase()
+    val breadcrumbUseCaseMock = mockk<BreadcrumbUseCase>()
+    val sut = PostgresSearchUseCase(breadcrumbUseCaseMock)
     val spaceId = UUID.randomUUID()
     val storageId = UUID.randomUUID()
     val exampleLocalDateTime = LocalDateTime.parse("2025-01-01T00:00:00")

@@ -1,14 +1,15 @@
 package io.github.lagersystembackend.search
 
 import io.github.lagersystembackend.attribute.Attribute
+import io.github.lagersystembackend.breadcrumb.Breadcrumb
 import kotlinx.serialization.Serializable
-
 
 interface SearchUseCase {
     fun fullTextSearch(query: String): List<SearchResult>
 }
 
 data class SearchResult(
+    val breadcrumb: Breadcrumb?,
     val type: String,
     val rank: Double,
     val id: String,
@@ -25,6 +26,7 @@ data class SearchResult(
 
 @Serializable
 data class NetworkSearchResult(
+    val breadcrumb: Breadcrumb?,
     val type: String,
     val rank: Double,
     val id: String,
@@ -40,6 +42,7 @@ data class NetworkSearchResult(
 )
 
 fun SearchResult.toNetworkSearchResult(): NetworkSearchResult = NetworkSearchResult(
+    breadcrumb = breadcrumb,
     type = this.type,
     rank = this.rank,
     id = this.id,

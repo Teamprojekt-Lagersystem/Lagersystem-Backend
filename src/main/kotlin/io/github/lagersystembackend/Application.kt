@@ -38,6 +38,6 @@ private object DependencyProvider {
     val spaceRepository: SpaceRepository = PostgresSpaceRepository()
     val storageRepository: StorageRepository = PostgresStorageRepository()
     val storedProductRepository: StoredProductRepository = PostgresStoredProductRepository()
-    val searchUseCase: SearchUseCase = PostgresSearchUseCase()
     val breadcrumbsUseCase: BreadcrumbUseCase = DefaultBreadcrumbUseCase(storageRepository, spaceRepository)
+    val searchUseCase: SearchUseCase = PostgresSearchUseCase(breadcrumbsUseCase)
 }

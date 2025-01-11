@@ -3,6 +3,7 @@ package io.github.lagersystembackend.search
 import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.attribute.buildAttribute
+import io.github.lagersystembackend.breadcrumb.BreadcrumbUseCase
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.space.Spaces
 import io.github.lagersystembackend.storage.Storages
@@ -22,7 +23,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 import kotlin.collections.plus
 
-class PostgresSearchUseCase : SearchUseCase {
+class PostgresSearchUseCase(private val breadcrumbUseCase: BreadcrumbUseCase) : SearchUseCase {
 
     override fun fullTextSearch(query: String): List<SearchResult> {
         if (query.isBlank()) return emptyList()
@@ -30,9 +31,7 @@ class PostgresSearchUseCase : SearchUseCase {
         val weights = listOf(0.1f, 0.2f, 0.4f, 1.0f) //default Postgres Weights for A, B, C and D
 
         val searchResults = fullTextSearchWeighted(query.trim(), weights).let {
-            if (query != normalizedQuery) it + fullTextSearchWeighted(
-                normalizedQuery,
-                weights.map { it * 0.2f }) else it
+            if (query != normalizedQuery) it + fullTextSearchWeighted(normalizedQuery, weights.map { it * 0.2f }) else it
         }
 
         return searchResults.groupBy { it.id }.map { (_, searchResults) ->
@@ -58,7 +57,8 @@ class PostgresSearchUseCase : SearchUseCase {
                 createdAt = row[Products.createdAt].toString(),
                 updatedAt = row[Products.updatedAt]?.toString(),
                 rank = rank,
-                attributes = getProductAttributes(row[Products.id].value)
+                attributes = getProductAttributes(row[Products.id].value),
+                breadcrumb = null
             )
         }
         val spaceResults = searchTable(
@@ -74,7 +74,8 @@ class PostgresSearchUseCase : SearchUseCase {
                 type = "space",
                 createdAt = row[Spaces.createdAt].toString(),
                 updatedAt = row[Spaces.updatedAt]?.toString(),
-                rank = rank
+                rank = rank,
+                breadcrumb = breadcrumbUseCase.getBreadcrumb(row[Spaces.id].value.toString())!!
             )
         }
 
@@ -88,7 +89,8 @@ class PostgresSearchUseCase : SearchUseCase {
                 type = "storages",
                 createdAt = row[Storages.createdAt].toString(),
                 updatedAt = row[Storages.updatedAt]?.toString(),
-                rank = rank
+                rank = rank,
+                breadcrumb = breadcrumbUseCase.getBreadcrumb(row[Storages.id].value.toString())!!
             )
         }
 
@@ -103,7 +105,8 @@ class PostgresSearchUseCase : SearchUseCase {
                 createdAt = "",
                 updatedAt = "",
                 rank = rank,
-                attributes = mapOf(row[ProductAttributes.key] to buildAttribute(row[ProductAttributes.value], row[ProductAttributes.type]))
+                attributes = mapOf(row[ProductAttributes.key] to buildAttribute(row[ProductAttributes.value], row[ProductAttributes.type])),
+                breadcrumb = null
             )
         }
 
@@ -112,8 +115,6 @@ class PostgresSearchUseCase : SearchUseCase {
                 acc.copy(rank = acc.rank + searchResult.rank, attributes = acc.attributes?.plus(searchResult.attributes ?: emptyMap()))
             }
         }
-
-
 
         return productResultsWithAttributes + spaceResults + storageResults
     }
@@ -130,10 +131,10 @@ class PostgresSearchUseCase : SearchUseCase {
     }
 
     private fun getProductAttributes(of: UUID): Map<String, Attribute> = transaction {
-            ProductAttributes.select(ProductAttributes.key, ProductAttributes.value, ProductAttributes.type). where { ProductAttributes.productId eq of }
-                .associate { row ->
-                    row[ProductAttributes.key] to buildAttribute(row[ProductAttributes.value], row[ProductAttributes.type])
-        }
+        ProductAttributes.select(ProductAttributes.key, ProductAttributes.value, ProductAttributes.type)
+            .where { ProductAttributes.productId eq of }.associate { row ->
+                row[ProductAttributes.key] to buildAttribute(row[ProductAttributes.value], row[ProductAttributes.type])
+            }
     }
 
     private class TSMatchOp(

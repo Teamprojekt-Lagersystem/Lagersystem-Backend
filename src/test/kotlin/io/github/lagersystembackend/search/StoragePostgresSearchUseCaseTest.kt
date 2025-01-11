@@ -1,9 +1,11 @@
 package io.github.lagersystembackend.search
 
+import io.github.lagersystembackend.breadcrumb.Breadcrumb
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.toStorage
 import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.testApplication
+import io.mockk.every
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.time.LocalDateTime
@@ -68,6 +70,21 @@ class StoragePostgresSearchUseCaseTest : BasePostgresSearchUseCaseTest() {
             this.first().apply {
                 id shouldBe storage.id.toString()
                 updatedAt shouldBe storage.updatedAt.toString()
+            }
+        }
+    }
+
+    @Test
+    fun `search storage should also get breadcrumb`() = testApplication {
+        val storage = createStorage(name = "someName")
+        val fakeBreadcrumb = Breadcrumb(listOf(Breadcrumb.BreadcrumbEntry(storage.id, storage.name, "storage")))
+        every { breadcrumbUseCaseMock.getBreadcrumb(storage.id) } returns fakeBreadcrumb
+        sut.fullTextSearch(storage.name).apply {
+            this.size shouldBe 1
+            this.first().apply {
+                id shouldBe storage.id.toString()
+                name shouldBe storage.name
+                breadcrumb shouldBe fakeBreadcrumb
             }
         }
     }
