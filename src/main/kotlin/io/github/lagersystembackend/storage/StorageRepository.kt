@@ -10,4 +10,5 @@ interface StorageRepository {
     fun moveStorage(id: String, newParentId: String?): Storage
     fun isCircularReference(storageId: String, targetParentId: String): Boolean
     fun copyStorage(id: String, newParentId: String?): Storage
+    fun isProductStored(storageId: String): Boolean
 }

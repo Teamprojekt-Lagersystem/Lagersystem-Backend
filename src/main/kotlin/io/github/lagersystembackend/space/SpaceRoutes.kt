@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.space
 
 import io.github.lagersystembackend.common.*
+import io.github.lagersystembackend.product.toNetworkProduct
 import io.github.lagersystembackend.storage.StorageRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -33,13 +34,16 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
 
                 call.respond(space.toNetworkSpace())
             }
-
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
 
                 if (!id.isUUID()) {
                     errors.add(ErrorMessages.INVALID_UUID_SPACE)
+                }
+
+                if (spaceRepository.isProductStored(id)) {
+                    errors.add(ErrorMessages.SPACE_IN_USE)
                 }
 
                 if (errors.isNotEmpty()) {
@@ -76,8 +80,24 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                         return@patch call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
                     }
 
+                    val currentSize = spaceRepository.getSpace(id)?.currentSize
+                    val totalSize = updateSpaceNetworkRequest.totalSize
+
+                    if (currentSize != null && totalSize != null) {
+                        if (totalSize <= currentSize) {
+                            errors.add(ErrorMessages.SIZE_TOO_SMALL)
+                        }
+                        if (totalSize <= 0) {
+                            errors.add(ErrorMessages.NEGATIVE_SIZE)
+                        }
+                    }
+
+                    if (errors.isNotEmpty()) {
+                        return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
+                    }
+
                     val updatedSpace = updateSpaceNetworkRequest.let {
-                        spaceRepository.updateSpace(id, it.name, it.size, it.description)
+                        spaceRepository.updateSpace(id, it.name, it.description, it.totalSize)
                     }
 
                     updatedSpace?.let {
@@ -180,6 +200,15 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
                 if (addSpaceNetworkRequest.storageId.isUUID() && !storageRepository.storageExists(addSpaceNetworkRequest.storageId)) {
                     errors.add(ErrorMessages.STORAGE_NOT_FOUND)
                 }
+
+                if (addSpaceNetworkRequest.unit != null && addSpaceNetworkRequest.totalSize == null ||
+                    addSpaceNetworkRequest.unit == null && addSpaceNetworkRequest.totalSize != null) {
+                    errors.add(ErrorMessages.WRONG_SPECIFICATION)
+                }
+
+                if (addSpaceNetworkRequest.totalSize != null && addSpaceNetworkRequest.totalSize <= 0) {
+                    errors.add(ErrorMessages.NEGATIVE_SIZE)
+                }
             }
 
             if (errors.isNotEmpty()) {
@@ -187,7 +216,7 @@ fun Route.spaceRoutes(spaceRepository: SpaceRepository, storageRepository: Stora
             }
 
             val createdSpace = addSpaceNetworkRequest?.let {
-                spaceRepository.createSpace(it.name, it.size, it.description, it.storageId)
+                spaceRepository.createSpace(it.name, it.description, it.totalSize, it.unit, it.storageId)
             }
 
             createdSpace?.let {

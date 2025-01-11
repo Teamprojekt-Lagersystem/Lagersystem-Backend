@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.stored_product.StoredProductEntity
+import io.github.lagersystembackend.stored_product.StoredProducts
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -84,11 +86,12 @@ class PostgresStorageRepository: StorageRepository {
 
         storage.parent = newParent
         storage.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
         storage.toStorage()
     }
 
     override fun isCircularReference(storageId: String, targetParentId: String): Boolean = transaction {
-        val storage = StorageEntity.findById(UUID.fromString(storageId)) ?: return@transaction false
+        StorageEntity.findById(UUID.fromString(storageId)) ?: return@transaction false
         val targetParent = StorageEntity.findById(UUID.fromString(targetParentId)) ?: return@transaction false
         generateSequence(targetParent) { it.parent }.any { it.id.value.toString() == storageId }
     }
@@ -118,24 +121,21 @@ class PostgresStorageRepository: StorageRepository {
             originalStorage.spaces.forEach { space ->
                 val newSpaceEntity = SpaceEntity.new {
                     name = space.name 
-                    size = space.size
+                    totalSize = space.totalSize
+                    currentSize = space.currentSize
+                    unit = space.unit
                     description = space.description
                     storage = newStorageEntity
                 }
-                space.products.forEach { product ->
-                    val newProductEntity = ProductEntity.new {
-                        name = product.name 
-                        description = product.description
+
+                space.storedProducts.forEach { product ->
+                    StoredProductEntity.new {
+                        this.product = getProduct(product.id)
                         this.space = newSpaceEntity
+                        this.quantity = product.quantity
+                        this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
                     }
-                    product.attributes.forEach { attribute ->
-                        ProductAttributeEntity.new {
-                            this.key = attribute.key
-                            this.value = attribute.value
-                            this.product = newProductEntity
-                        }
-                    }
-                    }
+                }
             }
 
             originalStorage.subStorages.forEach { subStorage ->
@@ -145,4 +145,35 @@ class PostgresStorageRepository: StorageRepository {
             newStorageEntity.toStorage()
         }
     }
+
+    private fun getProduct(id: String): ProductEntity = transaction {
+        val storedProduct = StoredProductEntity.findById(UUID.fromString(id))
+            ?: throw IllegalArgumentException("Stored product with ID $id not found")
+        storedProduct.product
+    }
+
+    private fun isProductinSpace(spaceId: String): Boolean = transaction {
+        StoredProductEntity.find { StoredProducts.spaceId eq UUID.fromString(spaceId) }.count() > 0
+    }
+
+    override fun isProductStored(storageId: String): Boolean = transaction {
+        val storageEntity = StorageEntity.findById(UUID.fromString(storageId))
+
+        storageEntity?.subStorages?.forEach { subStorage ->
+            subStorage.spaces.forEach { space ->
+                if (isProductinSpace(space.id.value.toString())) {
+                    return@transaction true
+                }
+            }
+        }
+
+        storageEntity?.spaces?.forEach { space ->
+            if (isProductinSpace(space.id.value.toString())) {
+                return@transaction true
+            }
+        }
+        return@transaction false
+    }
+
+
 }

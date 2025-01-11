@@ -8,6 +8,8 @@ import io.github.lagersystembackend.space.SpaceRepository
 import io.github.lagersystembackend.space.spaceRoutes
 import io.github.lagersystembackend.storage.StorageRepository
 import io.github.lagersystembackend.storage.storageRoutes
+import io.github.lagersystembackend.stored_product.StoredProductRepository
+import io.github.lagersystembackend.stored_product.storedProductRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.plugins.BadRequestException
@@ -16,7 +18,7 @@ import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(productRepository: ProductRepository, spaceRepository: SpaceRepository, storageRepository: StorageRepository, searchUseCase: SearchUseCase) {
+fun Application.configureRouting(productRepository: ProductRepository, spaceRepository: SpaceRepository, storageRepository: StorageRepository, storedProductRepository: StoredProductRepository, searchUseCase: SearchUseCase) {
     install(StatusPages) {
         exception<BadRequestException> { call, cause ->
             call.respondText(text = "400: ${cause.message}", status = HttpStatusCode.BadRequest)
@@ -33,6 +35,7 @@ fun Application.configureRouting(productRepository: ProductRepository, spaceRepo
             productRoutes(productRepository, spaceRepository)
             spaceRoutes(spaceRepository, storageRepository)
             storageRoutes(storageRepository)
+            storedProductRoutes(storedProductRepository, spaceRepository)
             searchRoutes(searchUseCase)
         }
     }
