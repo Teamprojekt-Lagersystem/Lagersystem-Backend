@@ -17,6 +17,50 @@ paths:
               examples:
                 Example#1:
                   value: "/swagger"
+  /v1/breadcrumb/{id}:
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors:
+                    - type: "INVALID_UUID"
+                      message: "The provided ID is not a valid UUID."
+                      context: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors:
+                    - type: "OBJECT_NOT_FOUND"
+                      message: "The specified storage or space was not found."
+                      context: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Breadcrumb"
   /v1/products:
     get:
       description: ""
@@ -1083,6 +1127,49 @@ paths:
                 $ref: "#/components/schemas/NetworkStoredProduct"
 components:
   schemas:
+    ApiError:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+        message:
+          type: "string"
+        context:
+          type: "string"
+      required:
+      - "type"
+      - "message"
+    Error:
+      type: "object"
+      properties:
+        errors:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ApiError"
+      required:
+      - "errors"
+    BreadcrumbEntry:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        type:
+          type: "string"
+      required:
+      - "id"
+      - "name"
+      - "type"
+    Breadcrumb:
+      type: "object"
+      properties:
+        entries:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/BreadcrumbEntry"
+      required:
+      - "entries"
     NetworkProduct:
       type: "object"
       properties:
@@ -1124,27 +1211,6 @@ components:
       required:
       - "name"
       - "description"
-    ApiError:
-      type: "object"
-      properties:
-        type:
-          type: "string"
-        message:
-          type: "string"
-        context:
-          type: "string"
-      required:
-      - "type"
-      - "message"
-    Error:
-      type: "object"
-      properties:
-        errors:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/ApiError"
-      required:
-      - "errors"
     UpdateProductNetworkRequest:
       type: "object"
       properties:

@@ -15,6 +15,7 @@ fun ApiError.withContext(context: String?): ApiError {
 }
 
 object ErrorMessages {
+    val INVALID_UUID = ApiError("INVALID_UUID" , "The provided ID is not a valid UUID.")
     val INVALID_UUID_STORAGE = ApiError("INVALID_UUID" , "The provided storage ID is not a valid UUID.")
     val INVALID_UUID_SPACE = ApiError("INVALID_UUID" , "The provided space ID is not a valid UUID.")
     val INVALID_UUID_PRODUCT = ApiError("INVALID_UUID" , "The provided product ID is not a valid UUID.")
@@ -23,6 +24,7 @@ object ErrorMessages {
     val STORAGE_NOT_FOUND = ApiError("STORAGE_NOT_FOUND" , "The specified storage was not found.")
     val STORED_PRODUCT_NOT_FOUND = ApiError("STORED_PRODUCT_NOT_FOUND" , "The specified stored product was not found.")
     val PRODUCT_NOT_FOUND = ApiError("PRODUCT_NOT_FOUND" , "The specified product was not found.")
+    val OBJECT_NOT_FOUND = ApiError("OBJECT_NOT_FOUND" , "The specified storage or space was not found.")
     val BODY_NOT_SERIALIZED_STORAGE = ApiError("BODY_NOT_SERIALIZED" , "The request of specified storage is not in the expected format.")
     val BODY_NOT_SERIALIZED_SPACE = ApiError("BODY_NOT_SERIALIZED" , "The request of specified space is not in the expected format.")
     val BODY_NOT_SERIALIZED_PRODUCT = ApiError("BODY_NOT_SERIALIZED" , "The request of specified product is not in the expected format.")

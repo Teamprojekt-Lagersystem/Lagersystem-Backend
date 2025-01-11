@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.test.Test
 
-class SearchRoutesKtTest {
+class SearchRoutesTest {
     val searchUseCase = mockk<SearchUseCase>()
     fun ApplicationTestBuilder.createEnvironment() {
         application {

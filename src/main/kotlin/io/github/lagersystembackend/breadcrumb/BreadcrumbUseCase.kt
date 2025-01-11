@@ -12,7 +12,8 @@ data class Breadcrumb(
     )
 }
 
-interface BreadcrumbsUseCase {
-    fun getBreadcrumb(of: String): Breadcrumb
+interface BreadcrumbUseCase {
+    fun getBreadcrumb(of: String): Breadcrumb?
+    fun objectWithIdExists(id: String): Boolean
 }
 

@@ -1,5 +1,7 @@
 package io.github.lagersystembackend.plugins
 
+import io.github.lagersystembackend.breadcrumb.BreadcrumbUseCase
+import io.github.lagersystembackend.breadcrumb.breadcrumbRoutes
 import io.github.lagersystembackend.product.ProductRepository
 import io.github.lagersystembackend.product.productRoutes
 import io.github.lagersystembackend.search.SearchUseCase
@@ -18,13 +20,20 @@ import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(productRepository: ProductRepository, spaceRepository: SpaceRepository, storageRepository: StorageRepository, storedProductRepository: StoredProductRepository, searchUseCase: SearchUseCase) {
+fun Application.configureRouting(
+    productRepository: ProductRepository,
+    spaceRepository: SpaceRepository,
+    storageRepository: StorageRepository,
+    storedProductRepository: StoredProductRepository,
+    searchUseCase: SearchUseCase,
+    breadcrumbsUseCase: BreadcrumbUseCase
+) {
     install(StatusPages) {
         exception<BadRequestException> { call, cause ->
             call.respondText(text = "400: ${cause.message}", status = HttpStatusCode.BadRequest)
         }
         exception<Throwable> { call, cause ->
-            call.respondText(text = "500: $cause" , status = HttpStatusCode.InternalServerError)
+            call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
     }
 
@@ -37,6 +46,7 @@ fun Application.configureRouting(productRepository: ProductRepository, spaceRepo
             storageRoutes(storageRepository)
             storedProductRoutes(storedProductRepository, spaceRepository)
             searchRoutes(searchUseCase)
+            breadcrumbRoutes(breadcrumbsUseCase)
         }
     }
 

@@ -6,7 +6,6 @@ import io.github.lagersystembackend.space.SpaceRepository
 import io.github.lagersystembackend.storage.Storage
 import io.github.lagersystembackend.storage.StorageRepository
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
@@ -35,7 +34,7 @@ class DefaultBreadcrumbUseCaseTest {
     }
 
     fun createFakeStorage(
-        id: String =  UUID.randomUUID().toString(),
+        id: String = UUID.randomUUID().toString(),
         name: String = "storage name",
         description: String = "storage description",
         spaces: List<Space> = emptyList(),
@@ -47,7 +46,7 @@ class DefaultBreadcrumbUseCaseTest {
     ) = Storage(id, name, description, spaces, parentId, subStorages, createdAt, updatedAt)
 
     fun createFakeSpace(
-        id: String =  UUID.randomUUID().toString(),
+        id: String = UUID.randomUUID().toString(),
         name: String = "space name",
         totalSize: Double? = null,
         currentSize: Double? = null,
@@ -69,13 +68,15 @@ class DefaultBreadcrumbUseCaseTest {
         createdAt = createdAt,
         updatedAt = updatedAt
     )
+
     @Test
     fun `getBreadcrumb should find depots`() = testApplication {
         val depot = createFakeStorage(parentId = null)
+        every { storageRepositoryMock.storageExists(depot.id) } returns true
         every { storageRepositoryMock.getStorage(depot.id) } returns depot
 
-        sut.getBreadcrumb(depot.id).entries.apply {
-            this.size shouldBe  1
+        sut.getBreadcrumb(depot.id)!!.entries.apply {
+            this.size shouldBe 1
             this.first() shouldBe Breadcrumb.BreadcrumbEntry(depot.id, depot.name, "storage")
         }
     }
@@ -84,11 +85,12 @@ class DefaultBreadcrumbUseCaseTest {
     fun `getBreadcrumb should find storages`() = testApplication {
         val depot = createFakeStorage(name = "depot", parentId = null)
         val storage = createFakeStorage(name = "storage", parentId = depot.id)
+        every { storageRepositoryMock.storageExists(or(depot.id, storage.id)) } returns true
         every { storageRepositoryMock.getStorage(depot.id) } returns depot
         every { storageRepositoryMock.getStorage(storage.id) } returns storage
 
-        sut.getBreadcrumb(storage.id).entries.apply {
-            this.size shouldBe  2
+        sut.getBreadcrumb(storage.id)!!.entries.apply {
+            this.size shouldBe 2
             this.first() shouldBe Breadcrumb.BreadcrumbEntry(depot.id, depot.name, "storage")
             this.last() shouldBe Breadcrumb.BreadcrumbEntry(storage.id, storage.name, "storage")
         }
@@ -98,14 +100,17 @@ class DefaultBreadcrumbUseCaseTest {
     fun `getBreadcrumb should find spaces`() = testApplication {
         val depot = createFakeStorage(name = "depot", parentId = null)
         val storage = createFakeStorage(name = "storage", parentId = depot.id)
-        val space =  createFakeSpace(storageId = storage.id)
+        val space = createFakeSpace(storageId = storage.id)
+        every { storageRepositoryMock.storageExists(any()) } returns false
+        every { storageRepositoryMock.storageExists(or(depot.id, storage.id)) } returns true
+        every { spaceRepositoryMock.spaceExists(space.id) } returns true
         every { storageRepositoryMock.getStorage(any()) } returns null
         every { storageRepositoryMock.getStorage(depot.id) } returns depot
         every { storageRepositoryMock.getStorage(storage.id) } returns storage
         every { spaceRepositoryMock.getSpace(space.id) } returns space
 
-        sut.getBreadcrumb(space.id).entries.apply {
-            this.size shouldBe  3
+        sut.getBreadcrumb(space.id)!!.entries.apply {
+            this.size shouldBe 3
             this[0] shouldBe Breadcrumb.BreadcrumbEntry(depot.id, depot.name, "storage")
             this[1] shouldBe Breadcrumb.BreadcrumbEntry(storage.id, storage.name, "storage")
             this[2] shouldBe Breadcrumb.BreadcrumbEntry(space.id, space.name, "space")
@@ -113,15 +118,35 @@ class DefaultBreadcrumbUseCaseTest {
     }
 
     @Test
-    fun `getBreadcrumb should throw IllegalArgumentException when Id not found`() = testApplication {
-        every { storageRepositoryMock.getStorage(any()) } returns null
-        every { spaceRepositoryMock.getSpace(any()) } returns null
+    fun `getBreadcrumb should return null when Id not found`() = testApplication {
+        every { storageRepositoryMock.storageExists(any()) } returns false
+        every { spaceRepositoryMock.spaceExists(any()) } returns false
 
-        runCatching { sut.getBreadcrumb(UUID.randomUUID().toString()) }.exceptionOrNull().run {
-            this shouldNotBe null
-            this!!::class shouldBe IllegalArgumentException::class
-            this.message shouldBe "ID not found"
-        }
+        sut.getBreadcrumb(UUID.randomUUID().toString()) shouldBe null
+    }
+
+    @Test
+    fun `objectWithIdExists should return true when Storage exists`() = testApplication {
+        every { spaceRepositoryMock.spaceExists(any()) } returns true
+        every { storageRepositoryMock.storageExists(any()) } returns false
+
+        sut.objectWithIdExists(UUID.randomUUID().toString()) shouldBe true
+    }
+
+    @Test
+    fun `objectWithIdExists should return true when Space exists`() = testApplication {
+        every { spaceRepositoryMock.spaceExists(any()) } returns true
+        every { storageRepositoryMock.storageExists(any()) } returns false
+
+
+        sut.objectWithIdExists(UUID.randomUUID().toString()) shouldBe true
+    }
+
+    @Test
+    fun `objectWithIdExists should return false when no Storage or Space with that id exists`() = testApplication {
+        every { spaceRepositoryMock.spaceExists(any()) } returns false
+        every { storageRepositoryMock.storageExists(any()) } returns false
+        sut.objectWithIdExists(UUID.randomUUID().toString()) shouldBe false
     }
 }
 
