@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.search
 
 import io.github.lagersystembackend.attribute.ProductAttributes
+import io.github.lagersystembackend.breadcrumb.Breadcrumb
 import io.github.lagersystembackend.breadcrumb.BreadcrumbUseCase
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.product.ProductEntity
@@ -12,6 +13,7 @@ import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
 import io.github.lagersystembackend.stored_product.StoredProducts
+import io.mockk.every
 import io.mockk.mockk
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -74,6 +76,7 @@ open class BasePostgresSearchUseCaseTest {
                 storage = exampleStorageEntity
             }
         }
+        every { breadcrumbUseCaseMock.getBreadcrumb(any()) } returns Breadcrumb(emptyList())
     }
 
     @AfterTest
