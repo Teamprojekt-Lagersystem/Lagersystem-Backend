@@ -5,6 +5,7 @@ import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.github.lagersystembackend.storage.StorageRepository
 import io.github.lagersystembackend.product.Product
+import io.github.lagersystembackend.stored_product.StoredProduct
 import io.github.lagersystembackend.storage.Storage
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
@@ -44,8 +45,8 @@ class SpaceRoutesKtTest {
     fun `get Spaces should respond with List of NetworkSpaces`() = testApplication {
         createEnvironment()
         val spaces = listOf(
-            Space(UUID.randomUUID().toString(), "Space 1",  null, null, null, "Description 1", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
-            Space(UUID.randomUUID().toString(), "Space 2", null, null, null, "Description 2", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+            Space(UUID.randomUUID().toString(), "Space 1",  null, null, null, "Description 1", storageId = "any id", storedProducts = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            Space(UUID.randomUUID().toString(), "Space 2", null, null, null, "Description 2", storageId = "any id", storedProducts = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         )
         every { mockSpaceRepository.getSpaces() } returns spaces
         client.get("/spaces").apply {
@@ -68,7 +69,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `get Space by ID should respond with NetworkSpace`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", null, null, null, "Description 1", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", null, null, null, "Description 1", storageId = "any id", storedProducts = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockSpaceRepository.getSpace(space1.id) } returns space1
         client.get("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -105,7 +106,7 @@ class SpaceRoutesKtTest {
     @Test
     fun `delete Space should delete Space`() = testApplication {
         createEnvironment()
-        val space1 = Space(UUID.randomUUID().toString(), "Space 1", null, null, null, "Description 1", storageId = "any id", products = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val space1 = Space(UUID.randomUUID().toString(), "Space 1", null, null, null, "Description 1", storageId = "any id", storedProducts = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockSpaceRepository.deleteSpace(space1.id) } returns space1
         client.delete("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -154,7 +155,7 @@ class SpaceRoutesKtTest {
         val storageId = UUID.randomUUID().toString()
         val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, null, "Description 1", storageId = storageId)
         addSpaceNetworkRequest.run {
-            val space = Space(id, name, null, null, null, description, products = listOf(), storageId, LocalDateTime.now(), LocalDateTime.now())
+            val space = Space(id, name, null, null, null, description, storedProducts = listOf(), storageId, LocalDateTime.now(), LocalDateTime.now())
             every { mockSpaceRepository.createSpace(name, description, null, null, storageId) } returns space
             every { mockStorageRepository.storageExists(storageId) } returns true
             client.post("/spaces") {
@@ -180,7 +181,7 @@ class SpaceRoutesKtTest {
         val storageId = UUID.randomUUID().toString()
         val addSpaceNetworkRequest = AddSpaceNetworkRequest("Space 1", null, null, "Description 1", storageId = storageId)
         addSpaceNetworkRequest.run {
-            val space = Space(id, name, null, null, null, description, products = listOf(), storageId, LocalDateTime.now(), LocalDateTime.now())
+            val space = Space(id, name, null, null, null, description, storedProducts = listOf(), storageId, LocalDateTime.now(), LocalDateTime.now())
             every { mockSpaceRepository.createSpace(name, description, null, null, storageId) } returns space
             every { mockStorageRepository.storageExists(storageId) } returns true
             client.post("/spaces") {
@@ -228,7 +229,7 @@ class SpaceRoutesKtTest {
         val updateSpaceNetworkRequest = UpdateSpaceNetworkRequest("Space 1", null, "Description 1")
         val createTime = LocalDateTime.now()
         updateSpaceNetworkRequest.run {
-            val space = Space(id, name!!, null, null, null, description!!, products = listOf(), storageId = "any id", createTime, createTime)
+            val space = Space(id, name!!, null, null, null, description!!, storedProducts = listOf(), storageId = "any id", createTime, createTime)
             every { mockSpaceRepository.getSpace(id) } returns space
             every { mockSpaceRepository.spaceExists(id) } returns true
             every { mockSpaceRepository.updateSpace(id, name, description, null) } returns space
@@ -459,23 +460,25 @@ class SpaceRoutesKtTest {
             null,
             null,
             description = "A space description",
-            storageId = storageId,
-            products = listOf(
-                Product(
+            storedProducts = listOf(
+                ProductInSpace(
                     id = productId,
                     name = "Original Product",
                     description = "A product description",
                     null,
                     null,
                     attributes = emptyMap(),
-                    spaceId = spaceId,
+                    quantity = 1,
+                    size = 0.1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
                 )
             ),
+            storageId = storageId,
             createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
         )
+
         val mockStorage = Storage(
             id = storageId,
             name = "Target Storage",
@@ -491,7 +494,7 @@ class SpaceRoutesKtTest {
             originalSpace.copy(
                 id = UUID.randomUUID().toString(),
                 name = originalSpace.name,
-                products = originalSpace.products.map { product ->
+                storedProducts = originalSpace.storedProducts.map { product ->
                     product.copy(
                         id = UUID.randomUUID().toString(),
                         name = product.name
@@ -516,8 +519,8 @@ class SpaceRoutesKtTest {
                 currentSize shouldBe this@apply.currentSize
                 unit shouldBe this@apply.unit
                 description shouldBe this@apply.description
-                products?.size shouldBe this@apply.products?.size
-                products?.zip(this@apply.products ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
+                storedProducts?.size shouldBe this@apply.storedProducts?.size
+                storedProducts?.zip(this@apply.storedProducts ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
                     expectedProduct.apply {
                         actualProduct.apply {
                             name shouldBe this@apply.name
@@ -594,7 +597,7 @@ class SpaceRoutesKtTest {
         val validId = UUID.randomUUID().toString()
         val nonExistentStorageId = UUID.randomUUID().toString()
 
-        val originalSpace = Space(validId, "Original Space", null, null, null, "Description", storageId = UUID.randomUUID().toString(), products = listOf(),createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),)
+        val originalSpace = Space(validId, "Original Space", null, null, null, "Description", storageId = UUID.randomUUID().toString(), storedProducts = listOf(),createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),)
         every { mockSpaceRepository.getSpace(validId) } returns originalSpace
         every { mockStorageRepository.getStorage(nonExistentStorageId) } returns null
 
