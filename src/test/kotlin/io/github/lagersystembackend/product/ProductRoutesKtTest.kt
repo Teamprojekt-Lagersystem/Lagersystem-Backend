@@ -109,6 +109,7 @@ class ProductRoutesKtTest {
     fun `delete Product should delete Product`() = testApplication {
         createEnvironment()
         val product1 = Product(UUID.randomUUID().toString(), "Product 1", "Description 1", null, null, emptyMap(), LocalDateTime.now(), LocalDateTime.now())
+        every { mockProductRepository.isProductInUse(product1.id) } returns false
         every { mockProductRepository.deleteProduct(product1.id) } returns product1
         client.delete("/products/${product1.id}").apply {
             status shouldBe HttpStatusCode.OK
@@ -121,6 +122,7 @@ class ProductRoutesKtTest {
     fun `delete Product should respond with BadRequest when id is invalid`() = testApplication {
         createEnvironment()
         val id = "invalid id"
+        every { mockProductRepository.isProductInUse(id) } returns false
         client.delete("/products/$id").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
@@ -135,6 +137,7 @@ class ProductRoutesKtTest {
         createEnvironment()
         val id = UUID.randomUUID().toString()
         every { mockProductRepository.deleteProduct(id) } returns null
+        every { mockProductRepository.isProductInUse(id) } returns false
         client.delete("/products/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(

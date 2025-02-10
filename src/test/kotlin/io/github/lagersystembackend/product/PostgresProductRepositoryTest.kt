@@ -12,6 +12,7 @@ import io.github.lagersystembackend.space.toSpace
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
+import io.github.lagersystembackend.stored_product.StoredProducts
 import io.kotest.matchers.date.shouldBeBefore
 
 import io.kotest.matchers.shouldBe
@@ -36,7 +37,7 @@ class PostgresProductRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
             exampleStorageEntity = StorageEntity.new(id = storageId) {
                 name = "storage name"
                 description = "storage description"
@@ -53,7 +54,7 @@ class PostgresProductRepositoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
         }
     }
 
