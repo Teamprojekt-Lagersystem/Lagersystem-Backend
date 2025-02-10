@@ -106,6 +106,7 @@ class SpaceRoutesKtTest {
         createEnvironment()
         val space1 = Space(UUID.randomUUID().toString(), "Space 1", null, null, null, "Description 1", storageId = "any id", storedProducts = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockSpaceRepository.deleteSpace(space1.id) } returns space1
+        every { mockSpaceRepository.isProductStored(space1.id) } returns false
         client.delete("/spaces/${space1.id}").apply {
             status shouldBe HttpStatusCode.OK
             Json.decodeFromString<NetworkSpace>(bodyAsText()) shouldBe space1.toNetworkSpace()
@@ -117,6 +118,7 @@ class SpaceRoutesKtTest {
     fun `delete Space should respond with BadRequest when id is invalid`() = testApplication {
         createEnvironment()
         val id = "invalid id"
+        every { mockSpaceRepository.isProductStored(id) } returns false
         client.delete("/spaces/$id").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
@@ -131,6 +133,7 @@ class SpaceRoutesKtTest {
         createEnvironment()
         val id = UUID.randomUUID().toString()
         every { mockSpaceRepository.deleteSpace(id) } returns null
+        every { mockSpaceRepository.isProductStored(id) } returns false
         client.delete("/spaces/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(

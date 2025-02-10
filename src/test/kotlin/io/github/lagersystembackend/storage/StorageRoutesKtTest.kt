@@ -134,6 +134,7 @@ class StorageRoutesKtTest {
         createEnviroment()
         val storage1 = Storage(UUID.randomUUID().toString(), "Storage 1", "Description 1", spaces = listOf(), parentId = null, subStorages = listOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
         every { mockStorageRepository.deleteStorage(storage1.id) } returns storage1
+        every { mockStorageRepository.isProductStored(storage1.id) } returns false
         client.delete("/storages/${storage1.id}").apply {
             status shouldBe HttpStatusCode.OK
             Json.decodeFromString<NetworkStorage>(bodyAsText()) shouldBe storage1.toNetworkStorage()
@@ -144,6 +145,7 @@ class StorageRoutesKtTest {
     fun `delete Storage should respond with BadRequest when id is invalid`() = testApplication {
         createEnviroment()
         val id = "invalid id"
+        every { mockStorageRepository.isProductStored(id) } returns false
         client.delete("/storages/$id").apply {
             status shouldBe HttpStatusCode.BadRequest
             val expectedResponse = ApiResponse.Error(
@@ -158,6 +160,7 @@ class StorageRoutesKtTest {
         createEnviroment()
         val id = UUID.randomUUID().toString()
         every { mockStorageRepository.deleteStorage(id) } returns null
+        every { mockStorageRepository.isProductStored(id) } returns false
         client.delete("/storages/$id").apply {
             status shouldBe HttpStatusCode.NotFound
             val expectedResponse = ApiResponse.Error(

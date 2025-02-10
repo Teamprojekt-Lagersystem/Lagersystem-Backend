@@ -4,7 +4,9 @@ import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.stored_product.PostgresStoredProductRepository
 import io.github.lagersystembackend.stored_product.StoredProduct
+import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.stored_product.StoredProducts
+import io.github.lagersystembackend.stored_product.StoredProductDTO
 import io.github.lagersystembackend.storage.StorageEntity
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
@@ -177,18 +179,66 @@ class PostgresSpaceRepositoryTest {
 
     @Test
     fun `delete Space should delete products`() = testApplication {
-        val createdSpace = insertSpace()
-        val products = listOf(
-            StoredProduct("anyId", "Product1", createdSpace.id, 1, LocalDateTime.now(), LocalDateTime.now()),
-            StoredProduct("anyId", "Product2", createdSpace.id, 1, LocalDateTime.now(), LocalDateTime.now()),
-            StoredProduct("anyId", "Product3", createdSpace.id, 1, LocalDateTime.now(), LocalDateTime.now())
-        )
-        val productRepository = PostgresStoredProductRepository()
-        val createdProducts = products.map { it.run { productRepository.createStoredProduct("name", spaceId, 1) } }
+        transaction {
+            val storage = StorageEntity.new {
+                name = "storage name"
+                description = "storage description"
+            }
+            val createdSpace = SpaceEntity.new {
+                name = "space name"
+                description = "space description"
+                this.storage = storage
+            }
+            val product1 = ProductEntity.new {
+                name = "Product1"
+                description = "product description"
+            }
+            val product2 = ProductEntity.new {
+                name = "Product2"
+                description = "product description"
+            }
+            val product3 = ProductEntity.new {
+                name = "Product3"
+                description = "product description"
+            }
+            val productRepository = PostgresStoredProductRepository()
+            val createdProducts = listOf(
+                productRepository.createStoredProduct(
+                    product1.id.value.toString(),
+                    createdSpace.id.value.toString(),
+                    1
+                ),
+                productRepository.createStoredProduct(
+                    product2.id.value.toString(),
+                    createdSpace.id.value.toString(),
+                    1
+                ),
+                productRepository.createStoredProduct(
+                    product3.id.value.toString(),
+                    createdSpace.id.value.toString(),
+                    1
+                )
+            )
+            val expectedProducts = createdProducts.map { storedProductDTO ->
+                ProductInSpace(
+                    id = storedProductDTO.id,
+                    name = storedProductDTO.productName,
+                    description = storedProductDTO.productDescription,
+                    productSize = storedProductDTO.productSize,
+                    productUnit = storedProductDTO.productUnit,
+                    attributes = storedProductDTO.attribute,
+                    quantity = storedProductDTO.quantity,
+                    size = storedProductDTO.size,
+                    createdAt = LocalDateTime.parse(storedProductDTO.createdAt),
+                    updatedAt = storedProductDTO.updatedAt?.let { LocalDateTime.parse(it) }
+                )
+            }
+            sut.getSpace(createdSpace.id.value.toString())!!.storedProducts shouldBe expectedProducts
 
-        sut.getSpace(createdSpace.id)!!.storedProducts shouldBe createdProducts
-        sut.deleteSpace(createdSpace.id)
-        productRepository.getStoredProducts() shouldBe emptyList()
+            sut.deleteSpace(createdSpace.id.value.toString())
+
+            productRepository.getStoredProducts() shouldBe emptyList()
+        }
     }
 
     @Test
@@ -254,45 +304,105 @@ class PostgresSpaceRepositoryTest {
         movedSpace.currentSize shouldBe createdSpace.totalSize
         movedSpace.unit shouldBe createdSpace.unit
     }
-
     @Test
     fun `moveSpace should keep products after move`() = testApplication {
-        val createdSpace = insertSpace()
-        val products = listOf(
-            StoredProduct("anyId", "Product1", createdSpace.id, 1, LocalDateTime.now(), LocalDateTime.now()),
-            StoredProduct("anyId", "Product2", createdSpace.id, 1, LocalDateTime.now(), LocalDateTime.now()),
-            StoredProduct("anyId", "Product3", createdSpace.id, 1, LocalDateTime.now(), LocalDateTime.now())
-        )
-        val productRepository = PostgresStoredProductRepository()
-        val createdProducts = products.map { it.run { productRepository.createStoredProduct("name", spaceId, 1) } }
+        transaction {
+            val storage = StorageEntity.new {
+                name = "storage name"
+                description = "storage description"
+            }
+            val createdSpace = SpaceEntity.new {
+                name = "space name"
+                description = "space description"
+                this.storage = storage
+            }
+            val product1 = ProductEntity.new {
+                name = "Product1"
+                description = "product description"
+            }
+            val product2 = ProductEntity.new {
+                name = "Product2"
+                description = "product description"
+            }
+            val product3 = ProductEntity.new {
+                name = "Product3"
+                description = "product description"
+            }
 
-        sut.getSpace(createdSpace.id)!!.storedProducts shouldBe createdProducts
-        val movedSpace = sut.moveSpace(createdSpace.id, targetStorageId.toString())
-        movedSpace.storedProducts shouldBe createdProducts
+            val productRepository = PostgresStoredProductRepository()
+            val createdProducts = listOf(
+                productRepository.createStoredProduct(
+                    product1.id.value.toString(),
+                    createdSpace.id.value.toString(),
+                    1
+                ),
+                productRepository.createStoredProduct(
+                    product2.id.value.toString(),
+                    createdSpace.id.value.toString(),
+                    1
+                ),
+                productRepository.createStoredProduct(
+                    product3.id.value.toString(),
+                    createdSpace.id.value.toString(),
+                    1
+                )
+            )
+            val expectedProducts = createdProducts.map { storedProductDTO ->
+                ProductInSpace(
+                    id = storedProductDTO.id,
+                    name = storedProductDTO.productName,
+                    description = storedProductDTO.productDescription,
+                    productSize = storedProductDTO.productSize,
+                    productUnit = storedProductDTO.productUnit,
+                    attributes = storedProductDTO.attribute,
+                    quantity = storedProductDTO.quantity,
+                    size = storedProductDTO.size,
+                    createdAt = LocalDateTime.parse(storedProductDTO.createdAt),
+                    updatedAt = storedProductDTO.updatedAt?.let { LocalDateTime.parse(it) }
+                )
+            }
+
+            sut.getSpace(createdSpace.id.value.toString())!!.storedProducts shouldBe expectedProducts
+            val movedSpace = sut.moveSpace(createdSpace.id.value.toString(), targetStorageId.toString())
+            movedSpace.storedProducts shouldBe expectedProducts
+        }
     }
+
 
     @Test
     fun `copySpace should correctly duplicate space structure including products`() = testApplication {
-        val storage = exampleStorageEntity
-        val productRepository = PostgresStoredProductRepository()
-        val space = insertSpace()
-        val product = productRepository.createStoredProduct("Product", space.id, 1)
+        transaction {
+            val storage = StorageEntity.new {
+                name = "storage name"
+                description = "storage description"
+            }
+            val space = SpaceEntity.new {
+                name = "space name"
+                description = "space description"
+                this.storage = storage
+            }
+            val productEntity = ProductEntity.new {
+                name = "product name"
+                description = "product description"
+            }
+            val productRepository = PostgresStoredProductRepository()
+            val product = productRepository.createStoredProduct(productEntity.id.value.toString(), space.id.value.toString(), 1)
 
-        val copiedSpace = sut.copySpace(space.id, exampleStorageId.toString())
+            val copiedSpace = sut.copySpace(space.id.value.toString(), storage.id.value.toString())
 
-        copiedSpace.name shouldBe space.name
-        copiedSpace.totalSize shouldBe space.totalSize
-        copiedSpace.currentSize shouldBe space.currentSize
-        copiedSpace.unit shouldBe space.unit
-        copiedSpace.description shouldBe space.description
-        copiedSpace.storageId shouldBe storage.id.toString()
+            copiedSpace.name shouldBe space.name
+            copiedSpace.totalSize shouldBe space.totalSize
+            copiedSpace.currentSize shouldBe space.currentSize
+            copiedSpace.unit shouldBe space.unit
+            copiedSpace.description shouldBe space.description
+            copiedSpace.storageId shouldBe storage.id.value.toString()
 
-        copiedSpace.storedProducts.size shouldBe 1
-        val copiedProduct = copiedSpace.storedProducts.first()
-        copiedProduct.name shouldBe product.productName
-        copiedProduct.description shouldBe product.productDescription
-        copiedProduct.id shouldBe copiedSpace.id
-        copiedProduct.attributes shouldBe emptyMap()
+            copiedSpace.storedProducts.size shouldBe 1
+            val copiedProduct = copiedSpace.storedProducts.first()
+            copiedProduct.name shouldBe product.productName
+            copiedProduct.description shouldBe product.productDescription
+            copiedProduct.attributes shouldBe emptyMap()
+        }
     }
 
     @Test
