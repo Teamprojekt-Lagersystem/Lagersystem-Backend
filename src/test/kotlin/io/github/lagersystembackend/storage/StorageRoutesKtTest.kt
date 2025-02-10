@@ -4,6 +4,9 @@ import io.github.lagersystembackend.common.*
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.github.lagersystembackend.product.Product
+import io.github.lagersystembackend.space.ProductInSpace
+import io.github.lagersystembackend.stored_product.StoredProduct
+import io.github.lagersystembackend.stored_product.StoredProducts
 import io.github.lagersystembackend.space.Space
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
@@ -532,20 +535,21 @@ class StorageRoutesKtTest {
                             null,
                             null,
                             "A space",
-                            storageId = subStorageId,
-                            products = listOf(
-                                Product(
-                                    productId,
-                                    "Product",
-                                    "A product",
+                            storedProducts = listOf(
+                                ProductInSpace(
+                                    id = productId,
+                                    name = "Original Product",
+                                    description = "A product description",
                                     null,
                                     null,
                                     attributes = emptyMap(),
-                                    spaceId = spaceId,
+                                    quantity = 1,
+                                    size = 0.1,
                                     createdAt = LocalDateTime.now(),
                                     updatedAt = LocalDateTime.now(),
                                 )
                             ),
+                            storageId = subStorageId,
                             createdAt = LocalDateTime.now(),
                             updatedAt = LocalDateTime.now(),
                         )
@@ -572,7 +576,7 @@ class StorageRoutesKtTest {
                             space.copy(
                                 id = UUID.randomUUID().toString(),
                                 name = space.name,
-                                products = space.products.map { product ->
+                                storedProducts = space.storedProducts.map { product ->
                                     product.copy(
                                         id = UUID.randomUUID().toString(),
                                         name = product.name
@@ -612,8 +616,8 @@ class StorageRoutesKtTest {
                                     actualSpace.apply {
                                         name shouldBe this.name
                                         description shouldBe this@apply.description
-                                        products?.size shouldBe this@apply.products?.size
-                                        products?.zip(this@apply.products ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
+                                        storedProducts?.size shouldBe this@apply.storedProducts?.size
+                                        storedProducts?.zip(this@apply.storedProducts ?: listOf())?.forEach { (expectedProduct, actualProduct) ->
                                             expectedProduct.apply {
                                                 actualProduct.apply {
                                                     name shouldBe this.name

@@ -2,8 +2,8 @@ package io.github.lagersystembackend.storage
 
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
-import io.github.lagersystembackend.product.PostgresProductRepository
-import io.github.lagersystembackend.product.Products
+import io.github.lagersystembackend.stored_product.PostgresStoredProductRepository
+import io.github.lagersystembackend.stored_product.StoredProducts
 import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.Space
 import io.github.lagersystembackend.space.Spaces
@@ -35,14 +35,14 @@ class PostgresStorageRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, StoredProducts, ProductAttributes)
         }
     }
 
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, StoredProducts, ProductAttributes)
         }
     }
 
@@ -321,9 +321,9 @@ class PostgresStorageRepositoryTest {
         val rootStorage = insertRootStorage()
         val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
         val spaceRepository = PostgresSpaceRepository()
-        val productRepository = PostgresProductRepository()
+        val productRepository = PostgresStoredProductRepository()
         val space = spaceRepository.createSpace("Space", "A space", null, null, subStorage.id)
-        val product = productRepository.createProduct("Product", "A product", null, null, space.id)
+        val product = productRepository.createStoredProduct("Product", space.id, 1)
 
         val copiedStorage = sut.copyStorage(rootStorage.id, null)
 
@@ -346,11 +346,11 @@ class PostgresStorageRepositoryTest {
         copiedSpace.description shouldBe space.description
         copiedSpace.storageId shouldBe copiedSubStorage.id
 
-        copiedSpace.products.size shouldBe 1
-        val copiedProduct = copiedSpace.products.first()
-        copiedProduct.name shouldBe product.name
-        copiedProduct.description shouldBe product.description
-        copiedProduct.spaceId shouldBe copiedSpace.id
+        copiedSpace.storedProducts.size shouldBe 1
+        val copiedProduct = copiedSpace.storedProducts.first()
+        copiedProduct.name shouldBe product.productName
+        copiedProduct.description shouldBe product.productDescription
+        copiedProduct.id shouldBe copiedSpace.id
         copiedProduct.attributes shouldBe emptyMap()
     }
     @Test

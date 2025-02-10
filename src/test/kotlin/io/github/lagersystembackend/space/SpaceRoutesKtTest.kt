@@ -4,8 +4,6 @@ import io.github.lagersystembackend.common.*
 import io.github.lagersystembackend.plugins.configureHTTP
 import io.github.lagersystembackend.plugins.configureSerialization
 import io.github.lagersystembackend.storage.StorageRepository
-import io.github.lagersystembackend.product.Product
-import io.github.lagersystembackend.stored_product.StoredProduct
 import io.github.lagersystembackend.storage.Storage
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
