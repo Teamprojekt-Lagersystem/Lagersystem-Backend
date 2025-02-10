@@ -1,6 +1,7 @@
 package io.github.lagersystembackend.attribute
 
 import io.github.lagersystembackend.plugins.configureDatabases
+import io.github.lagersystembackend.stored_product.StoredProductEntity
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.product.toProduct
@@ -17,6 +18,7 @@ import io.ktor.server.testing.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
+import java.time.LocalDateTime
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -45,7 +47,12 @@ class PostgresProductAttributeRepositoryTest {
                 ProductEntity.new(id = productId) {
                     name = "product name"
                     description = "product description"
+                }
+                StoredProductEntity.new {
+                    this.product = product
                     this.space = space
+                    this.quantity = 1
+                    this.createdAt = LocalDateTime.now()
                 }
             }
         }

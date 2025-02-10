@@ -66,22 +66,20 @@ class PostgresProductRepositoryTest {
             null,
             null,
             emptyMap(),
-            spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
 
+        val createdProduct = sut.createProduct(expectedProduct.name, expectedProduct.description, null, null)
 
-        expectedProduct.run { sut.createProduct(name, description, null, null, spaceId.toString()) }.apply {
+        createdProduct.apply {
             name shouldBe expectedProduct.name
             description shouldBe expectedProduct.description
-            spaceId shouldBe expectedProduct.spaceId
             createdAt shouldBeBefore LocalDateTime.now()
             updatedAt shouldBe null
         }
-
     }
-
+    /*
     @Test
     fun `create Product should throw IllegalArgumentException when SpaceUUID is unknown`() = testApplication {
         val expectedProduct = Product(
@@ -125,7 +123,7 @@ class PostgresProductRepositoryTest {
             this.message shouldBe "Invalid UUID string: ${expectedProduct.spaceId}"
         }
     }
-
+    */
     @Test
     fun `get Product should return Product`() = testApplication {
         val expectedProduct = Product(
@@ -135,11 +133,10 @@ class PostgresProductRepositoryTest {
             null,
             null,
             emptyMap(),
-            spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = expectedProduct.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
+        val createdProduct = expectedProduct.run { sut.createProduct(name, description, null, null) }
         sut.getProduct(createdProduct.id) shouldBe createdProduct
     }
 
@@ -165,12 +162,11 @@ class PostgresProductRepositoryTest {
         var expectedProducts = listOf(
             Product(
                 "any id",
-                "name1",
+                "name",
                 "description",
                 null,
                 null,
                 emptyMap(),
-                spaceId.toString(),
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ),
@@ -185,7 +181,6 @@ class PostgresProductRepositoryTest {
                     "someOtherKey" to Attribute.StringAttribute("some text"),
                     "someBooleanKey" to Attribute.BooleanAttribute(true)
                 ),
-                spaceId.toString(),
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ),
@@ -196,12 +191,11 @@ class PostgresProductRepositoryTest {
                 null,
                 null,
                 emptyMap(),
-                spaceId.toString(),
                 LocalDateTime.now(),
                 LocalDateTime.now()
             )
         )
-        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, null, null, spaceId) } }
+        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, null, null) } }
         sut.getProducts() shouldBe expectedProducts
     }
 
@@ -219,11 +213,10 @@ class PostgresProductRepositoryTest {
             null,
             null,
             emptyMap(),
-            spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null) }
         val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description", null)
 
         updatedProduct shouldBe Product(
@@ -233,7 +226,6 @@ class PostgresProductRepositoryTest {
             null,
             null,
             emptyMap(),
-            spaceId.toString(),
             createdProduct.createdAt,
             updatedProduct!!.updatedAt
         )
@@ -250,11 +242,10 @@ class PostgresProductRepositoryTest {
             null,
             null,
             emptyMap(),
-            spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null) }
         val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
 
         createdProduct.createdAt shouldBeBefore updatedProduct?.updatedAt!!
@@ -288,11 +279,10 @@ class PostgresProductRepositoryTest {
             null,
             null,
             emptyMap(),
-            spaceId.toString(),
             LocalDateTime.now(),
             LocalDateTime.now()
         )
-        val createdProduct = product.run { sut.createProduct(name, description, null, null, spaceId.toString()) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null) }
         sut.deleteProduct(createdProduct.id) shouldBe createdProduct
         sut.getProduct(createdProduct.id) shouldBe null
 
@@ -317,7 +307,7 @@ class PostgresProductRepositoryTest {
 
     @Test
     fun `delete Product should delete all of its attributes`() = testApplication {
-        val product = sut.createProduct("name", "description", null, null, spaceId.toString())
+        val product = sut.createProduct("name", "description", null, null)
         val productAttributeRepository = PostgresProductAttributeRepository()
         product.run {
             productAttributeRepository.createOrUpdateAttribute("someKey", Attribute.NumberAttribute(1.2f), id)
@@ -329,7 +319,7 @@ class PostgresProductRepositoryTest {
         sut.deleteProduct(product.id)
         transaction { ProductAttributeEntity.all().count() } shouldBe 0
     }
-
+    /*
     @Test
     fun `moveProduct should return Product with new Space`() = testApplication {
         val product = Product(
@@ -454,5 +444,5 @@ class PostgresProductRepositoryTest {
         copiedProduct.spaceId shouldBe space.id
         copiedProduct.attributes shouldBe product.attributes
     }
-
+    */
 }
