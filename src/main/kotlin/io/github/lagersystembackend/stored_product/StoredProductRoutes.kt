@@ -108,6 +108,11 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                         errors.add(ErrorMessages.SPACE_NOT_FOUND.withContext("ID: $targetSpaceId"))
                     }
 
+                    val isStored = storedProductRepository.isStored(storedProduct.productId, targetSpaceId)
+                    if (isStored and (storedProduct.spaceId == targetSpaceId)) {
+                        errors.add(ErrorMessages.ALREADY_STORED)
+                    }
+
                     if (errors.isNotEmpty()) {
                         return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
@@ -122,7 +127,7 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
                         return@patch call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
                     }
 
-                    if (storedProductRepository.isStored(storedProduct.productId, targetSpaceId)) {
+                    if (isStored) {
                         val alreadyStoredProductId = storedProductRepository.getId(storedProduct.productId, targetSpaceId)
                         val alreadyStoredProduct = storedProductRepository.getStoredProduct(alreadyStoredProductId)
                         val updatedStoredProduct = alreadyStoredProduct?.let {

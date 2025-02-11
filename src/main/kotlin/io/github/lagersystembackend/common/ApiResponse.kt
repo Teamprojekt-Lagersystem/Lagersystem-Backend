@@ -36,7 +36,7 @@ object ErrorMessages {
     val PRODUCT_IN_USE = ApiError("PRODUCT_IN_USE" , "The product is still stored in a space.")
     val SPACE_IN_USE = ApiError("SPACE_IN_USE" , "The space still contains stored products.")
     val STORAGE_IN_USE = ApiError("STORAGE_IN_USE" , "The storage still contains stored products in space.")
-    val SIZE_NOT_FITTING = ApiError("PRODUCT_NOT_FITTING" , "The size of the product exceeds the size of the space.")
+    val SIZE_NOT_FITTING = ApiError("SIZE_NOT_FITTING" , "The size of the product exceeds the size of the space.")
     val UNIT_NOT_FITTING = ApiError("UNIT_NOT_FITTING", "The unit of the product differs from the unit of the space.")
     val SIZE_TOO_SMALL = ApiError("SIZE_TOO_SMALL", "The new size of the space must be larger than the size of the stored products.")
     val NEGATIVE_SIZE = ApiError("NEGATIVE_SIZE" , "The size must be positive.")
