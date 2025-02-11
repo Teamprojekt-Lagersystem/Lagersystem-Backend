@@ -2,10 +2,13 @@ package io.github.lagersystembackend.storage
 
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.plugins.configureDatabases
-import io.github.lagersystembackend.product.PostgresProductRepository
-import io.github.lagersystembackend.product.Products
+import io.github.lagersystembackend.product.ProductEntity
+import io.github.lagersystembackend.stored_product.PostgresStoredProductRepository
+import io.github.lagersystembackend.stored_product.StoredProducts
+import io.github.lagersystembackend.space.ProductInSpace
 import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.Space
+import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.date.shouldBeBefore
@@ -35,14 +38,14 @@ class PostgresStorageRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, StoredProducts, ProductAttributes)
         }
     }
 
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, StoredProducts, ProductAttributes)
         }
     }
 
@@ -277,7 +280,6 @@ class PostgresStorageRepositoryTest {
         val subStorage1 = sut.createStorage("SubStorage1", "First sub-storage", rootStorage.id)
         val subStorage2 = sut.createStorage("SubStorage2", "Second sub-storage", subStorage1.id)
 
-        // Try to set rootStorage as a child of subStorage2
         sut.isCircularReference(rootStorage.id, subStorage2.id) shouldBe true
     }
 
@@ -318,41 +320,49 @@ class PostgresStorageRepositoryTest {
     }
     @Test
     fun `copyStorage should correctly duplicate storage structure including spaces and products`() = testApplication {
-        val rootStorage = insertRootStorage()
-        val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
-        val spaceRepository = PostgresSpaceRepository()
-        val productRepository = PostgresProductRepository()
-        val space = spaceRepository.createSpace("Space", "A space", null, null, subStorage.id)
-        val product = productRepository.createProduct("Product", "A product", null, null, space.id)
+        transaction {
+            val productEntity = ProductEntity.new {
+                name = "product name"
+                description = "product description"
+            }
+            val rootStorage = insertRootStorage()
+            val subStorage = sut.createStorage("SubStorage", "A sub-storage", rootStorage.id)
+            val spaceRepository = PostgresSpaceRepository()
+            val space = spaceRepository.createSpace("Space", "A space", null, null, subStorage.id)
+            val productRepository = PostgresStoredProductRepository()
+            val product =
+                productRepository.createStoredProduct(productEntity.id.value.toString(), space.id, 1)
 
-        val copiedStorage = sut.copyStorage(rootStorage.id, null)
+            val copiedStorage = sut.copyStorage(rootStorage.id, null)
 
-        copiedStorage.name shouldBe rootStorage.name
-        copiedStorage.description shouldBe rootStorage.description
-        copiedStorage.parentId shouldBe null
-        copiedStorage.subStorages.size shouldBe 1
+            copiedStorage.name shouldBe rootStorage.name
+            copiedStorage.description shouldBe rootStorage.description
+            copiedStorage.parentId shouldBe null
+            copiedStorage.subStorages.size shouldBe 1
 
-        val copiedSubStorage = copiedStorage.subStorages.first()
-        copiedSubStorage.name shouldBe subStorage.name
-        copiedSubStorage.description shouldBe subStorage.description
-        copiedSubStorage.parentId shouldBe copiedStorage.id
+            val copiedSubStorage = copiedStorage.subStorages.first()
+            copiedSubStorage.name shouldBe subStorage.name
+            copiedSubStorage.description shouldBe subStorage.description
+            copiedSubStorage.parentId shouldBe copiedStorage.id
 
-        copiedSubStorage.spaces.size shouldBe 1
-        val copiedSpace = copiedSubStorage.spaces.first()
-        copiedSpace.name shouldBe space.name
-        copiedSpace.totalSize shouldBe space.totalSize
-        copiedSpace.currentSize shouldBe space.currentSize
-        copiedSpace.unit shouldBe space.unit
-        copiedSpace.description shouldBe space.description
-        copiedSpace.storageId shouldBe copiedSubStorage.id
+            copiedSubStorage.spaces.size shouldBe 1
+            val copiedSpace = copiedSubStorage.spaces.first()
+            copiedSpace.name shouldBe space.name
+            copiedSpace.totalSize shouldBe space.totalSize
+            copiedSpace.currentSize shouldBe space.currentSize
+            copiedSpace.unit shouldBe space.unit
+            copiedSpace.description shouldBe space.description
+            copiedSpace.storageId shouldBe copiedSubStorage.id
 
-        copiedSpace.products.size shouldBe 1
-        val copiedProduct = copiedSpace.products.first()
-        copiedProduct.name shouldBe product.name
-        copiedProduct.description shouldBe product.description
-        copiedProduct.spaceId shouldBe copiedSpace.id
-        copiedProduct.attributes shouldBe emptyMap()
+            copiedSpace.storedProducts.size shouldBe 1
+            val copiedProduct = copiedSpace.storedProducts.first()
+            copiedProduct.name shouldBe product.productName
+            copiedProduct.description shouldBe product.productDescription
+            copiedProduct.attributes shouldBe emptyMap()
+        }
     }
+
+
     @Test
     fun `copyStorage should throw IllegalArgumentException when original storage not found`() = testApplication {
         val invalidId = UUID.randomUUID().toString()
