@@ -136,8 +136,8 @@ private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage
         name = name,
         description = description,
         parentId = parentId,
-        spaces = spaces.map { it.toNetworkSpace() },
-        subStorages = subStorages,
+        spaces = spaces.map { it.toNetworkSpace() }.sortedByDescending { it.createdAt },
+        subStorages = subStorages.sortedByDescending { it. createdAt },
         createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
         updatedAt = updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
     )
