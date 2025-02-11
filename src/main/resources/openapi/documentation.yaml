@@ -897,43 +897,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStoredProduct"
-    get:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/StoredProductDTO"
   /v1/storedProducts/{spaceId}:
     get:
       description: ""
@@ -1272,7 +1235,6 @@ components:
           format: "double"
       required:
       - "type"
-      - "rank"
       - "id"
       - "name"
       - "description"
@@ -1308,7 +1270,6 @@ components:
       - "name"
       - "description"
       - "attributes"
-      - "quantity"
       - "createdAt"
     NetworkSpace:
       type: "object"
@@ -1482,7 +1443,6 @@ components:
       - "productName"
       - "productDescription"
       - "attribute"
-      - "quantity"
       - "createdAt"
     AddStoredProductNetworkRequest:
       type: "object"
@@ -1497,7 +1457,6 @@ components:
       required:
       - "productId"
       - "spaceId"
-      - "quantity"
     NetworkStoredProduct:
       type: "object"
       properties:
@@ -1518,7 +1477,6 @@ components:
       - "id"
       - "productId"
       - "spaceId"
-      - "quantity"
       - "createdAt"
     CopyStoredProductRequest:
       type: "object"
@@ -1540,5 +1498,3 @@ components:
         quantity:
           type: "integer"
           format: "int32"
-      required:
-      - "quantity"

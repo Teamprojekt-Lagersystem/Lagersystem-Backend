@@ -14,25 +14,6 @@ fun Route.storedProductRoutes(storedProductRepository: StoredProductRepository, 
         }
 
         route("/{id}") {
-            get {
-                val id = call.parameters["id"]!!
-                val errors = mutableListOf<ApiError>()
-                if (!id.isUUID()) {
-                    errors.add(ErrorMessages.INVALID_UUID_STORED_PRODUCT)
-                }
-
-                if (errors.isNotEmpty()) {
-                    return@get call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))
-                }
-
-                val storedProductDTO = storedProductRepository.getStoredProduct(id)
-                if (storedProductDTO == null) {
-                    errors.add(ErrorMessages.STORED_PRODUCT_NOT_FOUND)
-                    return@get call.respond(HttpStatusCode.NotFound, ApiResponse.Error(errors))
-                }
-
-                call.respond(storedProductDTO)
-            }
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
