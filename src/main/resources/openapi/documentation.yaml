@@ -843,6 +843,16 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#2:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
         "201":
           description: "Created"
           content:
@@ -1007,6 +1017,12 @@ paths:
                   description: ""
                   value:
                     errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StoredProductDTO"
         "201":
           description: "Created"
           content:
@@ -1124,7 +1140,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/NetworkStoredProduct"
+                $ref: "#/components/schemas/StoredProductDTO"
 components:
   schemas:
     ApiError:
@@ -1224,6 +1240,8 @@ components:
     NetworkSearchResult:
       type: "object"
       properties:
+        breadcrumb:
+          $ref: "#/components/schemas/Breadcrumb"
         type:
           type: "string"
         rank:
@@ -1254,6 +1272,7 @@ components:
           format: "double"
       required:
       - "type"
+      - "rank"
       - "id"
       - "name"
       - "description"
@@ -1289,6 +1308,7 @@ components:
       - "name"
       - "description"
       - "attributes"
+      - "quantity"
       - "createdAt"
     NetworkSpace:
       type: "object"
@@ -1462,6 +1482,7 @@ components:
       - "productName"
       - "productDescription"
       - "attribute"
+      - "quantity"
       - "createdAt"
     AddStoredProductNetworkRequest:
       type: "object"
@@ -1476,6 +1497,7 @@ components:
       required:
       - "productId"
       - "spaceId"
+      - "quantity"
     NetworkStoredProduct:
       type: "object"
       properties:
@@ -1496,6 +1518,7 @@ components:
       - "id"
       - "productId"
       - "spaceId"
+      - "quantity"
       - "createdAt"
     CopyStoredProductRequest:
       type: "object"
@@ -1517,3 +1540,5 @@ components:
         quantity:
           type: "integer"
           format: "int32"
+      required:
+      - "quantity"

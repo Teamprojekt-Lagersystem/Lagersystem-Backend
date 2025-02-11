@@ -4,6 +4,7 @@ import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.toAttribute
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
+import io.github.lagersystembackend.space.ProductInSpace
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.space.Spaces
 import kotlinx.serialization.Serializable
@@ -124,6 +125,7 @@ fun StoredProductEntity.toStoredProductDTO() = StoredProductDTO(
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
 )
+
 
 
 
