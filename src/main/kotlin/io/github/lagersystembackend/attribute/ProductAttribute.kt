@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.attribute
 
+import TsVectorColumnType
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
 import org.jetbrains.exposed.dao.IntEntity
@@ -14,6 +15,7 @@ object ProductAttributes : IntIdTable() {
     val type = varchar("type", 255)
     val value = text("value")
     val productId = reference("product_id", Products, onDelete = ReferenceOption.CASCADE)
+    val tsVector = registerColumn<String>("tsVector", TsVectorColumnType()).databaseGenerated()
 }
 
 class ProductAttributeEntity(id: EntityID<Int>) : IntEntity(id) {
@@ -24,8 +26,7 @@ class ProductAttributeEntity(id: EntityID<Int>) : IntEntity(id) {
     var product by ProductEntity referencedOn ProductAttributes.productId
 }
 
-
-fun ProductAttributeEntity.toAttribute() = when (type) {
+fun buildAttribute(value: String, type: String) =  when (type) {
     Attribute.StringAttribute.TYPE -> Attribute.StringAttribute(value)
     Attribute.NumberAttribute.TYPE -> Attribute.NumberAttribute(value.toFloat())
     Attribute.BooleanAttribute.TYPE -> Attribute.BooleanAttribute(value.toBoolean())
@@ -34,3 +35,5 @@ fun ProductAttributeEntity.toAttribute() = when (type) {
     Attribute.ListAttribute.type(Attribute.BooleanAttribute.TYPE) -> Attribute.ListAttribute.fromBooleans(value.split(",").map { it.toBoolean() })
     else -> throw IllegalArgumentException("Unknown attribute type: $type")
 }
+
+fun ProductAttributeEntity.toAttribute() = buildAttribute(value, type)

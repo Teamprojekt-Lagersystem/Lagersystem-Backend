@@ -1,12 +1,18 @@
 package io.github.lagersystembackend
 
+import io.github.lagersystembackend.breadcrumb.BreadcrumbUseCase
+import io.github.lagersystembackend.breadcrumb.DefaultBreadcrumbUseCase
 import io.github.lagersystembackend.plugins.*
 import io.github.lagersystembackend.product.PostgresProductRepository
 import io.github.lagersystembackend.product.ProductRepository
+import io.github.lagersystembackend.search.PostgresSearchUseCase
+import io.github.lagersystembackend.search.SearchUseCase
 import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.SpaceRepository
 import io.github.lagersystembackend.storage.PostgresStorageRepository
 import io.github.lagersystembackend.storage.StorageRepository
+import io.github.lagersystembackend.stored_product.PostgresStoredProductRepository
+import io.github.lagersystembackend.stored_product.StoredProductRepository
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -17,11 +23,21 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureHTTP()
-    configureRouting(DependencyProvider.productRepository, DependencyProvider.spaceRepository, DependencyProvider.storageRepository)
+    configureRouting(
+        DependencyProvider.productRepository,
+        DependencyProvider.spaceRepository,
+        DependencyProvider.storageRepository,
+        DependencyProvider.storedProductRepository,
+        DependencyProvider.searchUseCase,
+        DependencyProvider.breadcrumbsUseCase
+    )
 }
 
 private object DependencyProvider {
     val productRepository: ProductRepository = PostgresProductRepository()
     val spaceRepository: SpaceRepository = PostgresSpaceRepository()
     val storageRepository: StorageRepository = PostgresStorageRepository()
+    val storedProductRepository: StoredProductRepository = PostgresStoredProductRepository()
+    val breadcrumbsUseCase: BreadcrumbUseCase = DefaultBreadcrumbUseCase(storageRepository, spaceRepository)
+    val searchUseCase: SearchUseCase = PostgresSearchUseCase(breadcrumbsUseCase)
 }

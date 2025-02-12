@@ -2,9 +2,11 @@ package io.github.lagersystembackend.plugins
 
 import io.github.lagersystembackend.attribute.ProductAttributes
 import io.github.lagersystembackend.product.Products
+import io.github.lagersystembackend.search.createPostgresFullTextSearchTriggers
 import io.github.lagersystembackend.space.Spaces
 import io.github.lagersystembackend.storage.StorageToStorages
 import io.github.lagersystembackend.storage.Storages
+import io.github.lagersystembackend.stored_product.StoredProducts
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -19,6 +21,7 @@ fun configureDatabases(isTest: Boolean = false) {
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes)
+        SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
+        createPostgresFullTextSearchTriggers()
     }
 }

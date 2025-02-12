@@ -54,7 +54,6 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 val networkStorage = storage.toNetworkStorage(maxDepth = depth)
                 call.respond(networkStorage)
             }
-
             delete {
                 val id = call.parameters["id"]!!
                 val errors = mutableListOf<ApiError>()
@@ -62,6 +61,11 @@ fun Route.storageRoutes(storageRepository: StorageRepository) {
                 if (!id.isUUID()) {
                     errors.add(ErrorMessages.INVALID_UUID_STORAGE)
                 }
+
+                if (storageRepository.isProductStored(id)) {
+                    errors.add(ErrorMessages.STORAGE_IN_USE)
+                }
+
 
                 if (errors.isNotEmpty()) {
                     return@delete call.respond(HttpStatusCode.BadRequest, ApiResponse.Error(errors))

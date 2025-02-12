@@ -1,6 +1,10 @@
 package io.github.lagersystembackend.product
 import io.github.lagersystembackend.space.SpaceEntity
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
+import io.github.lagersystembackend.stored_product.StoredProductEntity
+import io.github.lagersystembackend.stored_product.StoredProducts
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -11,13 +15,14 @@ class PostgresProductRepository : ProductRepository {
     override fun createProduct(
         name: String,
         description: String,
-        spaceId: String
+        size: Double?,
+        unit: String?,
     ): Product = transaction {
-        val space = SpaceEntity.findById(UUID.fromString(spaceId)) ?: return@transaction throw IllegalArgumentException("Space not found")
         ProductEntity.new {
             this.name = name
             this.description = description
-            this.space = space
+            this.size = size
+            this.unit = unit
         }.toProduct()
     }
 
@@ -32,8 +37,10 @@ class PostgresProductRepository : ProductRepository {
     override fun updateProduct(
         id: String,
         name: String?,
-        description: String?
+        description: String?,
+        size: Double?,
     ): Product? = transaction {
+        // Todo: Update size and check if the new size does not conflict with any space the product is stored in
         ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
             name?.let { product.name = it }
             description?.let { product.description = it }
@@ -41,42 +48,15 @@ class PostgresProductRepository : ProductRepository {
         }?.toProduct()
     }
 
-    override fun moveProduct(id: String, spaceId: String): Product? = transaction {
-        val targetSpace = SpaceEntity.findById(UUID.fromString(spaceId)) ?: throw IllegalArgumentException("target Space not found")
-        ProductEntity.findByIdAndUpdate(UUID.fromString(id)) { product ->
-            product.space = targetSpace
-            product.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
-        }?.toProduct()
-
-    }
-
     override fun deleteProduct(id: String): Product? = transaction {
-        ProductEntity.findById(UUID.fromString(id)).also { it?.delete() }?.toProduct()
+        val product = ProductEntity.findById(UUID.fromString(id))
+
+        product?.delete()
+
+        product?.toProduct()
     }
 
-    override fun copyProduct(productId: String, targetSpaceId: String): Product {
-        return transaction {
-
-            val originalProduct = ProductEntity.findById(UUID.fromString(productId))
-                ?: throw IllegalArgumentException("Product with ID $productId not found")
-
-            val targetSpace = SpaceEntity.findById(UUID.fromString(targetSpaceId))
-                ?: throw IllegalArgumentException("Space with ID $targetSpaceId not found")
-
-            val newProductEntity = ProductEntity.new {
-                name = originalProduct.name
-                description = originalProduct.description
-                space = targetSpace
-            }
-
-            originalProduct.attributes.forEach { attribute ->
-                ProductAttributeEntity.new {
-                    key = attribute.key
-                    value = attribute.value
-                    product = newProductEntity
-                }
-            }
-            newProductEntity.toProduct()
-        }
+    override fun isProductInUse(productId: String): Boolean = transaction {
+        StoredProductEntity.find { StoredProducts.productId eq UUID.fromString(productId) }.count() > 0
     }
 }
