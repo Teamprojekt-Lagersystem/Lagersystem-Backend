@@ -26,7 +26,8 @@ data class Product(
     val unit: String?,
     val attributes: Map<String, Attribute>,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime?
+    val updatedAt: LocalDateTime?,
+    val unique: Boolean
 ) {
     init {
         val allNull = (size == null && unit == null)
@@ -47,7 +48,8 @@ data class NetworkProduct(
     val unit: String?,
     val attributes: Map<String, Attribute>,
     val createdAt: String,
-    val updatedAt: String?
+    val updatedAt: String?,
+    val unique: Boolean
 )
 
 @Serializable
@@ -56,6 +58,7 @@ data class AddProductNetworkRequest(
     val description: String,
     val size: Double? = null,
     val unit: String? = null,
+    val unique: Boolean
 )
 
 @Serializable
@@ -65,19 +68,6 @@ data class UpdateProductNetworkRequest(
     val size: Double?,
 )
 
-/*
-@Serializable
-data class MoveProductNetworkRequest(
-    val targetSpaceId: String
-)
-
-@Serializable
-data class CopyProductRequest(
-    val targetSpaceId: String
-)
-
- */
-
 object Products: UUIDTable() {
     val name = varchar("name", 255)
     val description = text("description")
@@ -86,6 +76,7 @@ object Products: UUIDTable() {
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
     val tsVector = registerColumn<String>("tsVector", TsVectorColumnType()).databaseGenerated()
+    val unique = bool("unique").default(false)
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -98,6 +89,7 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     val attributes by ProductAttributeEntity referrersOn ProductAttributes.productId
     var createdAt by Products.createdAt
     var updatedAt by Products.updatedAt
+    var unique by Products.unique
 }
 
 fun ProductEntity.toProduct() = transaction {
@@ -109,7 +101,8 @@ fun ProductEntity.toProduct() = transaction {
         unit,
         attributes.associate { it.key to it.toAttribute() },
         createdAt,
-        updatedAt
+        updatedAt,
+        unique
     )
 }
 
@@ -122,4 +115,5 @@ fun Product.toNetworkProduct() = NetworkProduct(
     attributes,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
+    unique
 )

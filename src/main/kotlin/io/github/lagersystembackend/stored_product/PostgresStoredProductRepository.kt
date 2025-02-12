@@ -126,9 +126,18 @@ class PostgresStoredProductRepository : StoredProductRepository {
         return@transaction true
     }
 
-    override fun isStored(productId: String, spaceId: String): Boolean = transaction {
+    override fun isStoredInSpace(productId: String, spaceId: String): Boolean = transaction {
         StoredProductEntity.find {
             (StoredProducts.productId eq UUID.fromString(productId)) and (StoredProducts.spaceId eq UUID.fromString(spaceId)) }.count() > 0
+    }
+
+    override fun isStored(productId: String): Boolean = transaction {
+        StoredProductEntity.find {
+            (StoredProducts.productId eq UUID.fromString(productId)) }.count() > 0
+    }
+    override fun isUnique(productId: String): Boolean = transaction {
+        val product = ProductEntity.findById(UUID.fromString(productId)) ?: throw IllegalArgumentException("Product not found")
+        product.unique
     }
 
     override fun getId(productId: String, spaceId: String): String = transaction {

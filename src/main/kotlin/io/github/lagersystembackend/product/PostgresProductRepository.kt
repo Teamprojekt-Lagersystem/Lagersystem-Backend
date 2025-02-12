@@ -17,12 +17,14 @@ class PostgresProductRepository : ProductRepository {
         description: String,
         size: Double?,
         unit: String?,
+        unique: Boolean
     ): Product = transaction {
         ProductEntity.new {
             this.name = name
             this.description = description
             this.size = size
             this.unit = unit
+            this.unique = unique
         }.toProduct()
     }
 

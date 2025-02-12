@@ -230,7 +230,8 @@ class PostgresSpaceRepositoryTest {
                     quantity = storedProductDTO.quantity,
                     size = storedProductDTO.size,
                     createdAt = LocalDateTime.parse(storedProductDTO.createdAt),
-                    updatedAt = storedProductDTO.updatedAt?.let { LocalDateTime.parse(it) }
+                    updatedAt = storedProductDTO.updatedAt?.let { LocalDateTime.parse(it) },
+                    unique = storedProductDTO.unique,
                 )
             }
             sut.getSpace(createdSpace.id.value.toString())!!.storedProducts shouldBe expectedProducts
@@ -358,7 +359,8 @@ class PostgresSpaceRepositoryTest {
                     quantity = storedProductDTO.quantity,
                     size = storedProductDTO.size,
                     createdAt = LocalDateTime.parse(storedProductDTO.createdAt),
-                    updatedAt = storedProductDTO.updatedAt?.let { LocalDateTime.parse(it) }
+                    updatedAt = storedProductDTO.updatedAt?.let { LocalDateTime.parse(it) },
+                    unique = storedProductDTO.unique
                 )
             }
 

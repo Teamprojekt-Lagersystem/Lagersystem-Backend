@@ -40,7 +40,8 @@ data class StoredProductDTO(
     val quantity: Int,
     val size: Double?,
     val createdAt: String,
-    val updatedAt: String?
+    val updatedAt: String?,
+    val unique: Boolean
 )
 
 @Serializable
@@ -123,7 +124,8 @@ fun StoredProductEntity.toStoredProductDTO() = StoredProductDTO(
     quantity,
     product.size?.times(quantity),
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
-    updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME)
+    updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
+    product.unique
 )
 
 

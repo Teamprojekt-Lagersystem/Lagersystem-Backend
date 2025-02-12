@@ -969,6 +969,10 @@ paths:
                   description: ""
                   value:
                     errors: []
+                Example#6:
+                  description: ""
+                  value:
+                    errors: []
         "404":
           description: "Not Found"
           content:
@@ -1169,6 +1173,8 @@ components:
           type: "string"
         updatedAt:
           type: "string"
+        unique:
+          type: "boolean"
       required:
       - "id"
       - "name"
@@ -1187,6 +1193,8 @@ components:
           format: "double"
         unit:
           type: "string"
+        unique:
+          type: "boolean"
       required:
       - "name"
       - "description"
@@ -1265,6 +1273,8 @@ components:
           type: "string"
         updatedAt:
           type: "string"
+        unique:
+          type: "boolean"
       required:
       - "id"
       - "name"
@@ -1436,6 +1446,8 @@ components:
           type: "string"
         updatedAt:
           type: "string"
+        unique:
+          type: "boolean"
       required:
       - "id"
       - "productId"

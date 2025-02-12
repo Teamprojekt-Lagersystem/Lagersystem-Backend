@@ -68,10 +68,11 @@ class PostgresProductRepositoryTest {
             null,
             emptyMap(),
             LocalDateTime.now(),
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            false
         )
 
-        val createdProduct = sut.createProduct(expectedProduct.name, expectedProduct.description, null, null)
+        val createdProduct = sut.createProduct(expectedProduct.name, expectedProduct.description, null, null, false)
 
         createdProduct.apply {
             name shouldBe expectedProduct.name
@@ -135,9 +136,10 @@ class PostgresProductRepositoryTest {
             null,
             emptyMap(),
             LocalDateTime.now(),
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            false
         )
-        val createdProduct = expectedProduct.run { sut.createProduct(name, description, null, null) }
+        val createdProduct = expectedProduct.run { sut.createProduct(name, description, null, null, false) }
         sut.getProduct(createdProduct.id) shouldBe createdProduct
     }
 
@@ -169,7 +171,8 @@ class PostgresProductRepositoryTest {
                 null,
                 emptyMap(),
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                false
             ),
             Product(
                 "any id",
@@ -183,7 +186,8 @@ class PostgresProductRepositoryTest {
                     "someBooleanKey" to Attribute.BooleanAttribute(true)
                 ),
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                false
             ),
             Product(
                 "any id",
@@ -193,10 +197,11 @@ class PostgresProductRepositoryTest {
                 null,
                 emptyMap(),
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                false
             )
         )
-        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, null, null) } }
+        expectedProducts = expectedProducts.map { it.run { sut.createProduct(name, description, null, null, false) } }
         sut.getProducts() shouldBe expectedProducts
     }
 
@@ -215,9 +220,10 @@ class PostgresProductRepositoryTest {
             null,
             emptyMap(),
             LocalDateTime.now(),
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            false
         )
-        val createdProduct = product.run { sut.createProduct(name, description, null, null) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, false) }
         val updatedProduct = sut.updateProduct(createdProduct.id, "new name", "new description", null)
 
         updatedProduct shouldBe Product(
@@ -228,7 +234,8 @@ class PostgresProductRepositoryTest {
             null,
             emptyMap(),
             createdProduct.createdAt,
-            updatedProduct!!.updatedAt
+            updatedProduct!!.updatedAt,
+            false
         )
 
         createdProduct.createdAt shouldBeBefore updatedProduct.updatedAt!!
@@ -244,9 +251,9 @@ class PostgresProductRepositoryTest {
             null,
             emptyMap(),
             LocalDateTime.now(),
-            LocalDateTime.now()
+            LocalDateTime.now(), false
         )
-        val createdProduct = product.run { sut.createProduct(name, description, null, null) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, false) }
         val updatedProduct = sut.updateProduct(createdProduct.id, null, null, null)
 
         createdProduct.createdAt shouldBeBefore updatedProduct?.updatedAt!!
@@ -281,9 +288,10 @@ class PostgresProductRepositoryTest {
             null,
             emptyMap(),
             LocalDateTime.now(),
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            false
         )
-        val createdProduct = product.run { sut.createProduct(name, description, null, null) }
+        val createdProduct = product.run { sut.createProduct(name, description, null, null, false) }
         sut.deleteProduct(createdProduct.id) shouldBe createdProduct
         sut.getProduct(createdProduct.id) shouldBe null
 
@@ -308,7 +316,7 @@ class PostgresProductRepositoryTest {
 
     @Test
     fun `delete Product should delete all of its attributes`() = testApplication {
-        val product = sut.createProduct("name", "description", null, null)
+        val product = sut.createProduct("name", "description", null, null, false)
         val productAttributeRepository = PostgresProductAttributeRepository()
         product.run {
             productAttributeRepository.createOrUpdateAttribute("someKey", Attribute.NumberAttribute(1.2f), id)

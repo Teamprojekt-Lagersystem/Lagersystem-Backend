@@ -126,7 +126,7 @@ fun Route.productRoutes(productRepository: ProductRepository, spaceRepository: S
             }
 
             val createdProduct = addProductNetworkRequest?.let {
-                productRepository.createProduct(it.name, it.description, it.size, it.unit)
+                productRepository.createProduct(it.name, it.description, it.size, it.unit, it.unique)
             }
 
             createdProduct?.let {

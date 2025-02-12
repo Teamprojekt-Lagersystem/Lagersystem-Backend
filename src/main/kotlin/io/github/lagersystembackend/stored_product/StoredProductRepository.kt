@@ -15,7 +15,9 @@ interface StoredProductRepository {
     fun productExists(id: String): Boolean
     fun fitsInSpace(productId: String, spaceId: String, quantity: Int): Boolean
     fun checkUnit(productId: String, spaceId: String): Boolean
-    fun isStored(productId: String, spaceId: String): Boolean
+    fun isStoredInSpace(productId: String, spaceId: String): Boolean
+    fun isStored(productId: String): Boolean
+    fun isUnique(productId: String): Boolean
     fun getId(productId: String, spaceId: String): String
     fun copyStoredProduct(id: String, targetSpaceId: String): StoredProductDTO
 }

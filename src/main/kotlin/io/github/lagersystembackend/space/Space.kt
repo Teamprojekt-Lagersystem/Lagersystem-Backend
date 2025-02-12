@@ -29,7 +29,8 @@ data class ProductInSpace(
     val quantity: Int,
     val size: Double?,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime?
+    val updatedAt: LocalDateTime?,
+    val unique: Boolean,
 )
 
 @Serializable
@@ -44,6 +45,7 @@ data class NetworkProductInSpace(
     val quantity: Int,
     val createdAt: String,
     val updatedAt: String?,
+    val unique: Boolean,
 )
 
 data class Space(
@@ -183,6 +185,7 @@ fun ProductInSpace.toNetworkProductInSpace() = NetworkProductInSpace(
     quantity,
     createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
     updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
+    unique
 )
 
 fun StoredProductEntity.toProductInSpace(): ProductInSpace {
@@ -197,5 +200,6 @@ fun StoredProductEntity.toProductInSpace(): ProductInSpace {
         quantity = this.quantity,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
+        unique = product.unique,
     )
 }

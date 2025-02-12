@@ -473,6 +473,7 @@ class SpaceRoutesKtTest {
                     size = 0.1,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now(),
+                    unique = false
                 )
             ),
             storageId = storageId,

@@ -33,6 +33,8 @@ object ErrorMessages {
     val RECURSIVE_MOVE = ApiError("RECURSIVE_MOVE" , "Cannot move storage to itself.")
     val RECURSIVE_COPY = ApiError("RECURSIVE_COPY" , "Cannot copy storage to itself.")
     val ALREADY_STORED = ApiError("ALREADY_STORED" , "The product is already stored in the space.")
+    val ALREADY_STORED_UNIQUE = ApiError("ALREADY_STORED_UNIQUE" , "The unique product is already stored.")
+    val UNIQUE_PRODUCT = ApiError("UNIQUE_PRODUCT", "The product is unique and should have quantity 1.")
     val PRODUCT_IN_USE = ApiError("PRODUCT_IN_USE" , "The product is still stored in a space.")
     val SPACE_IN_USE = ApiError("SPACE_IN_USE" , "The space still contains stored products.")
     val STORAGE_IN_USE = ApiError("STORAGE_IN_USE" , "The storage still contains stored products in space.")
