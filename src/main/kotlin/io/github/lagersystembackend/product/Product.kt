@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.product
 
+import TsVectorColumnType
 import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.ProductAttributeEntity
 import io.github.lagersystembackend.attribute.ProductAttributes
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -83,6 +85,7 @@ object Products: UUIDTable() {
     val unit = varchar("unit", 255).nullable()
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
+    val tsVector = registerColumn<String>("tsVector", TsVectorColumnType()).databaseGenerated()
 }
 
 class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -97,16 +100,18 @@ class ProductEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by Products.updatedAt
 }
 
-fun ProductEntity.toProduct() = Product(
-    id.value.toString(),
-    name,
-    description,
-    size,
-    unit,
-    attributes.associate { it.key to it.toAttribute() },
-    createdAt,
-    updatedAt
-)
+fun ProductEntity.toProduct() = transaction {
+    Product(
+        this@toProduct.id.value.toString(),
+        name,
+        description,
+        size,
+        unit,
+        attributes.associate { it.key to it.toAttribute() },
+        createdAt,
+        updatedAt
+    )
+}
 
 fun Product.toNetworkProduct() = NetworkProduct(
     id,

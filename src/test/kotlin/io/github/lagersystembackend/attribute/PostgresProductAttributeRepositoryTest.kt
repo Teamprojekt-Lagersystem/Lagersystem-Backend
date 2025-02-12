@@ -3,7 +3,6 @@ package io.github.lagersystembackend.attribute
 import io.github.lagersystembackend.plugins.configureDatabases
 import io.github.lagersystembackend.stored_product.StoredProductEntity
 import io.github.lagersystembackend.stored_product.StoredProducts
-import io.github.lagersystembackend.stored_product.StoredProduct
 import io.github.lagersystembackend.product.ProductEntity
 import io.github.lagersystembackend.product.Products
 import io.github.lagersystembackend.product.toProduct
@@ -35,7 +34,7 @@ class PostgresProductAttributeRepositoryTest {
     fun setUp() {
         configureDatabases(isTest = true)
         transaction {
-            SchemaUtils.create(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
+            SchemaUtils.create(Storages, StorageToStorages, Spaces, ProductAttributes, Products, StoredProducts)
             transaction {
                 val storage = StorageEntity.new(id = storageId) {
                     name = "storage name"
@@ -63,7 +62,7 @@ class PostgresProductAttributeRepositoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(StoredProducts, ProductAttributes, Products, Spaces, StorageToStorages, Storages)
+            SchemaUtils.drop(Storages, StorageToStorages, Spaces, Products, ProductAttributes, StoredProducts)
         }
     }
 

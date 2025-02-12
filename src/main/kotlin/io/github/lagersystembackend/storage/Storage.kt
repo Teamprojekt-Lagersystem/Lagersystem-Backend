@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.storage
 
+import TsVectorColumnType
 import io.github.lagersystembackend.space.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -69,6 +70,7 @@ object Storages: UUIDTable() {
     val description = text("description")
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
+    val tsVector = registerColumn<String>("tsVector", TsVectorColumnType()).databaseGenerated()
 }
 
 object StorageToStorages: Table() {
@@ -134,8 +136,8 @@ private fun Storage.toNetworkStorage(depth: Int, maxDepth: Int?): NetworkStorage
         name = name,
         description = description,
         parentId = parentId,
-        spaces = spaces.map { it.toNetworkSpace() },
-        subStorages = subStorages,
+        spaces = spaces.map { it.toNetworkSpace() }.sortedByDescending { it.createdAt },
+        subStorages = subStorages.sortedByDescending { it. createdAt },
         createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
         updatedAt = updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
     )

@@ -17,6 +17,50 @@ paths:
               examples:
                 Example#1:
                   value: "/swagger"
+  /v1/breadcrumb/{id}:
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors:
+                    - type: "INVALID_UUID"
+                      message: "The provided ID is not a valid UUID."
+                      context: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors:
+                    - type: "OBJECT_NOT_FOUND"
+                      message: "The specified storage or space was not found."
+                      context: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Breadcrumb"
   /v1/products:
     get:
       description: ""
@@ -182,6 +226,35 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkProduct"
+  /v1/search:
+    get:
+      description: ""
+      parameters:
+      - name: "q"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    errors: []
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NetworkSearchResult"
   /v1/spaces:
     get:
       description: ""
@@ -824,43 +897,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/NetworkStoredProduct"
-    get:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "404":
-          description: "Not Found"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Error"
-              examples:
-                Example#1:
-                  description: ""
-                  value:
-                    errors: []
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/StoredProductDTO"
   /v1/storedProducts/{spaceId}:
     get:
       description: ""
@@ -1070,6 +1106,49 @@ paths:
                 $ref: "#/components/schemas/StoredProductDTO"
 components:
   schemas:
+    ApiError:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+        message:
+          type: "string"
+        context:
+          type: "string"
+      required:
+      - "type"
+      - "message"
+    Error:
+      type: "object"
+      properties:
+        errors:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ApiError"
+      required:
+      - "errors"
+    BreadcrumbEntry:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        type:
+          type: "string"
+      required:
+      - "id"
+      - "name"
+      - "type"
+    Breadcrumb:
+      type: "object"
+      properties:
+        entries:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/BreadcrumbEntry"
+      required:
+      - "entries"
     NetworkProduct:
       type: "object"
       properties:
@@ -1111,27 +1190,6 @@ components:
       required:
       - "name"
       - "description"
-    ApiError:
-      type: "object"
-      properties:
-        type:
-          type: "string"
-        message:
-          type: "string"
-        context:
-          type: "string"
-      required:
-      - "type"
-      - "message"
-    Error:
-      type: "object"
-      properties:
-        errors:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/ApiError"
-      required:
-      - "errors"
     UpdateProductNetworkRequest:
       type: "object"
       properties:
@@ -1142,6 +1200,45 @@ components:
         size:
           type: "number"
           format: "double"
+    NetworkSearchResult:
+      type: "object"
+      properties:
+        breadcrumb:
+          $ref: "#/components/schemas/Breadcrumb"
+        type:
+          type: "string"
+        rank:
+          type: "number"
+          format: "double"
+        id:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+        createdAt:
+          type: "string"
+        updatedAt:
+          type: "string"
+        attributes:
+          type: "string"
+        unit:
+          type: "string"
+        totalSize:
+          type: "number"
+          format: "double"
+        currentSize:
+          type: "number"
+          format: "double"
+        size:
+          type: "number"
+          format: "double"
+      required:
+      - "type"
+      - "id"
+      - "name"
+      - "description"
+      - "createdAt"
     NetworkProductInSpace:
       type: "object"
       properties:

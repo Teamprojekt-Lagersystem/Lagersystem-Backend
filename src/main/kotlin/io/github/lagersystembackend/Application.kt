@@ -1,8 +1,12 @@
 package io.github.lagersystembackend
 
+import io.github.lagersystembackend.breadcrumb.BreadcrumbUseCase
+import io.github.lagersystembackend.breadcrumb.DefaultBreadcrumbUseCase
 import io.github.lagersystembackend.plugins.*
 import io.github.lagersystembackend.product.PostgresProductRepository
 import io.github.lagersystembackend.product.ProductRepository
+import io.github.lagersystembackend.search.PostgresSearchUseCase
+import io.github.lagersystembackend.search.SearchUseCase
 import io.github.lagersystembackend.space.PostgresSpaceRepository
 import io.github.lagersystembackend.space.SpaceRepository
 import io.github.lagersystembackend.storage.PostgresStorageRepository
@@ -19,7 +23,14 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureHTTP()
-    configureRouting(DependencyProvider.productRepository, DependencyProvider.spaceRepository, DependencyProvider.storageRepository, DependencyProvider.storedProductRepository)
+    configureRouting(
+        DependencyProvider.productRepository,
+        DependencyProvider.spaceRepository,
+        DependencyProvider.storageRepository,
+        DependencyProvider.storedProductRepository,
+        DependencyProvider.searchUseCase,
+        DependencyProvider.breadcrumbsUseCase
+    )
 }
 
 private object DependencyProvider {
@@ -27,4 +38,6 @@ private object DependencyProvider {
     val spaceRepository: SpaceRepository = PostgresSpaceRepository()
     val storageRepository: StorageRepository = PostgresStorageRepository()
     val storedProductRepository: StoredProductRepository = PostgresStoredProductRepository()
+    val breadcrumbsUseCase: BreadcrumbUseCase = DefaultBreadcrumbUseCase(storageRepository, spaceRepository)
+    val searchUseCase: SearchUseCase = PostgresSearchUseCase(breadcrumbsUseCase)
 }

@@ -54,7 +54,7 @@ class PostgresStoredProductRepository : StoredProductRepository {
         val storedProduct = StoredProductEntity.findById(UUID.fromString(id)) ?: throw IllegalArgumentException("Stored product not found")
 
         if (fitsInSpace(storedProduct.product.id.toString(), storedProduct.space.id.toString(), quantity - storedProduct.quantity)) {
-            storedProduct.space.currentSize = storedProduct.space.currentSize?.plus(storedProduct.product.size!! * quantity - storedProduct.quantity)
+            storedProduct.space.currentSize = storedProduct.space.currentSize?.plus(storedProduct.product.size!! * (quantity - storedProduct.quantity))
             storedProduct.quantity = quantity
             storedProduct.updatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
         }

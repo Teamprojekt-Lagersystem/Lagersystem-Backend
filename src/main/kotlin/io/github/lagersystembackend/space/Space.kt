@@ -1,5 +1,6 @@
 package io.github.lagersystembackend.space
 
+import TsVectorColumnType
 import io.github.lagersystembackend.attribute.Attribute
 import io.github.lagersystembackend.attribute.toAttribute
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -121,6 +122,7 @@ object Spaces: UUIDTable() {
     val storageId = reference("storageId", Storages)
     val createdAt = datetime("createdAt").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updatedAt").nullable()
+    val tsVector = registerColumn<String>("tsVector", TsVectorColumnType()).databaseGenerated()
 }
 
 class SpaceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
